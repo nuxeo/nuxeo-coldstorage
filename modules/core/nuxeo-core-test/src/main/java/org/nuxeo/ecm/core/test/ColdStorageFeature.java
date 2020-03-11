@@ -27,7 +27,7 @@ import org.nuxeo.runtime.test.runner.RunnerFeature;
  * @since 11.1
  */
 @Features(CoreFeature.class)
-@Deploy("org.nuxeo.ecm.core.test.tests:OSGI-INF/test-dummy-thumbnail-factory-contrib.xml")
-@Deploy("org.nuxeo.ecm.core.test.tests:OSGI-INF/test-coldstorage-contrib.xml")
+@Deploy("org.nuxeo.ecm.core.test:OSGI-INF/test-dummy-thumbnail-factory-contrib.xml")
+@Deploy("org.nuxeo.ecm.core.test:OSGI-INF/test-coldstorage-contrib.xml")
 public class ColdStorageFeature implements RunnerFeature {
 }
