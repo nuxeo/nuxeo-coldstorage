@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.nuxeo</groupId>
+    <artifactId>nuxeo-parent</artifactId>
+    <version>11.4-SNAPSHOT</version>
+  </parent>
+
+  <groupId>org.nuxeo</groupId>
+  <artifactId>nuxeo-coldstorage-parent</artifactId>
+  <name>Nuxeo cold storage Parent</name>
+  <version>11.0.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <description>Nuxeo cold storage allows the cold storage of document content. This can be needed for archiving,
+    compliance, etc.
+  </description>
+
+  <modules>
+    <module>nuxeo-coldstorage</module>
+    <module>nuxeo-coldstorage-package</module>
+  </modules>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.nuxeo</groupId>
+        <artifactId>nuxeo-coldstorage</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.nuxeo</groupId>
+        <artifactId>nuxeo-coldstorage-package</artifactId>
+        <version>${project.version}</version>
+        <type>zip</type>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <repositories>
+    <repository>
+      <id>public</id>
+      <url>https://packages.nuxeo.com/repository/maven-public</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <updatePolicy>always</updatePolicy>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>public</id>
+      <url>https://packages.nuxeo.com/repository/maven-public</url>
+      <name>Nuxeo</name>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <!-- no need to enable snapshots for plugin repository -->
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
+
+  <scm>
+    <connection>scm:git:git://github.com/nuxeo/nuxeo-coldstorage.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com:nuxeo/nuxeo-coldstorage.git</developerConnection>
+    <url>https://github.com/nuxeo/nuxeo-coldstorage</url>
+  </scm>
+
+</project>
