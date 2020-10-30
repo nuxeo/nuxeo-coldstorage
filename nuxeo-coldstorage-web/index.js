@@ -17,8 +17,4 @@ limitations under the License.
 import './elements/nuxeo-move-content-to-coldstorage-button.js';
 import './elements/nuxeo-move-contents-to-coldstorage-button.js';
 
-import html from './nuxeo-coldstorage.html';
-
-const tmpl = document.createElement('template');
-tmpl.innerHTML = html;
-document.head.appendChild(tmpl.content);
+import './nuxeo-coldstorage.html';
