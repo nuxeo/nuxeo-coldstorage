@@ -19,6 +19,7 @@
   <modules>
     <module>nuxeo-coldstorage</module>
     <module>nuxeo-coldstorage-package</module>
+    <module>nuxeo-coldstorage-web</module>
   </modules>
 
   <dependencyManagement>
@@ -33,6 +34,11 @@
         <artifactId>nuxeo-coldstorage-package</artifactId>
         <version>${project.version}</version>
         <type>zip</type>
+      </dependency>
+      <dependency>
+        <groupId>org.nuxeo</groupId>
+        <artifactId>nuxeo-coldstorage-web</artifactId>
+        <version>${project.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
