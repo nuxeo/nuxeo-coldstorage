@@ -56,9 +56,7 @@ suite('Addons', () => {
       suite('Visibility', () => {
         test('Should not be visible when document is not provided', async () => {
           button = await fixture(
-            html`
-              <nuxeo-move-content-to-coldstorage-button></nuxeo-move-content-to-coldstorage-button>
-            `,
+            html` <nuxeo-move-content-to-coldstorage-button></nuxeo-move-content-to-coldstorage-button> `,
           );
 
           await flush();
