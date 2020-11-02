@@ -27,6 +27,7 @@ bin
 
 # build artifacts
 target/
+coverage/
 node_modules/
 nashorn_code_cache/
 chromedriver.log
