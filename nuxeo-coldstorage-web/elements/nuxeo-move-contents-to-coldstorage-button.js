@@ -54,9 +54,7 @@ class BulkMoveToColdStorage extends mixinBehaviors([FiltersBehavior, FormatBehav
 
       <nuxeo-dialog id="contentsToMoveDialog" with-backdrop>
         <h2>[[i18n('moveDocumentsContentsToColdStorage.ask.confirmation')]]</h2>
-        <p>
-          [[i18n('moveDocumentsContentsToColdStorage.description')]]
-        </p>
+        <p>[[i18n('moveDocumentsContentsToColdStorage.description')]]</p>
 
         <div class="buttons">
           <paper-button id="cancel" name="cancel" noink dialog-dismiss>

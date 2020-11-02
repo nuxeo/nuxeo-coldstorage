@@ -1,0 +1,44 @@
+{
+  "extends": ["airbnb-base", "prettier"],
+  "rules": {
+    "class-methods-use-this": "off",
+    "consistent-return": "off",
+    "import/extensions": ["error", "always", {"ignorePackages": true}],
+    "max-len": ["error", 120, 2, {
+      "ignoreUrls": true,
+      "ignoreComments": false
+    }],
+    "no-console": "off",
+    "no-param-reassign": "off",
+    "no-underscore-dangle": "off"
+  },
+  "env": {
+    "browser": true,
+    "es6": true
+  },
+  "plugins": ["html"],
+  "settings": {
+    "html/indent": "+2",
+    "html/report-bad-indent": "error"
+  },
+  "globals": {
+    "Nuxeo": false,
+    "Polymer": false
+  },
+  "overrides": [
+    {
+      "files": ["./test/**/*.test.js"],
+      "env": {
+        "mocha": true
+      },
+      "rules": {
+        "no-unused-expressions": "off"
+      },
+      "globals": {
+        "assert": "readable",
+        "expect": "readable",
+        "sinon": "readable"
+      }
+    }
+  ]
+}
