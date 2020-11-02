@@ -55,9 +55,7 @@ class MoveToColdStorage extends mixinBehaviors([FiltersBehavior, FormatBehavior]
 
       <nuxeo-dialog id="contentToMoveDialog" with-backdrop>
         <h2>[[i18n('documentContentView.moveToColdStorage.ask.confirmation')]]</h2>
-        <p>
-          [[i18n('documentContentView.moveToColdStorage.description')]]
-        </p>
+        <p>[[i18n('documentContentView.moveToColdStorage.description')]]</p>
 
         <div class="buttons">
           <paper-button id="cancel" name="cancel" noink dialog-dismiss>
