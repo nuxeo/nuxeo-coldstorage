@@ -24,7 +24,7 @@ if (isSauceLabsRun) {
   const sharedCapabilities = {
     'sauce:options': {
       name: 'Nuxeo Cold Storage',
-      build: `Nuxeo Cold Storage ${process.env.GITHUB_REF || 'local'} build ${process.env.GITHUB_RUN_NUMBER || ''}`,
+      build: `Nuxeo Cold Storage ${process.env.BRANCH_NAME || 'local'} build ${process.env.BUILD_NUMBER || ''}`,
     },
   };
 
