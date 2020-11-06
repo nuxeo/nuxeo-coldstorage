@@ -2,14 +2,7 @@
   "extends": ["airbnb-base", "prettier"],
   "rules": {
     "class-methods-use-this": "off",
-    "consistent-return": "off",
     "import/extensions": ["error", "always", {"ignorePackages": true}],
-    "max-len": ["error", 120, 2, {
-      "ignoreUrls": true,
-      "ignoreComments": false
-    }],
-    "no-console": "off",
-    "no-param-reassign": "off",
     "no-underscore-dangle": "off"
   },
   "env": {
@@ -27,7 +20,7 @@
   },
   "overrides": [
     {
-      "files": ["./test/**/*.test.js"],
+      "files": ["test/**/*.test.js"],
       "env": {
         "mocha": true
       },
@@ -38,6 +31,17 @@
         "assert": "readable",
         "expect": "readable",
         "sinon": "readable"
+      }
+    },
+    {
+      "files": ["ftest/**/*.js"],
+      "rules": {
+        "func-names": "off",
+        "import/no-extraneous-dependencies": ["error", { "devDependencies": true }]
+      },
+      "globals": {
+        "driver": true,
+        "fixtures": true
       }
     }
   ]
