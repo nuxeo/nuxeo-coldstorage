@@ -7,7 +7,7 @@
     <version>11.4-SNAPSHOT</version>
   </parent>
 
-  <groupId>org.nuxeo</groupId>
+  <groupId>org.nuxeo.coldstorage</groupId>
   <artifactId>nuxeo-coldstorage-parent</artifactId>
   <name>Nuxeo cold storage Parent</name>
   <version>11.0.0-SNAPSHOT</version>
@@ -25,18 +25,18 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>org.nuxeo</groupId>
+        <groupId>org.nuxeo.coldstorage</groupId>
         <artifactId>nuxeo-coldstorage</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.nuxeo</groupId>
+        <groupId>org.nuxeo.coldstorage</groupId>
         <artifactId>nuxeo-coldstorage-package</artifactId>
         <version>${project.version}</version>
         <type>zip</type>
       </dependency>
       <dependency>
-        <groupId>org.nuxeo</groupId>
+        <groupId>org.nuxeo.coldstorage</groupId>
         <artifactId>nuxeo-coldstorage-web</artifactId>
         <version>${project.version}</version>
       </dependency>
