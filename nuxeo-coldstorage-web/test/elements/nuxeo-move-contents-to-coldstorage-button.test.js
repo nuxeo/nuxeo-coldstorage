@@ -24,6 +24,7 @@ import {
   timePasses,
   waitForEvent,
 } from '@nuxeo/testing-helpers';
+import { expect } from '@esm-bundle/chai';
 import '../../elements/nuxeo-move-contents-to-coldstorage-button.js';
 
 suite('Cold Storage', () => {
