@@ -45,7 +45,6 @@ import org.nuxeo.runtime.test.runner.Deploy;
 /**
  * @since 11.1
  */
-@Deploy("org.nuxeo.ecm.platform.notification.core")
 public class RequestRetrievalFromColdStorageTest extends AbstractTestColdStorageOperation {
 
     protected static final int NUMBER_OF_DAYS_OF_AVAILABILITY = 5;
