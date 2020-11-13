@@ -9,8 +9,8 @@
 
   <groupId>org.nuxeo.coldstorage</groupId>
   <artifactId>nuxeo-coldstorage</artifactId>
-  <name>Nuxeo cold storage</name>
-  <description>Nuxeo cold storage allows the cold storage of document content. This can be needed for archiving,
+  <name>Nuxeo Cold Storage Core</name>
+  <description>Nuxeo Cold Storage allows the cold storage of document content. This can be needed for archiving,
     compliance, etc.
   </description>
 
