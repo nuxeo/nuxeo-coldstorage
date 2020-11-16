@@ -1,7 +1,7 @@
 /* eslint import/no-extraneous-dependencies: ["error", {"devDependencies": true}] */
-import { createSauceLabsLauncher } from '@web/test-runner-saucelabs';
-import { legacyPlugin } from '@web/dev-server-legacy';
-import { playwrightLauncher } from '@web/test-runner-playwright';
+const { createSauceLabsLauncher } = require('@web/test-runner-saucelabs');
+const { legacyPlugin } = require('@web/dev-server-legacy');
+const { playwrightLauncher } = require('@web/test-runner-playwright');
 
 const baseConfig = {
   files: 'test/**/*.test.js',
@@ -67,4 +67,4 @@ if (isSauceLabsRun) {
   baseConfig.testFramework.config.timeout = '10000';
 }
 
-export default baseConfig;
+module.exports = baseConfig;

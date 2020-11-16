@@ -100,7 +100,7 @@ boolean needsSaucelabs() {
   return this.isPullRequest() && pullRequest.labels.contains('saucelabs')
 }
 
-void runFrontEndUnitTests() {
+def runFrontEndUnitTests() {
   return {
     stage('Run Unit tests: FrontEnd') {
       container('maven') {
@@ -143,7 +143,7 @@ void runFrontEndUnitTests() {
   }
 }
 
-void runBackEndUnitTests() {
+def runBackEndUnitTests() {
   return {
     stage('Run Unit tests: BackEnd') {
       container('maven') {
