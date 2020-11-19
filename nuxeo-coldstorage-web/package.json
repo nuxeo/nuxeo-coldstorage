@@ -1,12 +1,11 @@
 {
   "name": "nuxeo-coldstorage-web",
-  "version": "0.1.0",
   "description": "Nuxeo Cold Storage WebUI integration",
   "author": "Nuxeo",
   "license": "Apache-2.0",
   "devDependencies": {
     "@esm-bundle/chai": "^4.1.5",
-    "@nuxeo/testing-helpers": "~3.0.2-rc.0",
+    "@nuxeo/testing-helpers": "^3.1.0-rc.0",
     "@rollup/plugin-node-resolve": "^7.1.3",
     "@web/dev-server-legacy": "^0.1.6",
     "@web/test-runner": "^0.9.7",
@@ -27,8 +26,8 @@
     "rollup-plugin-terser": "^7.0.2"
   },
   "dependencies": {
-    "@nuxeo/nuxeo-elements": "~3.0.2-rc.0",
-    "@nuxeo/nuxeo-ui-elements": "~3.0.2-rc.0",
+    "@nuxeo/nuxeo-elements": "^3.1.0-rc.0",
+    "@nuxeo/nuxeo-ui-elements": "^3.1.0-rc.0",
     "@polymer/iron-icon": "^3.0.0",
     "@polymer/iron-icons": "^3.0.1",
     "@polymer/paper-button": "^3.0.0",

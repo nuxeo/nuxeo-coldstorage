@@ -56,15 +56,23 @@ pipeline {
   environment {
     APP_NAME = "${appName}"
     BACKEND_FOLDER = "${WORKSPACE}/nuxeo-coldstorage"
+    BRANCH_LC = "${BRANCH_NAME.toLowerCase()}"
+    BUCKET_PREFIX = "coldstorage-${BRANCH_LC}-${BUILD_NUMBER}"
     CHANGE_BRANCH = "${env.CHANGE_BRANCH != null ? env.CHANGE_BRANCH : BRANCH_NAME}"
     CHANGE_TARGET = "${env.CHANGE_TARGET != null ? env.CHANGE_TARGET : BRANCH_NAME}"
+    CHART_DIR = 'ci/helm/preview'
     CONNECT_PREPROD_URL = 'https://nos-preprod-connect.nuxeocloud.com/nuxeo'
     ENABLE_GITHUB_STATUS = 'true'
     FRONTEND_FOLDER = "${WORKSPACE}/nuxeo-coldstorage-web"
     JENKINS_HOME = '/root'
     MAVEN_DEBUG = '-e'
     MAVEN_OPTS = "${MAVEN_OPTS} -Xms512m -Xmx3072m"
+    NUXEO_VERSION = '11.4.34'
+    NUXEO_BASE_IMAGE = "docker-private.packages.nuxeo.com/nuxeo/nuxeo:${NUXEO_VERSION}"
     ORG = 'nuxeo'
+    PREVIEW_NAMESPACE = "coldstorage-${BRANCH_LC}"
+    REFERENCE_BRANCH = 'master'
+    IS_REFERENCE_BRANCH = "${BRANCH_NAME == REFERENCE_BRANCH}"
   }
   stages {
     stage('Load Common Library') {
@@ -156,6 +164,54 @@ pipeline {
         }
       }
     }
+    stage('Build Docker Image') {
+      steps {
+        setGitHubBuildStatus('coldstorage/docker/build', 'Build Docker Image', 'PENDING', "${repositoryUrl}")
+        container('maven') {
+          script {
+            pipelineLib.buildDockerImage()
+          }
+        }
+      }
+      post {
+        success {
+          setGitHubBuildStatus('coldstorage/docker/build', 'Build Docker Image', 'SUCCESS', "${repositoryUrl}")
+        }
+        unsuccessful {
+          setGitHubBuildStatus('coldstorage/docker/build', 'Build Docker Image', 'FAILURE', "${repositoryUrl}")
+        }
+      }
+    }
+    stage('Buid Helm Chart') {
+      steps {
+        setGitHubBuildStatus('coldstorage/helm/chart', 'Build Helm Chart', 'PENDING', "${repositoryUrl}")
+        container('maven') {
+          script {
+            pipelineLib.buildHelmChart("${CHART_DIR}")
+          }
+        }
+      }
+      post {
+        success {
+          setGitHubBuildStatus('coldstorage/helm/chart', 'Build Helm Chart', 'SUCCESS', "${repositoryUrl}")
+        }
+        unsuccessful {
+          setGitHubBuildStatus('coldstorage/helm/chart', 'Build Helm Chart', 'FAILURE', "${repositoryUrl}")
+        }
+      }
+    }
+    stage('Deploy ColdStorage Preview') {
+      steps {
+        container('maven') {
+          script {
+            env.CLEANUP_PREVIEW = pipelineLib.needsPreviewCleanup()
+            pipelineLib.deployPreview(
+                    "${PREVIEW_NAMESPACE}", "${CHART_DIR}", "${CLEANUP_PREVIEW}", "${repositoryUrl}", "${IS_REFERENCE_BRANCH}"
+            )
+          }
+        }
+      }
+    }
     stage('Publish') {
       when {
         allOf {
@@ -231,7 +287,7 @@ pipeline {
         pipelineLib.setSlackBuildStatus("${SLACK_CHANNEL}", "${message}", 'good')
       }
     }
-    failure {
+    unsuccessful {
       script {
         // update Slack Channel
         String message = "${JOB_NAME} - #${BUILD_NUMBER} ${currentBuild.currentResult} (<${BUILD_URL}|Open>)"
