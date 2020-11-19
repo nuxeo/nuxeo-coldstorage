@@ -1,0 +1,143 @@
+expose:
+  Annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: hook-succeeded
+  config:
+    # add tls configuration
+    domain: napps.dev.nuxeo.com
+    exposer: Ingress
+    http: true
+    tlsacme: true
+    tlsSecretName: napps-tls
+    urltemplate: '"{{.Service}}-{{.Namespace}}.{{.Domain}}"'
+
+cleanup:
+  Args:
+    - --cleanup
+  Annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/hook-delete-policy: hook-succeeded
+
+nuxeo:
+  fullnameOverride: preview
+  nuxeo:
+    podLabels:
+      branch: "$BRANCH_NAME"
+      team: napps
+      resource: pod
+      usage: preview
+    service:
+      annotations:
+        fabric8.io/expose: "true"
+        fabric8.io/ingress.annotations: |-
+          nginx.ingress.kubernetes.io/proxy-body-size: 0
+          nginx.ingress.kubernetes.io/server-snippet: ignore_invalid_headers off;
+      labels:
+        branch: "$BRANCH_NAME"
+        team: napps
+        resource: service
+        usage: preview
+    image:
+      repository: ${DOCKER_REGISTRY}/${ORG}/nuxeo-coldstorage
+      tag: ${VERSION}
+      pullPolicy: Always
+    persistence:
+      enabled: disable
+    packages: nuxeo-web-ui-3.1.0-rc.9 amazon-s3-online-storage-$NUXEO_VERSION
+    livenessProbe:
+      initialDelaySeconds: 420
+      periodSeconds: 20
+      successThreshold: 1
+      failureThreshold: 5
+      timeoutSeconds: 10
+    readinessProbe:
+      periodSeconds: 20
+      initialDelaySeconds: 420
+      successThreshold: 1
+      timeoutSeconds: 10
+      failureThreshold: 5
+    customParams: |-
+      org.nuxeo.connect.url=https://nos-preprod-connect.nuxeocloud.com/nuxeo/site/
+      nuxeo.templates=default,s3-coldstorage
+      # AWS
+      nuxeo.aws.accessKeyId=${env:AWS_ACCESS_KEY}
+      nuxeo.aws.secretKey=${env:AWS_ACCESS_SECRET}
+      nuxeo.aws.region=${env:AWS_REGION}
+      nuxeo.s3storage.bucket_prefix=${env:AWS_S3_BUCKET_PREFIX}
+      nuxeo.s3storage.bucket=${env:AWS_S3_BUCKET}
+      nuxeo.glacier.bucket=${env:AWS_S3_GLACIER_BUCKET}
+      nuxeo.glacier.bucket_prefix=${env:AWS_S3_BUCKET_PREFIX}
+    customEnvs:
+      - name: NUXEO_CLID
+        valueFrom:
+          secretKeyRef:
+            name: instance-clid
+            key: CLID
+      - name: AWS_ACCESS_KEY
+        valueFrom:
+          secretKeyRef:
+            name: aws-iam-user-credentials
+            key: access_key_id
+      - name: AWS_ACCESS_SECRET
+        valueFrom:
+          secretKeyRef:
+            name: aws-iam-user-credentials
+            key: secret_access_key
+      - name: AWS_REGION
+        valueFrom:
+          secretKeyRef:
+            name: aws-config-napps
+            key: region
+      - name: AWS_S3_BUCKET
+        valueFrom:
+          secretKeyRef:
+            name: aws-config-napps
+            key: coldstorage.bucket
+      - name: AWS_S3_GLACIER_BUCKET
+        valueFrom:
+          secretKeyRef:
+            name: aws-config-napps
+            key: coldstorage.bucket.glacier
+      - name: AWS_S3_BUCKET_PREFIX
+        value: $BUCKET_PREFIX
+    tolerations:
+      - key: team
+        operator: Equal
+        value: napps
+        effect: NoSchedule
+    nodeSelector:
+      team: napps
+  mongodb:
+    deploy: false
+  postgresql:
+    deploy: true
+    useStatefulSet: true
+    image:
+      tag: "11.7.0"
+    initdbScripts:
+      db-init.sql: |
+        CREATE ROLE nuxeo WITH PASSWORD 'nuxeo' LOGIN;
+        CREATE DATABASE nuxeo ENCODING 'UTF8' OWNER nuxeo;
+    persistence:
+      enabled: false
+    labels:
+      branch: "$BRANCH_NAME"
+      resource: deployment
+      team: napps
+      usage: preview
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 1
+        memory: 2Gi
+    tolerations:
+      - key: team
+        operator: Equal
+        value: napps
+        effect: NoSchedule
+    nodeSelector:
+      team: napps
+  elasticsearch:
+    deploy: false
