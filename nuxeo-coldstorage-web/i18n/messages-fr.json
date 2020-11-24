@@ -1,10 +1,10 @@
 {
   "documentContentView.moveToColdStorage.ask.confirmation": "Send the document content to cold storage?",
-  "documentContentView.moveToColdStorage.cancel": "Cancel",
-  "documentContentView.moveToColdStorage.confirm": "Confirm",
+  "documentContentView.moveToColdStorage.cancel": "Annuler",
+  "documentContentView.moveToColdStorage.confirm": "Confirmer",
   "documentContentView.moveToColdStorage.error": "Error moving the document content to cold storage.",
   "documentContentView.moveToColdStorage.label": "Send to cold storage",
-  "documentContentView.moveToColdStorage.ok": "OK",
+  "documentContentView.moveToColdStorage.ok": "Ok",
   "documentContentView.moveToColdStorage.description": "This will result in increased file retrieval times and a low resolution preview.",
   "documentContentView.moveToColdStorage.success": "Document content moved to cold storage successfully.",
   "documentContentView.moveToColdStorage.tooltip": "Send to cold storage",
