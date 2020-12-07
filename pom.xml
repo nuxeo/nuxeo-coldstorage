@@ -4,20 +4,20 @@
   <parent>
     <groupId>org.nuxeo</groupId>
     <artifactId>nuxeo-parent</artifactId>
-    <version>11.4-SNAPSHOT</version>
+    <version>2021.0-SNAPSHOT</version>
   </parent>
 
   <groupId>org.nuxeo.coldstorage</groupId>
   <artifactId>nuxeo-coldstorage-parent</artifactId>
   <name>Nuxeo Cold Storage Parent</name>
-  <version>11.0.0-SNAPSHOT</version>
+  <version>2021.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <description>Nuxeo Cold Storage allows the cold storage of document content. This can be needed for archiving,
     compliance, etc.
   </description>
 
   <properties>
-    <nuxeo.target.version>11.*</nuxeo.target.version>
+    <nuxeo.target.version>2021.*</nuxeo.target.version>
   </properties>
 
   <modules>
