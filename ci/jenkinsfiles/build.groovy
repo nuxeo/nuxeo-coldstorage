@@ -201,6 +201,19 @@ pipeline {
       }
     }
     stage('Deploy ColdStorage Preview') {
+      when {
+        anyOf {
+          not {
+            branch 'PR-*'
+          }
+          allOf {
+            branch 'PR-*'
+            expression {
+              return pullRequest.labels.contains('preview')
+            }
+          }
+        }
+      }
       steps {
         container('maven') {
           script {
@@ -264,6 +277,20 @@ pipeline {
             }
             unsuccessful {
               setGitHubBuildStatus('coldstorage/publish/package', 'Upload ColdStorage Package', 'FAILURE', "${repositoryUrl}")
+            }
+          }
+        }
+        stage('Git Push') {
+          steps {
+            container('maven') {
+              echo '''
+                --------------------------
+                Git push ${TAG}
+                --------------------------
+              '''
+              script {
+                pipelineLib.gitPush("${TAG}")
+              }
             }
           }
         }
