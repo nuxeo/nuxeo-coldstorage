@@ -174,16 +174,15 @@ String getVersion() {
 }
 
 String getReleaseVersion() {
-  String preid = 'rc'
   String nextPromotion = readMavenPom().getVersion().replace('-SNAPSHOT', '')
-  String version = "${nextPromotion}-${preid}.0" // first version ever
+  String version = "${nextPromotion}.1" // first version ever
 
   // find the latest tag if any
   sh "git fetch origin 'refs/tags/v${nextPromotion}*:refs/tags/v${nextPromotion}*'"
   String tag = sh(returnStdout: true, script: "git tag --sort=taggerdate --list 'v${nextPromotion}*' | tail -1 | tr -d '\n'")
   if (tag) {
     container('maven') {
-      version = sh(returnStdout: true, script: "npx --ignore-existing semver -i prerelease --preid ${preid} ${tag} | tr -d '\n'")
+      version = sh(returnStdout: true, script: "semver bump patch ${tag} | tr -d '\n'")
     }
   }
   return version
