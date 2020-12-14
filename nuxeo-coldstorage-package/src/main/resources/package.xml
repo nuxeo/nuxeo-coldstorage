@@ -7,7 +7,7 @@
   <home-page>https://doc.nuxeo.com/coldstorage/</home-page>
   <vendor>Nuxeo</vendor>
   <platforms>
-    <platform>@DISTRIBUTION_NAME@-@VERSION@</platform>
+    <platform>@DISTRIBUTION_NAME@-@NUXEO_TARGET_VERSION@</platform>
   </platforms>
   <!-- Dependencies on other packages -->
   <dependencies>
