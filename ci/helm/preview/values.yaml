@@ -22,7 +22,7 @@ nuxeo:
   fullnameOverride: preview
   nuxeo:
     podLabels:
-      branch: "$BRANCH_NAME"
+      branch: "master"
       team: napps
       resource: pod
       usage: preview
@@ -33,17 +33,17 @@ nuxeo:
           nginx.ingress.kubernetes.io/proxy-body-size: 0
           nginx.ingress.kubernetes.io/server-snippet: ignore_invalid_headers off;
       labels:
-        branch: "$BRANCH_NAME"
+        branch: "master"
         team: napps
         resource: service
         usage: preview
     image:
-      repository: ${DOCKER_REGISTRY}/${ORG}/nuxeo-coldstorage
-      tag: ${VERSION}
+      repository: 10.63.243.100:5000/nuxeo/nuxeo-coldstorage
+      tag: 11.0.0-rc.2
       pullPolicy: Always
     persistence:
       enabled: disable
-    packages: nuxeo-web-ui-3.1.0-rc.9 amazon-s3-online-storage-$NUXEO_VERSION
+    packages: nuxeo-web-ui-3.1.0-rc.9 amazon-s3-online-storage-11.4.34
     livenessProbe:
       initialDelaySeconds: 420
       periodSeconds: 20
@@ -99,7 +99,7 @@ nuxeo:
             name: aws-config-napps
             key: coldstorage.bucket.glacier
       - name: AWS_S3_BUCKET_PREFIX
-        value: $BUCKET_PREFIX
+        value: coldstorage-master-13
     tolerations:
       - key: team
         operator: Equal
@@ -121,7 +121,7 @@ nuxeo:
     persistence:
       enabled: false
     labels:
-      branch: "$BRANCH_NAME"
+      branch: "master"
       resource: deployment
       team: napps
       usage: preview
