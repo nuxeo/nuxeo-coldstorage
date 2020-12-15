@@ -29,6 +29,7 @@ import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,6 +38,7 @@ import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentModelList;
 import org.nuxeo.ecm.core.api.DocumentRef;
+import org.nuxeo.ecm.core.api.IdRef;
 import org.nuxeo.ecm.core.api.NuxeoException;
 import org.nuxeo.ecm.core.api.security.SecurityConstants;
 import org.nuxeo.ecm.core.blob.BlobManager;
@@ -220,6 +222,19 @@ public class ColdStorageHelper {
         return new ColdStorageContentStatus(beingRetrieved, available);
     }
 
+    /**
+     * Retrieves the {@link DocumentModel} of the given {@code id}.
+     *
+     * @param session the core session
+     * @param id
+    the document id
+     * @return an optional containing the document model of the given {@code id} if it exists, empty otherwise
+     */
+
+    public static Optional<DocumentModel> getDocumentModelById(CoreSession session, DocumentRef documentIdRef) {
+        return Optional.of(session.getDocument(documentIdRef));
+    }
+
     protected static String getContentBlobKey(Blob coldContent) {
         String key = ((ManagedBlob) coldContent).getKey();
         int colon = key.indexOf(':');
@@ -252,7 +267,7 @@ public class ColdStorageHelper {
         }
     }
 
-    private ColdStorageHelper() {
+    public ColdStorageHelper() {
         // no instance allowed
     }
 

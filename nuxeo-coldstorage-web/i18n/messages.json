@@ -15,5 +15,11 @@
   "moveDocumentsContentsToColdStorage.confirm": "Confirm",
   "moveDocumentsContentsToColdStorage.error": "Error moving the documents contents to cold storage.",
   "moveDocumentsContentsToColdStorage.success": "Documents contents moved to cold storage successfully.",
-  "moveDocumentsContentsToColdStorage.tooltip": "Send the selected items to cold storage"
-}
+ "moveDocumentsContentsToColdStorage.tooltip": "Send the selected items to cold storage",
+
+  "deleteContentFromColdStorage.description" : "This will delete definitely the document content from cold storage.",
+  "deleteContentFromColdStorage.ask.confirmation": "Delete the document content from cold storage?",
+  "deleteContentFromColdStorage.cancel": "Cancel",
+  "deleteContentFromColdStorage.confirm": "Confirm",
+  "deleteContentFromColdStorage.error": "Error moving the document content to cold storage.",
+  "deleteContentFromColdStorage.success": "Document content deleted from cold storage successfully."

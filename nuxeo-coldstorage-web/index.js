@@ -16,5 +16,6 @@ limitations under the License.
 */
 import './elements/nuxeo-move-content-to-coldstorage-button.js';
 import './elements/nuxeo-move-contents-to-coldstorage-button.js';
+import './elements/nuxeo-delete-content-from-coldstorage-button';
 
 import './nuxeo-coldstorage.html';
