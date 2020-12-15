@@ -107,8 +107,8 @@ class BulkMoveToColdStorage extends mixinBehaviors([FiltersBehavior, FormatBehav
   }
 
   _toggle() {
-    const uids = this.documents.map((doc) => doc.uid).join(',');
-    this.$.opMove.input = `docs:${uids}`;
+    var uids = this.documents.map((doc) => doc.uid).join(',');
+    var input = `docs:${uids}`;
     this.$.opMove
       .execute()
       .then(() => {
@@ -127,16 +127,6 @@ class BulkMoveToColdStorage extends mixinBehaviors([FiltersBehavior, FormatBehav
             detail: { message: this.i18n('moveDocumentsContentsToColdStorage.success') },
           }),
         );
-      })
-      .catch((error) => {
-        this.dispatchEvent(
-          new CustomEvent('notify', {
-            composed: true,
-            bubbles: true,
-            detail: { message: this.i18n('moveDocumentsContentsToColdStorage.error') },
-          }),
-        );
-        throw error;
       });
   }
 }
