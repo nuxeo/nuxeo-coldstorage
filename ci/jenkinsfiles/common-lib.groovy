@@ -40,6 +40,7 @@ void buildHelmChart(String charDir) {
   // first substitute environment variables in chart values
   sh """
     cd ${charDir}
+    helm init --client-only --stable-repo-url=https://charts.helm.sh/stable
     mv values.yaml values.yaml.tosubst
     envsubst < values.yaml.tosubst > values.yaml
     #build and deploy the chart
