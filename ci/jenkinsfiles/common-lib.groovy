@@ -377,10 +377,12 @@ void uploadPackage(String version, String credential,  String connectUrl) {
   withCredentials(
     [usernameColonPassword(credentialsId: "${credential}", variable: 'CONNECT_PASS')]
   ) {
-    sh """
-      PACKAGE="nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-${version}.zip"
-      curl -i -u "$CONNECT_PASS" -F package=@\$PACKAGE "$connectUrl"/site/marketplace/upload?batch=true
-    """
+    withEnv(["CONNECT_URL=${connectUrl}", "PACKAGE_VERSION=${version}"]) {
+      sh '''
+        PACKAGE="nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-$PACKAGE_VERSION.zip"
+        curl --fail -i -u $CONNECT_PASS -F package=@\$PACKAGE $CONNECT_URL/site/marketplace/upload?batch=true
+      '''
+    }
   }
 }
 
