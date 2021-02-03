@@ -258,7 +258,7 @@ pipeline {
               script {
                 echo """
                   -------------------------------------------------
-                  Upload Aspera Package ${VERSION} to ${CONNECT_PREPROD_URL}
+                  Upload ColdStorage Package ${VERSION} to ${CONNECT_PREPROD_URL}
                   -------------------------------------------------
                 """
                 pipelineLib.uploadPackage("${VERSION}", 'connect-preprod', "${CONNECT_PREPROD_URL}")
@@ -283,11 +283,11 @@ pipeline {
         stage('Git Push') {
           steps {
             container('maven') {
-              echo '''
+              echo """
                 --------------------------
                 Git push ${TAG}
                 --------------------------
-              '''
+              """
               script {
                 pipelineLib.gitPush("${TAG}")
               }
