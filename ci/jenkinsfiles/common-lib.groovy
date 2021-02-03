@@ -191,7 +191,7 @@ String getReleaseVersion() {
 }
 
 String getPullRequestVersion() {
-  return "${readMavenPom().getVersion()}-${BRANCH_NAME}"
+  return readMavenPom().getVersion().replace('SNAPSHOT', "${BRANCH_NAME}-SNAPSHOT")
 }
 
 void gitCheckout(String reference) {
