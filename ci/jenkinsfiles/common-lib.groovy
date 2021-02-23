@@ -43,9 +43,6 @@ void buildHelmChart(String charDir) {
     helm init --client-only --stable-repo-url=https://charts.helm.sh/stable
     mv values.yaml values.yaml.tosubst
     envsubst < values.yaml.tosubst > values.yaml
-    #build and deploy the chart
-    #To avoid jx gc cron job,
-    #reference branch previews are deployed by calling jx step helm install instead of jx preview
     jx step helm build
     mkdir target && helm template . --output-dir target
   """
@@ -61,11 +58,8 @@ void cleanupChart(String charDir) {
 }
 
 void cleanupPreview(String namespace) {
-  String deploymentName = this.getResourceName('deployment', "${namespace}")
-  String statefulsetName = this.getResourceName('statefulset', "${namespace}")
   try {
-    this.scaleResource("${namespace}", 'deployment', "${deploymentName}", '0')
-    this.scaleResource("${namespace}", 'statefulset', "${statefulsetName}", '0')
+    this.scaleResource("${namespace}", 'deployment', 'preview', '0')
   } catch (err) {
     echo hudson.Functions.printThrowable(err)
   } finally {
@@ -87,8 +81,7 @@ void compile() {
 void deployPreview(String namespace, String charDir, String isCleanupPreview, String gitRepo, String isReferenceBranch) {
   //The notification will only be printed if the PR has "preview" tag on GitHub
   String previewOption = isCleanupPreview == 'true' ? '--no-comment=false' : ''
-  String deploymentName = ''
-  String statefulsetName = ''
+  String dbResourceName =  isReferenceBranch == 'true' ? "${namespace}-postgresql" : 'preview-postgresql'
   String timeout = '11m'
   dir(charDir) {
     echo """
@@ -99,10 +92,8 @@ void deployPreview(String namespace, String charDir, String isCleanupPreview, St
     boolean nsExists = this.namespaceExists(namespace)
     if (nsExists) {
       // Previous preview deployment needs to be scaled to 0 to be replaced correctly
-      deploymentName = this.getResourceName('deployment', "${namespace}")
-      statefulsetName = this.getResourceName('statefulset', "${namespace}")
-      this.scaleResource("${namespace}", 'deployment', "${deploymentName}", '0')
-      this.scaleResource("${namespace}", 'statefulset', "${statefulsetName}", '0')
+      this.scaleResource("${namespace}", 'deployment', 'preview', '0')
+      this.scaleResource("${namespace}", 'statefulset', "${dbResourceName}", '0')
     }
     String traceCmd = """
       mkdir -p ${WORKSPACE}/logs
@@ -127,14 +118,9 @@ void deployPreview(String namespace, String charDir, String isCleanupPreview, St
       throw err
     }
 
-    //statefulsetName deploymentName are empty if the first time the preview is enabled
-    if (!nsExists) {
-      deploymentName = this.getResourceName('deployment', "${namespace}")
-      statefulsetName = this.getResourceName('statefulset', "${namespace}")
-    }
     // check deployment status, exits if not OK
-    rolloutStatus('statefulset', "${statefulsetName}", '1m', "${namespace}")
-    rolloutStatus('deployment', "${deploymentName}", "${timeout}", "${namespace}")
+    this.rolloutStatus('statefulset', "${dbResourceName}", '1m', "${namespace}")
+    this.rolloutStatus('deployment', 'preview', "${timeout}", "${namespace}")
     // We need to expose the nuxeo url by hand
     previewUrl =
             sh(returnStdout: true, script: "jx get urls -n ${namespace} | grep -oP https://.* | tr -d '\\n'")
@@ -146,18 +132,11 @@ void deployPreview(String namespace, String charDir, String isCleanupPreview, St
   }
 }
 
-String getResourceName(String resource, String namespace) {
-  return sh(
-          script: "kubectl get ${resource} -n ${namespace} -o custom-columns=:metadata.name |tr '\\n' ' ' |  awk  -F' ' '{print \$1}' | sed '/^\$/d'",
-          returnStdout: true
-  ).trim()
-}
-
 void getPreviewLogs(String namespace) {
   try {
-    String deployName = getResourceName('deployment', "${namespace}")
     String kubcetlCmd =
-            "kubectl get pods -n ${namespace} --selector \"app=${deployName}\" -o custom-columns=:metadata.name |tr '\\n' ' ' | awk -F' ' '{print \$1}'"
+            "kubectl get pods -n ${namespace} --selector \"app=preview\" -o custom-columns=:metadata.name |tr '\\n' ' ' \
+              | awk -F' ' '{print \$1}'"
     String podName = sh(returnStdout: true, script: kubcetlCmd)
     podName = podName.replaceAll('\\s', '')
     sh """
@@ -328,8 +307,8 @@ def runBackEndUnitTests() {
   }
 }
 
-void scaleResource(String namespace, String resource, String podName, String replicas) {
-  sh "kubectl -n ${namespace} scale ${resource} ${podName} --replicas=${replicas}"
+void scaleResource(String namespace, String resourceType, String resourceName, String replicas) {
+  sh "kubectl -n ${namespace} scale ${resourceType} ${resourceName} --replicas=${replicas}"
 }
 
 void setup() {
