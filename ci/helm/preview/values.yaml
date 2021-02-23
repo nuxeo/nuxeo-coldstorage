@@ -106,8 +106,6 @@ nuxeo:
         effect: NoSchedule
     nodeSelector:
       team: napps
-  mongodb:
-    deploy: false
   postgresql:
     deploy: true
     useStatefulSet: true
@@ -138,5 +136,3 @@ nuxeo:
         effect: NoSchedule
     nodeSelector:
       team: napps
-  elasticsearch:
-    deploy: false
