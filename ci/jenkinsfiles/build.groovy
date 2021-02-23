@@ -73,6 +73,7 @@ pipeline {
     PREVIEW_NAMESPACE = "coldstorage-${BRANCH_LC}"
     REFERENCE_BRANCH = 'master'
     IS_REFERENCE_BRANCH = "${BRANCH_NAME == REFERENCE_BRANCH}"
+    SLACK_CHANNEL = "${env.DRY_RUN == 'true' ? 'infra-napps' : 'napps-notifs'}"
   }
   stages {
     stage('Load Common Library') {
@@ -80,11 +81,6 @@ pipeline {
         container('maven') {
           script {
             pipelineLib = load 'ci/jenkinsfiles/common-lib.groovy'
-            if (env.DRY_RUN == 'true') {
-              env.SLACK_CHANNEL = 'infra-napps'
-            } else {
-              env.SLACK_CHANNEL = 'pr-napps'
-            }
           }
         }
       }
