@@ -136,3 +136,5 @@ nuxeo:
         effect: NoSchedule
     nodeSelector:
       team: napps
+tags:
+  postgresql: true
