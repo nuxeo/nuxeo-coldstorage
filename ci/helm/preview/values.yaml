@@ -43,7 +43,7 @@ nuxeo:
       pullPolicy: Always
     persistence:
       enabled: disable
-    packages: nuxeo-web-ui-3.1.0-rc.9 amazon-s3-online-storage-$NUXEO_VERSION
+    packages: nuxeo-web-ui amazon-s3-online-storage-$NUXEO_VERSION
     livenessProbe:
       initialDelaySeconds: 420
       periodSeconds: 20
@@ -107,8 +107,6 @@ nuxeo:
         effect: NoSchedule
     nodeSelector:
       team: napps
-  mongodb:
-    deploy: false
   postgresql:
     deploy: true
     useStatefulSet: true
@@ -139,5 +137,3 @@ nuxeo:
         effect: NoSchedule
     nodeSelector:
       team: napps
-  elasticsearch:
-    deploy: false
