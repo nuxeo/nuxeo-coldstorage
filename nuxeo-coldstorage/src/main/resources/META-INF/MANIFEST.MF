@@ -7,4 +7,5 @@ Bundle-Localization: bundle
 Eclipse-LazyStart: true
 Nuxeo-Component: OSGI-INF/coldstorage-core-types-contrib.xml,
  OSGI-INF/coldstorage-operations-contrib.xml,
- OSGI-INF/coldstorage-events-contrib.xml
+ OSGI-INF/coldstorage-events-contrib.xml,
+ OSGI-INF/coldstorage-security.xml

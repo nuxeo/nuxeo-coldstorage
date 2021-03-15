@@ -22,7 +22,7 @@ nuxeo:
   fullnameOverride: preview
   nuxeo:
     podLabels:
-      branch: "$BRANCH_NAME"
+      branch: "BRANCH_LC"
       team: napps
       resource: pod
       usage: preview
@@ -33,7 +33,7 @@ nuxeo:
           nginx.ingress.kubernetes.io/proxy-body-size: 0
           nginx.ingress.kubernetes.io/server-snippet: ignore_invalid_headers off;
       labels:
-        branch: "$BRANCH_NAME"
+        branch: "BRANCH_LC"
         team: napps
         resource: service
         usage: preview
@@ -43,7 +43,7 @@ nuxeo:
       pullPolicy: Always
     persistence:
       enabled: disable
-    packages: nuxeo-web-ui amazon-s3-online-storage-$NUXEO_VERSION
+    packages: nuxeo-web-ui amazon-s3-online-storage ${JSF_ENABLED} /packages/nuxeo-coldstorage-package.zip
     livenessProbe:
       initialDelaySeconds: 420
       periodSeconds: 20
@@ -56,7 +56,7 @@ nuxeo:
       successThreshold: 1
       timeoutSeconds: 10
       failureThreshold: 5
-    customParams: |-
+    custom_params: |-
       org.nuxeo.connect.url=https://nos-preprod-connect.nuxeocloud.com/nuxeo/site/
       nuxeo.templates=default,s3-coldstorage
       # AWS
@@ -67,7 +67,7 @@ nuxeo:
       nuxeo.s3storage.bucket=${env:AWS_S3_BUCKET}
       nuxeo.glacier.bucket=${env:AWS_S3_GLACIER_BUCKET}
       nuxeo.glacier.bucket_prefix=${env:AWS_S3_BUCKET_PREFIX}
-    customEnvs:
+    custom_envs:
       - name: NUXEO_CLID
         valueFrom:
           secretKeyRef:
@@ -119,7 +119,7 @@ nuxeo:
     persistence:
       enabled: false
     labels:
-      branch: "$BRANCH_NAME"
+      branch: "BRANCH_LC"
       resource: deployment
       team: napps
       usage: preview

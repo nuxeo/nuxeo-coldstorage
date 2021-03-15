@@ -2,22 +2,22 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.nuxeo</groupId>
-    <artifactId>nuxeo-parent</artifactId>
-    <version>11.4-SNAPSHOT</version>
+    <groupId>org.nuxeo.ecm.distribution</groupId>
+    <artifactId>nuxeo-distribution</artifactId>
+    <version>10.10-HF41</version>
   </parent>
 
   <groupId>org.nuxeo.coldstorage</groupId>
   <artifactId>nuxeo-coldstorage-parent</artifactId>
   <name>Nuxeo Cold Storage Parent</name>
-  <version>11.0.0-SNAPSHOT</version>
+  <version>10.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <description>Nuxeo Cold Storage allows the cold storage of document content. This can be needed for archiving,
     compliance, etc.
   </description>
 
   <properties>
-    <nuxeo.target.version>11.*</nuxeo.target.version>
+    <nuxeo.distribution.version>10.10</nuxeo.distribution.version>
   </properties>
 
   <modules>
@@ -46,6 +46,40 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+
+  <profiles>
+    <!-- Profile to alternate build dir -->
+    <profile>
+      <id>alternateBuildDir</id>
+      <activation>
+        <property>
+          <name>alt.build.dir</name>
+        </property>
+      </activation>
+      <build>
+        <directory>target-${alt.build.dir}</directory>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>properties-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>initialize</phase>
+                <goals>
+                  <goal>read-project-properties</goal>
+                </goals>
+                <configuration>
+                  <files>
+                    <file>${HOME}/nuxeo-test-vcs-${alt.build.dir}.properties</file>
+                  </files>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
   <repositories>
     <repository>
