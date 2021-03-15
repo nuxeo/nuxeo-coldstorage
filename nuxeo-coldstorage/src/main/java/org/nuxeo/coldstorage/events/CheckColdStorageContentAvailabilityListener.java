@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.nuxeo.coldstorage.helpers.ColdStorageHelper;
+import org.nuxeo.ecm.core.api.CloseableCoreSession;
 import org.nuxeo.ecm.core.api.CoreInstance;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.event.Event;
@@ -46,8 +47,9 @@ public class CheckColdStorageContentAvailabilityListener implements EventListene
         log.debug("Start checking the available cold storage content");
         List<String> repositoryNames = Framework.getService(RepositoryService.class).getRepositoryNames();
         for (String repository : repositoryNames) {
-            CoreSession coreSession = CoreInstance.getCoreSession(repository);
-            ColdStorageHelper.checkColdStorageContentAvailability(coreSession);
+            try (CloseableCoreSession session = CoreInstance.openCoreSessionSystem(repository)) {
+                ColdStorageHelper.checkColdStorageContentAvailability(session);
+            }
         }
         log.debug("End checking the available cold storage content");
     }

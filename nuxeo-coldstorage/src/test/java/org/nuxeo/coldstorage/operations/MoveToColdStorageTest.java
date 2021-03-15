@@ -28,18 +28,19 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import javax.inject.Inject;
 
 import org.junit.Test;
+import org.nuxeo.coldstorage.helpers.ColdStorageHelper;
 import org.nuxeo.ecm.automation.OperationException;
-import org.nuxeo.ecm.core.api.CoreInstance;
-import org.nuxeo.ecm.core.api.CoreSession;
-import org.nuxeo.ecm.core.api.DocumentModel;
-import org.nuxeo.ecm.core.api.NuxeoException;
+import org.nuxeo.ecm.core.api.*;
 import org.nuxeo.ecm.core.api.security.ACE;
 import org.nuxeo.ecm.core.api.security.SecurityConstants;
+import org.nuxeo.ecm.core.test.CoreFeature;
 
 /**
  * @since 11.1
@@ -54,8 +55,7 @@ public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
         ACE[] aces = { new ACE("john", SecurityConstants.READ, true) };
         DocumentModel documentModel = createFileDocument(session, true, aces);
 
-        try {
-            CoreSession userSession = CoreInstance.getCoreSession(documentModel.getRepositoryName(), "john");
+        try (CloseableCoreSession userSession = coreFeature.openCoreSession("john"))  {
             moveContentToColdStorage(userSession, documentModel);
             fail("Should fail because the user does not have permissions to move document to cold storage");
         } catch (NuxeoException e) {
@@ -68,12 +68,11 @@ public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
         // with regular user with "WriteColdStorage" permission
         ACE[] aces = { new ACE("john", SecurityConstants.READ, true), //
                 new ACE("john", SecurityConstants.WRITE, true), //
-                new ACE("john", SecurityConstants.WRITE_COLD_STORAGE, true) };
+                new ACE("john", ColdStorageHelper.WRITE_COLD_STORAGE, true) };
         DocumentModel documentModel = createFileDocument(session, true, aces);
-
-        CoreSession userSession = CoreInstance.getCoreSession(documentModel.getRepositoryName(), "john");
-        moveContentToColdStorage(userSession, documentModel);
-
+        try (CloseableCoreSession userSession = CoreInstance.openCoreSessionSystem(documentModel.getRepositoryName(), "john")) {
+            moveContentToColdStorage(userSession, documentModel);
+        }
         // with Administrator
         documentModel = createFileDocument(session, true);
         moveContentToColdStorage(session, documentModel);
@@ -84,17 +83,19 @@ public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
         // with regular user with "WriteColdStorage" permission
         ACE[] aces = { new ACE("linda", SecurityConstants.READ, true), //
                 new ACE("linda", SecurityConstants.WRITE, true), //
-                new ACE("linda", SecurityConstants.WRITE_COLD_STORAGE, true) };
+                new ACE("linda", ColdStorageHelper.WRITE_COLD_STORAGE, true) };
 
-        List<DocumentModel> documents = List.of(createFileDocument(session, true, aces), //
+        List<DocumentModel> documents = Arrays.asList(createFileDocument(session, true, aces), //
                 createFileDocument(session, true, aces), //
                 createFileDocument(session, true, aces));
 
-        CoreSession userSession = CoreInstance.getCoreSession(session.getRepositoryName(), "linda");
-        moveContentToColdStorage(userSession, documents);
+        try (CloseableCoreSession userSession = CoreInstance.openCoreSessionSystem(session.getRepositoryName(), "linda"))
+        {
+            moveContentToColdStorage(userSession, documents);
+        }
 
         // with Administrator
-        documents = List.of(createFileDocument(session, true), //
+        documents = Arrays.asList(createFileDocument(session, true), //
                 createFileDocument(session, true), //
                 createFileDocument(session, true));
 

@@ -6,7 +6,7 @@
       <class>org.nuxeo.ecm.core.blob.InMemoryBlobProvider</class>
     </blobprovider>
     <blobprovider name="dummy">
-      <class>org.nuxeo.ecm.core.DummyBlobProvider</class>
+      <class>org.nuxeo.coldstorage.blob.providers.DummyBlobProvider</class>
     </blobprovider>
   </extension>
   <extension target="org.nuxeo.ecm.core.blob.DocumentBlobManager" point="configuration">

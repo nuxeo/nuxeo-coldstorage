@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -98,7 +99,8 @@ public class RequestRetrievalFromColdStorageTest extends AbstractTestColdStorage
     protected void requestRetrievalContentFromColdStorage(DocumentModel documentModel) throws OperationException {
         try (OperationContext context = new OperationContext(session)) {
             context.setInput(documentModel);
-            Map<String, Integer> params = Map.of("numberOfDaysOfAvailability", NUMBER_OF_DAYS_OF_AVAILABILITY);
+            Map<String, Integer> params = new HashMap<>();
+            params.put("numberOfDaysOfAvailability", NUMBER_OF_DAYS_OF_AVAILABILITY);
             DocumentModel updatedDocument = (DocumentModel) automationService.run(context,
                     RequestRetrievalFromColdStorage.ID, params);
             assertEquals(documentModel.getRef(), updatedDocument.getRef());

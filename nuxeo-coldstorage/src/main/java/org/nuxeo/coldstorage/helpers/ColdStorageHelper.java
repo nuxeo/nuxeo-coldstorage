@@ -76,10 +76,14 @@ public class ColdStorageHelper {
 
     public static final String COLD_STORAGE_CONTENT_ARCHIVE_LOCATION_MAIL_TEMPLATE_KEY = "archiveLocation";
 
+    /** @since 10.10 **/
+    // FIXME we have to define the versioning policy for this addon
+    public static final String WRITE_COLD_STORAGE = "WriteColdStorage";
+
     /**
      * Moves the main content associated with the document of the given {@link DocumentRef} to a cold storage.
      * <p/>
-     * The permission {@value org.nuxeo.ecm.core.api.security.SecurityConstants#WRITE_COLD_STORAGE} is required.
+     * The permission {@value WRITE_COLD_STORAGE} is required.
      *
      * @return the updated document model if the move succeeds
      * @throws NuxeoException if the main content is already in the cold storage, if there is no main content
@@ -90,7 +94,7 @@ public class ColdStorageHelper {
         DocumentModel documentModel = session.getDocument(documentRef);
         log.debug("Move to cold storage the main content of document: {}", documentModel);
 
-        if (!session.hasPermission(documentRef, SecurityConstants.WRITE_COLD_STORAGE)) {
+        if (!session.hasPermission(documentRef, WRITE_COLD_STORAGE)) {
             log.debug("The user {} does not have the right permissions to move the content of document {}",
                     session::getPrincipal, () -> documentModel);
             throw new NuxeoException(String.format("The document: %s cannot be moved to cold storage", documentRef),

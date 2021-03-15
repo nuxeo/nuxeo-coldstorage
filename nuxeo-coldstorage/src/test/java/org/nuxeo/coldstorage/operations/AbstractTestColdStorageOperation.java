@@ -24,6 +24,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,10 +34,10 @@ import javax.inject.Inject;
 import org.junit.runner.RunWith;
 import org.nuxeo.coldstorage.ColdStorageFeature;
 import org.nuxeo.coldstorage.helpers.ColdStorageHelper;
+import org.nuxeo.coldstorage.thumbnail.DummyThumbnailFactory;
 import org.nuxeo.ecm.automation.AutomationService;
 import org.nuxeo.ecm.automation.OperationContext;
 import org.nuxeo.ecm.automation.OperationException;
-import org.nuxeo.ecm.core.DummyThumbnailFactory;
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.Blobs;
 import org.nuxeo.ecm.core.api.CoreSession;
@@ -44,7 +46,7 @@ import org.nuxeo.ecm.core.api.DocumentModelList;
 import org.nuxeo.ecm.core.api.security.ACE;
 import org.nuxeo.ecm.core.api.security.ACL;
 import org.nuxeo.ecm.core.api.security.ACP;
-import org.nuxeo.ecm.core.schema.FacetNames;
+import org.nuxeo.ecm.core.test.CoreFeature;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.Features;
 import org.nuxeo.runtime.test.runner.FeaturesRunner;
@@ -54,8 +56,9 @@ import org.nuxeo.runtime.test.runner.FeaturesRunner;
  */
 @RunWith(FeaturesRunner.class)
 @Features(ColdStorageFeature.class)
-@Deploy("org.nuxeo.ecm.automation.core")
+@Deploy("org.nuxeo.ecm.platform.notification.api")
 @Deploy("org.nuxeo.ecm.automation.features")
+@Deploy("org.nuxeo.ecm.platform.notification.core")
 public abstract class AbstractTestColdStorageOperation {
 
     protected static final String FILE_CONTENT = "foo and boo";
@@ -63,12 +66,15 @@ public abstract class AbstractTestColdStorageOperation {
     @Inject
     protected AutomationService automationService;
 
+    @Inject
+    protected CoreFeature coreFeature;
+
     protected void moveContentToColdStorage(CoreSession session, DocumentModel documentModel)
             throws OperationException, IOException {
         try (OperationContext context = new OperationContext(session)) {
             context.setInput(documentModel);
             DocumentModel updatedDocModel = (DocumentModel) automationService.run(context, MoveToColdStorage.ID);
-            checkMoveContent(List.of(documentModel), List.of(updatedDocModel));
+            checkMoveContent(Collections.singletonList(documentModel) , Collections.singletonList(updatedDocModel));
         }
     }
 
@@ -111,7 +117,7 @@ public abstract class AbstractTestColdStorageOperation {
         if (aces.length > 0) {
             ACP acp = documentModel.getACP();
             ACL acl = acp.getOrCreateACL();
-            acl.addAll(List.of(aces));
+            acl.addAll(Arrays.asList(aces));
             document.setACP(acp, true);
         }
         return document;
