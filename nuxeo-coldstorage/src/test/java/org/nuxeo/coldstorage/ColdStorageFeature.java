@@ -28,7 +28,7 @@ import org.nuxeo.runtime.test.runner.RunnerFeature;
  * @since 11.1
  */
 @Features(CoreFeature.class)
-@Deploy("org.nuxeo.ecm.platform.notification")
+@Deploy("org.nuxeo.ecm.platform.notification.api")
 @Deploy("org.nuxeo.ecm.automation.core")
 @Deploy("org.nuxeo.ecm.core.management")
 @Deploy("org.nuxeo.coldstorage")

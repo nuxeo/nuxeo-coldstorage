@@ -33,11 +33,7 @@ import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -45,14 +41,8 @@ import javax.inject.Inject;
 import org.apache.commons.collections.CollectionUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.nuxeo.ecm.core.DummyBlobProvider;
-import org.nuxeo.ecm.core.api.Blob;
-import org.nuxeo.ecm.core.api.Blobs;
-import org.nuxeo.ecm.core.api.CoreInstance;
-import org.nuxeo.ecm.core.api.CoreSession;
-import org.nuxeo.ecm.core.api.DocumentModel;
-import org.nuxeo.ecm.core.api.IdRef;
-import org.nuxeo.ecm.core.api.NuxeoException;
+import org.nuxeo.coldstorage.blob.providers.DummyBlobProvider;
+import org.nuxeo.ecm.core.api.*;
 import org.nuxeo.ecm.core.api.security.ACE;
 import org.nuxeo.ecm.core.api.security.ACL;
 import org.nuxeo.ecm.core.api.security.ACP;
@@ -63,8 +53,8 @@ import org.nuxeo.ecm.core.blob.ManagedBlob;
 import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
 import org.nuxeo.ecm.core.event.test.CapturingEventListener;
 import org.nuxeo.ecm.core.io.download.DownloadService;
-import org.nuxeo.ecm.core.schema.FacetNames;
 import org.nuxeo.coldstorage.ColdStorageFeature;
+import org.nuxeo.ecm.core.test.CoreFeature;
 import org.nuxeo.runtime.test.runner.Features;
 import org.nuxeo.runtime.test.runner.FeaturesRunner;
 import org.nuxeo.runtime.test.runner.TransactionalFeature;
@@ -94,16 +84,20 @@ public class TestColdStorage {
     @Inject
     protected DownloadService downloadService;
 
+    @Inject
+    protected CoreFeature coreFeature;
+
     @Test
     public void shouldMoveToColdStorage() throws IOException {
         // with regular user with "WriteColdStorage" permission
         ACE[] aces = { new ACE("john", SecurityConstants.READ, true), //
                 new ACE("john", SecurityConstants.WRITE, true), //
-                new ACE("john", SecurityConstants.WRITE_COLD_STORAGE, true) };
+                new ACE("john", ColdStorageHelper.WRITE_COLD_STORAGE, true) };
         DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true, aces);
 
-        CoreSession userSession = CoreInstance.getCoreSession(documentModel.getRepositoryName(), "john");
-        moveAndVerifyContent(userSession, documentModel);
+        try( CloseableCoreSession userSession =  coreFeature.openCoreSession("john")) {
+            moveAndVerifyContent(userSession, documentModel);
+        }
 
         // with Administrator
         documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
@@ -115,8 +109,7 @@ public class TestColdStorage {
         ACE[] aces = { new ACE("john", SecurityConstants.READ, true) };
         DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true, aces);
 
-        try {
-            CoreSession userSession = CoreInstance.getCoreSession(documentModel.getRepositoryName(), "john");
+        try (CloseableCoreSession userSession =  coreFeature.openCoreSession("john")) {
             ColdStorageHelper.moveContentToColdStorage(userSession, documentModel.getRef());
             fail("Should fail because the user does not have permissions to move document to cold storage");
         } catch (NuxeoException e) {
@@ -269,13 +262,17 @@ public class TestColdStorage {
         documentModel.refresh();
         documentModel.setPropertyValue("dc:title", "I update the title");
         documentModel.setPropertyValue("dc:description", "I add a description");
-        var attachments = List.of(Map.of("file", Blobs.createBlob("bar", "text/plain")));
+        Map <String, Serializable> blobs = new HashMap<>();
+        blobs.put("file", (Serializable) Blobs.createBlob("bar", "text/plain"));
+        List<Map<String, Serializable>> attachments = new ArrayList<>();
+        attachments.add(blobs);
         documentModel.setPropertyValue("files:files", (Serializable) attachments);
 
         documentModel = session.saveDocument(documentModel);
         assertEquals("I update the title", documentModel.getPropertyValue("dc:title"));
         assertEquals("I add a description", documentModel.getPropertyValue("dc:description"));
-        var actualAttachments = (List<Map<String, Blob>>) documentModel.getPropertyValue("files:files");
+
+        List<Map<String, Serializable>> actualAttachments = (List<Map<String, Serializable>>) documentModel.getPropertyValue("files:files");
         assertTrue(CollectionUtils.isEqualCollection(attachments, actualAttachments));
     }
 
@@ -314,7 +311,7 @@ public class TestColdStorage {
         if (aces.length > 0) {
             ACP acp = documentModel.getACP();
             ACL acl = acp.getOrCreateACL();
-            acl.addAll(List.of(aces));
+            acl.addAll(Arrays.asList(aces));
             document.setACP(acp, true);
         }
         return document;
@@ -328,7 +325,7 @@ public class TestColdStorage {
                     session);
 
             assertEquals(totalBeingRetrieved, coldStorageContentStatus.getTotalBeingRetrieved());
-            var expectedSizeOfDocs = expectedAvailableDocIds.size();
+            int expectedSizeOfDocs = expectedAvailableDocIds.size();
             assertEquals(expectedSizeOfDocs, coldStorageContentStatus.getTotalAvailable());
             assertTrue(listener.hasBeenFired(ColdStorageHelper.COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME));
             assertEquals(expectedSizeOfDocs, listener.streamCapturedEvents().count());
