@@ -67,8 +67,7 @@ pipeline {
     JENKINS_HOME = '/root'
     MAVEN_DEBUG = '-e'
     MAVEN_OPTS = "${MAVEN_OPTS} -Xms512m -Xmx3072m"
-    NUXEO_VERSION = '11.4.34'
-    NUXEO_BASE_IMAGE = "docker-private.packages.nuxeo.com/nuxeo/nuxeo:${NUXEO_VERSION}"
+    NUXEO_BASE_IMAGE = 'nuxeo/nuxeo:10.10'
     ORG = 'nuxeo'
     PREVIEW_NAMESPACE = "coldstorage-${BRANCH_LC}"
     REFERENCE_BRANCH = 'master'
