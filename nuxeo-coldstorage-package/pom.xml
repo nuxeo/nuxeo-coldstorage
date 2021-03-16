@@ -13,6 +13,11 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.nuxeo.ecm.distribution</groupId>
+      <artifactId>nuxeo-nxr-server</artifactId>
+      <type>zip</type>
+    </dependency>
+    <dependency>
       <groupId>org.nuxeo.coldstorage</groupId>
       <artifactId>nuxeo-coldstorage</artifactId>
     </dependency>
