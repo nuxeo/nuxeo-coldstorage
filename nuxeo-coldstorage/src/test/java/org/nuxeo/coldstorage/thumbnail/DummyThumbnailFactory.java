@@ -18,6 +18,7 @@
  */
 
 package org.nuxeo.coldstorage.thumbnail;
+
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.Blobs;
 import org.nuxeo.ecm.core.api.CoreSession;
