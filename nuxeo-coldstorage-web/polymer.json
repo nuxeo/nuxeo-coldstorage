@@ -1,10 +1,13 @@
 {
-  "sources": [
-    "elements/**/*.js"
-  ],
   "lint": {
-    "rules": ["polymer-3"],
-    "ignoreWarnings": []
-  },
-  "npm": true
+    "rules": ["polymer-2"],
+    "ignoreWarnings" : [
+      "could-not-resolve-reference",
+      "databind-with-unknown-property",
+      "databinding-calls-must-be-functions",
+      "not-loadable",
+      "polymer-expression-parse-error",
+      "undefined-elements"
+    ]
+  }
 }
