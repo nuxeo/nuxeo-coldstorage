@@ -16,21 +16,73 @@
 * Contributors:
 *     Abdoul BA <aba@nuxeo.com>
 */
+/* Using a version specifier, such as branch, tag, etc */
+@Library('nuxeo-napps-tools@0.0.4') _
 
 def appName = 'nuxeo-coldstorage'
-def pipelineLib
 def repositoryUrl = 'https://github.com/nuxeo/nuxeo-coldstorage/'
 
-void setGitHubBuildStatus(String context, String message, String state, String gitRepo) {
-  if ( env.DRY_RUN != 'true' && ENABLE_GITHUB_STATUS == 'true') {
-    step([
-      $class: 'GitHubCommitStatusSetter',
-      reposSource: [$class: 'ManuallyEnteredRepositorySource', url: gitRepo],
-      contextSource: [$class: 'ManuallyEnteredCommitContextSource', context: context],
-      statusResultSource: [
-        $class: 'ConditionalStatusResultSource', results: [[$class: 'AnyBuildResult', message: message, state: state]]
-      ],
-    ])
+def runBackEndUnitTests() {
+  return {
+    stage('backend') {
+      container('maven-default') {
+        script {
+          try {
+            echo '''
+              ----------------------------------------
+              Run BackEnd Unit tests
+              ----------------------------------------
+            '''
+            sh """
+              cd ${BACKEND_FOLDER}
+              mvn ${MAVEN_ARGS} -V -T0.8C test
+            """
+          } catch (err) {
+            throw err
+          } finally {
+            junit allowEmptyResults: true, testResults: "**/target/surefire-reports/*.xml"
+          }
+        }
+      }
+    }
+  }
+}
+
+def runFrontEndUnitTests() {
+  return {
+    stage('frontend') {
+      container('maven-mongodb') {
+        script {
+          echo '''
+            ----------------------------------------
+            Run FrontEnd Unit tests
+            ----------------------------------------
+          '''
+          try {
+            String sauceAccessKey = ''
+            String sauceUsername = ''
+            if (nxNapps.needsSaucelabs()) {
+              String saucelabesSecretName = 'saucelabs-coldstorage'
+              sauceAccessKey =
+                sh(script: "jx step credential -s ${saucelabesSecretName} -k key", returnStdout: true).trim()
+              sauceUsername =
+                sh(script: "jx step credential -s ${saucelabesSecretName} -k username", returnStdout: true).trim()
+            }
+            withEnv(["SAUCE_USERNAME=${sauceUsername}", "SAUCE_ACCESS_KEY=${sauceAccessKey}"]) {
+              container('playwright') {
+                sh """
+                  cd ${FRONTEND_FOLDER}
+                  npm install
+                  npm run test
+                """
+              }
+            }
+          } catch (err) {
+            throw err
+          }
+        }
+      }
+    }
   }
 }
 
@@ -56,7 +108,7 @@ pipeline {
     JENKINS_HOME = '/root'
     MAVEN_DEBUG = '-e'
     MAVEN_OPTS = "${MAVEN_OPTS} -Xms512m -Xmx3072m"
-    NUXEO_BASE_IMAGE = 'docker-private.packages.nuxeo.com/nuxeo/nuxeo:11.4.34'
+    NUXEO_BASE_IMAGE = 'docker-private.packages.nuxeo.com/nuxeo/nuxeo:11.x'
     ORG = 'nuxeo'
     PREVIEW_NAMESPACE = "coldstorage-${BRANCH_LC}"
     REFERENCE_BRANCH = 'master'
@@ -64,20 +116,11 @@ pipeline {
     SLACK_CHANNEL = "${env.DRY_RUN == 'true' ? 'infra-napps' : 'napps-notifs'}"
   }
   stages {
-    stage('Load Common Library') {
-      steps {
-        container('maven') {
-          script {
-            pipelineLib = load 'ci/jenkinsfiles/common-lib.groovy'
-          }
-        }
-      }
-    }
     stage('Set Labels') {
       steps {
         container('maven') {
           script {
-            pipelineLib.setLabels()
+            nxNapps.setLabels()
           }
         }
       }
@@ -86,8 +129,8 @@ pipeline {
       steps {
         container('maven') {
           script {
-            pipelineLib.setup()
-            env.VERSION = pipelineLib.getVersion()
+            nxNapps.setup()
+            env.VERSION = nxNapps.getRCVersion()
             sh 'env'
           }
         }
@@ -97,44 +140,42 @@ pipeline {
       steps {
         container('maven') {
           script {
-            pipelineLib.updateVersion("${VERSION}")
+            nxNapps.updateVersion("${VERSION}")
           }
         }
       }
     }
     stage('Compile') {
       steps {
-        setGitHubBuildStatus('compile', 'Compile', 'PENDING', "${repositoryUrl}")
         container('maven') {
           script {
-            pipelineLib.compile()
+            gitHubBuildStatus.set('compile')
+            nxNapps.mavenCompile()
           }
         }
       }
       post {
-        success {
-          setGitHubBuildStatus('compile', 'Compile', 'SUCCESS', "${repositoryUrl}")
-        }
-        unsuccessful {
-          setGitHubBuildStatus('compile', 'Compile', 'FAILURE', "${repositoryUrl}")
+        always {
+          script {
+            gitHubBuildStatus.set('compile')
+          }
         }
       }
     }
     stage('Linting') {
       steps {
-        setGitHubBuildStatus('lint', 'Run Linting Validations', 'PENDING', "${repositoryUrl}")
         container('maven') {
           script {
-            pipelineLib.lint()
+            gitHubBuildStatus.set('lint')
+            nxNapps.lint("${FRONTEND_FOLDER}")
           }
         }
       }
       post {
-        success {
-          setGitHubBuildStatus('lint', 'Run Linting Validations', 'SUCCESS', "${repositoryUrl}")
-        }
-        unsuccessful {
-          setGitHubBuildStatus('lint', 'Run Linting Validations', 'FAILURE', "${repositoryUrl}")
+        always {
+          script {
+            gitHubBuildStatus.set('lint')
+          }
         }
       }
     }
@@ -142,45 +183,56 @@ pipeline {
       steps {
         script {
           def stages = [:]
-          stages['backend'] = pipelineLib.runBackEndUnitTests()
-          stages['frontend'] = pipelineLib.runFrontEndUnitTests()
+          stages['backend'] = runBackEndUnitTests()
+          stages['frontend'] = runFrontEndUnitTests()
+          gitHubBuildStatus.set('utests/frontend')
+          gitHubBuildStatus.set('utests/backend')
           parallel stages
+        }
+      }
+      post {
+        always {
+          script {
+            gitHubBuildStatus.set('utests/frontend')
+            gitHubBuildStatus.set('utests/backend')
+          }
         }
       }
     }
     stage('Build Docker Image') {
       steps {
-        setGitHubBuildStatus('docker/build', 'Build Docker Image', 'PENDING', "${repositoryUrl}")
         container('maven') {
           script {
-            pipelineLib.buildDockerImage()
+            gitHubBuildStatus.set('docker/build')
+            nxNapps.dockerBuild(
+              "${WORKSPACE}/nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-*.zip",
+              "${WORKSPACE}/ci/docker","${WORKSPACE}/ci/docker/skaffold.yaml"
+            )
           }
         }
       }
       post {
-        success {
-          setGitHubBuildStatus('docker/build', 'Build Docker Image', 'SUCCESS', "${repositoryUrl}")
-        }
-        unsuccessful {
-          setGitHubBuildStatus('docker/build', 'Build Docker Image', 'FAILURE', "${repositoryUrl}")
+        always {
+          script {
+            gitHubBuildStatus.set('docker/build')
+          }
         }
       }
     }
     stage('Buid Helm Chart') {
       steps {
-        setGitHubBuildStatus('helm/chart', 'Build Helm Chart', 'PENDING', "${repositoryUrl}")
         container('maven') {
           script {
-            pipelineLib.buildHelmChart("${CHART_DIR}")
+            gitHubBuildStatus.set('helm/chart/build')
+            nxKube.helmBuildChart("${CHART_DIR}", 'values.yaml')
           }
         }
       }
       post {
-        success {
-          setGitHubBuildStatus('helm/chart/build', 'Build Helm Chart', 'SUCCESS', "${repositoryUrl}")
-        }
-        unsuccessful {
-          setGitHubBuildStatus('helm/chart/build', 'Build Helm Chart', 'FAILURE', "${repositoryUrl}")
+        always {
+          script {
+            gitHubBuildStatus.set('helm/chart/build')
+          }
         }
       }
     }
@@ -201,9 +253,8 @@ pipeline {
       steps {
         container('maven') {
           script {
-            env.CLEANUP_PREVIEW = pipelineLib.needsPreviewCleanup()
-            pipelineLib.deployPreview(
-                    "${PREVIEW_NAMESPACE}", "${CHART_DIR}", "${CLEANUP_PREVIEW}", "${repositoryUrl}", "${IS_REFERENCE_BRANCH}"
+            nxKube.helmDeployPreview(
+              "${PREVIEW_NAMESPACE}", "${CHART_DIR}", "${repositoryUrl}", "${IS_REFERENCE_BRANCH}"
             )
           }
         }
@@ -229,23 +280,24 @@ pipeline {
           steps {
             container('maven') {
               script {
-                pipelineLib.gitCommit("${MESSAGE}", '-a')
-                pipelineLib.gitTag("${TAG}", "${MESSAGE}")
+                nxNapps.gitCommit("${MESSAGE}", '-a')
+                nxNapps.gitTag("${TAG}", "${MESSAGE}")
               }
             }
           }
         }
-        stage('Publish Package') {
+        stage('Package') {
           steps {
-            setGitHubBuildStatus('publish/package', 'Upload ColdStorage Package', 'PENDING', "${repositoryUrl}")
             container('maven') {
               script {
+                gitHubBuildStatus.set('publish/package')
                 echo """
                   -------------------------------------------------
-                  Upload ColdStorage Package ${VERSION} to ${CONNECT_PREPROD_URL}
+                  Upload Retention Package ${VERSION} to ${CONNECT_PREPROD_URL}
                   -------------------------------------------------
                 """
-                pipelineLib.uploadPackage("${VERSION}", 'connect-preprod', "${CONNECT_PREPROD_URL}")
+                String packageFile = "nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-${VERSION}.zip"
+                connectUploadPackage.set("${packageFile}", 'connect-preprod', "${CONNECT_PREPROD_URL}")
               }
             }
           }
@@ -255,12 +307,9 @@ pipeline {
                 allowEmptyArchive: true,
                 artifacts: 'nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-*.zip'
               )
-            }
-            success {
-              setGitHubBuildStatus('publish/package', 'Upload ColdStorage Package', 'SUCCESS', "${repositoryUrl}")
-            }
-            unsuccessful {
-              setGitHubBuildStatus('publish/package', 'Upload ColdStorage Package', 'FAILURE', "${repositoryUrl}")
+              script {
+                gitHubBuildStatus.set('publish/package')
+              }
             }
           }
         }
@@ -273,7 +322,7 @@ pipeline {
                 --------------------------
               """
               script {
-                pipelineLib.gitPush("${TAG}")
+                nxNapps.gitPush("${TAG}")
               }
             }
           }
@@ -284,7 +333,7 @@ pipeline {
   post {
     always {
       script {
-        if (!pipelineLib.isPullRequest() && env.DRY_RUN != 'true') {
+        if (!nxNapps.isPullRequest() && env.DRY_RUN != 'true') {
           // update JIRA issue
           step([$class: 'JiraIssueUpdater', issueSelector: [$class: 'DefaultIssueSelector'], scm: scm])
           currentBuild.description = "Build ${VERSION}"
@@ -295,14 +344,14 @@ pipeline {
       script {
         // update Slack Channel
         String message = "${JOB_NAME} - #${BUILD_NUMBER} ${currentBuild.currentResult} (<${BUILD_URL}|Open>)"
-        pipelineLib.setSlackBuildStatus("${SLACK_CHANNEL}", "${message}", 'good')
+        slackBuildStatus.set("${SLACK_CHANNEL}", "${message}", 'good')
       }
     }
     unsuccessful {
       script {
         // update Slack Channel
         String message = "${JOB_NAME} - #${BUILD_NUMBER} ${currentBuild.currentResult} (<${BUILD_URL}|Open>)"
-        pipelineLib.setSlackBuildStatus("${SLACK_CHANNEL}", "${message}", 'danger')
+        slackBuildStatus.set("${SLACK_CHANNEL}", "${message}", 'danger')
       }
     }
   }
