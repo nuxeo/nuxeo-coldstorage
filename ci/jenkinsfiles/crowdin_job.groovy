@@ -21,15 +21,13 @@
 appName='nuxeo-coldstorage'
 repositoryUrl = 'https://github.com/nuxeo/nuxeo-coldstorage/'
 
-properties([
-  [$class: 'BuildDiscarderProperty', strategy: [$class: 'LogRotator', daysToKeepStr: '15', numToKeepStr: '10', artifactNumToKeepStr: '5']],
-  [$class: 'GithubProjectProperty', projectUrlStr: repositoryUrl],
-  disableConcurrentBuilds(),
-])
-
 pipeline {
   agent {
     label 'jenkins-python37'
+  }
+  options {
+    disableConcurrentBuilds()
+    buildDiscarder(logRotator(daysToKeepStr: '15', numToKeepStr: '10', artifactNumToKeepStr: '5'))
   }
   parameters {
     string(name: 'PROJECT', defaultValue: 'nuxeo-web-ui', description: 'The name of the Crowdin project to impact.')
@@ -56,13 +54,13 @@ pipeline {
   }
   environment {
     APP_NAME = "${appName}"
-    BRANCH_NAME = GIT_BRANCH.replace("origin/", "")
+    BRANCH_NAME = GIT_BRANCH.replace('origin/', '')
     CROWDIN_TOOL_FOLDER = "${WORKSPACE}/tools-nuxeo-crowdin"
-    NAMESPACE = "napps"
+    NAMESPACE = 'napps'
     PROJECT_PATH = "${WORKSPACE}"
     INPUT_FILE = "${PROJECT_PATH}/nuxeo-coldstorage-web/i18n/messages.json"
     OUTPUT_FOLDER = "${PROJECT_PATH}/nuxeo-coldstorage-web/i18n"
-    ORG = "nuxeo"
+    ORG = 'nuxeo'
   }
   stages {
     stage('Check parameters') {
@@ -81,11 +79,11 @@ pipeline {
     stage('Set Kubernetes labels') {
       steps {
         container('python') {
-          echo """
+          echo '''
             ----------------------------------------
             Set Kubernetes labels
             ----------------------------------------
-          """
+          '''
           echo "Set label 'branch: ${BRANCH_NAME}' on pod ${NODE_NAME}"
           sh """
             kubectl label pods ${NODE_NAME} branch=${BRANCH_NAME}
@@ -96,20 +94,23 @@ pipeline {
     stage('Setup') {
       steps {
         container('python') {
-          echo """
+          echo '''
             ----------------------------------------
             Setup
             ----------------------------------------
-          """
-          withCredentials([usernamePassword(credentialsId: 'jx-pipeline-git-github', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-            sh """
-              # create the Git credentials
-              jx step git credentials
-              git config credential.helper store
-              git clone -b ${CROWDIN_TOOL_VERSION} https://${USERNAME}:${PASSWORD}@github.com/nuxeo/tools-nuxeo-crowdin.git ${CROWDIN_TOOL_FOLDER}
-              python -m pip install --user -r ${CROWDIN_TOOL_FOLDER}/requirements.txt
-              chmod +x ${CROWDIN_TOOL_FOLDER}/jenkins/*.sh
-            """
+          '''
+          withCredentials([usernamePassword(credentialsId: 'jx-pipeline-git-github', usernameVariable: 'username', passwordVariable: 'password')]) {
+            withEnv(["USERNAME=${username}", "PASSWORD=${password}"]) {
+              sh '''
+                # create the Git credentials
+                jx step git credentials
+                git config credential.helper store
+                git clone -b $CROWDIN_TOOL_VERSION \
+                  https://$USERNAME:$PASSWORD@github.com/nuxeo/tools-nuxeo-crowdin.git $CROWDIN_TOOL_FOLDER
+                python -m pip install --user -r $CROWDIN_TOOL_FOLDER/requirements.txt
+                chmod +x $CROWDIN_TOOL_FOLDER/jenkins/*.sh
+              '''
+            }
           }
         }
       }
@@ -124,11 +125,11 @@ pipeline {
                 "CROWDIN_API_KEY=${crowdinToken}",
                 "CROWDIN_USER=${crowdinUser}"
               ]) {
-              echo """
+              echo '''
                 ----------------------------------------
                 Run Translation
                 ----------------------------------------
-              """
+              '''
               sh """
                 echo "Start synchronization"
                 bash -xe ${WORKSPACE}/tools-nuxeo-crowdin/jenkins/sync_nuxeo_web_ui_crowdin.sh

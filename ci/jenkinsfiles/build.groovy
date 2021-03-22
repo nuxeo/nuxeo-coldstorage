@@ -21,21 +21,6 @@ def appName = 'nuxeo-coldstorage'
 def pipelineLib
 def repositoryUrl = 'https://github.com/nuxeo/nuxeo-coldstorage/'
 
-properties([
-  [
-    $class: 'BuildDiscarderProperty',
-    strategy: [
-      $class: 'LogRotator',
-      daysToKeepStr: '15', numToKeepStr: '10',
-      artifactNumToKeepStr: '5'
-    ]
-  ],
-  [
-    $class: 'GithubProjectProperty', projectUrlStr: repositoryUrl
-  ],
-  disableConcurrentBuilds(),
-])
-
 void setGitHubBuildStatus(String context, String message, String state, String gitRepo) {
   if ( env.DRY_RUN != 'true' && ENABLE_GITHUB_STATUS == 'true') {
     step([
@@ -53,6 +38,10 @@ pipeline {
   agent {
     label 'builder-maven-nuxeo-11'
   }
+  options {
+    disableConcurrentBuilds()
+    buildDiscarder(logRotator(daysToKeepStr: '15', numToKeepStr: '10', artifactNumToKeepStr: '5'))
+  }
   environment {
     APP_NAME = "${appName}"
     BACKEND_FOLDER = "${WORKSPACE}/nuxeo-coldstorage"
@@ -67,8 +56,7 @@ pipeline {
     JENKINS_HOME = '/root'
     MAVEN_DEBUG = '-e'
     MAVEN_OPTS = "${MAVEN_OPTS} -Xms512m -Xmx3072m"
-    NUXEO_VERSION = '11.4.34'
-    NUXEO_BASE_IMAGE = "docker-private.packages.nuxeo.com/nuxeo/nuxeo:${NUXEO_VERSION}"
+    NUXEO_BASE_IMAGE = 'docker-private.packages.nuxeo.com/nuxeo/nuxeo:11.4.34'
     ORG = 'nuxeo'
     PREVIEW_NAMESPACE = "coldstorage-${BRANCH_LC}"
     REFERENCE_BRANCH = 'master'
@@ -116,7 +104,7 @@ pipeline {
     }
     stage('Compile') {
       steps {
-        setGitHubBuildStatus('coldstorage/compile', 'Compile', 'PENDING', "${repositoryUrl}")
+        setGitHubBuildStatus('compile', 'Compile', 'PENDING', "${repositoryUrl}")
         container('maven') {
           script {
             pipelineLib.compile()
@@ -125,16 +113,16 @@ pipeline {
       }
       post {
         success {
-          setGitHubBuildStatus('coldstorage/compile', 'Compile', 'SUCCESS', "${repositoryUrl}")
+          setGitHubBuildStatus('compile', 'Compile', 'SUCCESS', "${repositoryUrl}")
         }
         unsuccessful {
-          setGitHubBuildStatus('coldstorage/compile', 'Compile', 'FAILURE', "${repositoryUrl}")
+          setGitHubBuildStatus('compile', 'Compile', 'FAILURE', "${repositoryUrl}")
         }
       }
     }
     stage('Linting') {
       steps {
-        setGitHubBuildStatus('coldstorage/lint', 'Run Linting Validations', 'PENDING', "${repositoryUrl}")
+        setGitHubBuildStatus('lint', 'Run Linting Validations', 'PENDING', "${repositoryUrl}")
         container('maven') {
           script {
             pipelineLib.lint()
@@ -143,10 +131,10 @@ pipeline {
       }
       post {
         success {
-          setGitHubBuildStatus('coldstorage/lint', 'Run Linting Validations', 'SUCCESS', "${repositoryUrl}")
+          setGitHubBuildStatus('lint', 'Run Linting Validations', 'SUCCESS', "${repositoryUrl}")
         }
         unsuccessful {
-          setGitHubBuildStatus('coldstorage/lint', 'Run Linting Validations', 'FAILURE', "${repositoryUrl}")
+          setGitHubBuildStatus('lint', 'Run Linting Validations', 'FAILURE', "${repositoryUrl}")
         }
       }
     }
@@ -162,7 +150,7 @@ pipeline {
     }
     stage('Build Docker Image') {
       steps {
-        setGitHubBuildStatus('coldstorage/docker/build', 'Build Docker Image', 'PENDING', "${repositoryUrl}")
+        setGitHubBuildStatus('docker/build', 'Build Docker Image', 'PENDING', "${repositoryUrl}")
         container('maven') {
           script {
             pipelineLib.buildDockerImage()
@@ -171,16 +159,16 @@ pipeline {
       }
       post {
         success {
-          setGitHubBuildStatus('coldstorage/docker/build', 'Build Docker Image', 'SUCCESS', "${repositoryUrl}")
+          setGitHubBuildStatus('docker/build', 'Build Docker Image', 'SUCCESS', "${repositoryUrl}")
         }
         unsuccessful {
-          setGitHubBuildStatus('coldstorage/docker/build', 'Build Docker Image', 'FAILURE', "${repositoryUrl}")
+          setGitHubBuildStatus('docker/build', 'Build Docker Image', 'FAILURE', "${repositoryUrl}")
         }
       }
     }
     stage('Buid Helm Chart') {
       steps {
-        setGitHubBuildStatus('coldstorage/helm/chart', 'Build Helm Chart', 'PENDING', "${repositoryUrl}")
+        setGitHubBuildStatus('helm/chart', 'Build Helm Chart', 'PENDING', "${repositoryUrl}")
         container('maven') {
           script {
             pipelineLib.buildHelmChart("${CHART_DIR}")
@@ -189,14 +177,14 @@ pipeline {
       }
       post {
         success {
-          setGitHubBuildStatus('coldstorage/helm/chart', 'Build Helm Chart', 'SUCCESS', "${repositoryUrl}")
+          setGitHubBuildStatus('helm/chart/build', 'Build Helm Chart', 'SUCCESS', "${repositoryUrl}")
         }
         unsuccessful {
-          setGitHubBuildStatus('coldstorage/helm/chart', 'Build Helm Chart', 'FAILURE', "${repositoryUrl}")
+          setGitHubBuildStatus('helm/chart/build', 'Build Helm Chart', 'FAILURE', "${repositoryUrl}")
         }
       }
     }
-    stage('Deploy ColdStorage Preview') {
+    stage('Deploy Preview') {
       when {
         anyOf {
           not {
@@ -247,9 +235,9 @@ pipeline {
             }
           }
         }
-        stage('Publish ColdStorage Package') {
+        stage('Publish Package') {
           steps {
-            setGitHubBuildStatus('coldstorage/publish/package', 'Upload ColdStorage Package', 'PENDING', "${repositoryUrl}")
+            setGitHubBuildStatus('publish/package', 'Upload ColdStorage Package', 'PENDING', "${repositoryUrl}")
             container('maven') {
               script {
                 echo """
@@ -269,10 +257,10 @@ pipeline {
               )
             }
             success {
-              setGitHubBuildStatus('coldstorage/publish/package', 'Upload ColdStorage Package', 'SUCCESS', "${repositoryUrl}")
+              setGitHubBuildStatus('publish/package', 'Upload ColdStorage Package', 'SUCCESS', "${repositoryUrl}")
             }
             unsuccessful {
-              setGitHubBuildStatus('coldstorage/publish/package', 'Upload ColdStorage Package', 'FAILURE', "${repositoryUrl}")
+              setGitHubBuildStatus('publish/package', 'Upload ColdStorage Package', 'FAILURE', "${repositoryUrl}")
             }
           }
         }

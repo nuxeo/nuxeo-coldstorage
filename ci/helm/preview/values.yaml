@@ -43,7 +43,7 @@ nuxeo:
       pullPolicy: Always
     persistence:
       enabled: disable
-    packages: nuxeo-web-ui amazon-s3-online-storage-$NUXEO_VERSION
+    packages: nuxeo-web-ui amazon-s3-online-storage
     livenessProbe:
       initialDelaySeconds: 420
       periodSeconds: 20
