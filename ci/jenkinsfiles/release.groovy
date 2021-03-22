@@ -17,8 +17,10 @@
 *     Abdoul BA <aba@nuxeo.com>
 */
 
+/* Using a version specifier, such as branch, tag, etc */
+@Library('nuxeo-napps-tools@0.0.4') _
+
 def appName = 'nuxeo-coldstorage'
-def pipelineLib
 def repositoryUrl = 'https://github.com/nuxeo/nuxeo-coldstorage/'
 
 String currentVersion() {
@@ -27,6 +29,70 @@ String currentVersion() {
 
 String getReleaseVersion(String version) {
   return version.replace('-SNAPSHOT', '')
+}
+
+def runBackEndUnitTests() {
+  return {
+    stage('backend') {
+      container('maven-default') {
+        script {
+          try {
+            echo '''
+              ----------------------------------------
+              Run BackEnd Unit tests
+              ----------------------------------------
+            '''
+            sh """
+              cd ${BACKEND_FOLDER}
+              mvn ${MAVEN_ARGS} -V -T0.8C test
+            """
+          } catch (err) {
+            throw err
+          } finally {
+            junit allowEmptyResults: true, testResults: "**/target/surefire-reports/*.xml"
+          }
+        }
+      }
+    }
+  }
+}
+
+def runFrontEndUnitTests() {
+  return {
+    stage('frontend') {
+      container('maven-mongodb') {
+        script {
+          echo '''
+            ----------------------------------------
+            Run FrontEnd Unit tests
+            ----------------------------------------
+          '''
+          try {
+            String sauceAccessKey = ''
+            String sauceUsername = ''
+            if (nxNapps.needsSaucelabs()) {
+              String saucelabesSecretName = 'saucelabs-coldstorage'
+              sauceAccessKey =
+                sh(script: "jx step credential -s ${saucelabesSecretName} -k key", returnStdout: true).trim()
+              sauceUsername =
+                sh(script: "jx step credential -s ${saucelabesSecretName} -k username", returnStdout: true).trim()
+            }
+            withEnv(["SAUCE_USERNAME=${sauceUsername}", "SAUCE_ACCESS_KEY=${sauceAccessKey}"]) {
+              container('playwright') {
+                sh """
+                  cd ${FRONTEND_FOLDER}
+                  npm install
+                  npm run test
+                """
+              }
+            }
+          } catch (err) {
+            throw err
+          }
+        }
+      }
+    }
+  }
 }
 
 pipeline {
@@ -90,7 +156,7 @@ pipeline {
               env.SLACK_CHANNEL = 'infra-napps'
             }
           } else {
-            env.SLACK_CHANNEL = 'pr-napps'
+            env.SLACK_CHANNEL = 'napps-notifs'
             env.DRY_RUN_RELEASE = 'false'
           }
 
@@ -111,29 +177,27 @@ pipeline {
         }
       }
     }
-    stage('Load Common Library') {
-      steps {
-        container('maven') {
-          script {
-            pipelineLib = load 'ci/jenkinsfiles/common-lib.groovy'
-          }
-        }
-      }
-    }
     stage('Notify promotion start on slack') {
       steps {
         script {
           String message = "Starting release ${VERSION} from build ${params.BUILD_VERSION}: ${BUILD_URL}"
-          pipelineLib.setSlackBuildStatus("${SLACK_CHANNEL}", "${message}", 'gray')
+          slackBuildStatus.set("${SLACK_CHANNEL}", "${message}", 'gray')
         }
       }
     }
     stage('Set Labels') {
       steps {
         container('maven') {
-          script {
-            pipelineLib.setLabels()
-          }
+          echo '''
+            ----------------------------------------
+            Set Kubernetes resource labels
+            ----------------------------------------
+          '''
+          echo "Set label 'branch: ${REFERENCE_BRANCH}' on pod ${NODE_NAME}"
+          sh "kubectl label pods ${NODE_NAME} branch=${REFERENCE_BRANCH}"
+          // output pod description
+          echo "Describe pod ${NODE_NAME}"
+          sh "kubectl describe pod ${NODE_NAME}"
         }
       }
     }
@@ -141,7 +205,7 @@ pipeline {
       steps {
         container('maven') {
           script {
-            pipelineLib.setup()
+            nxNapps.setup()
             sh 'env'
           }
         }
@@ -158,7 +222,7 @@ pipeline {
       steps {
         container('maven') {
           script {
-            pipelineLib.gitCheckout("v${params.BUILD_VERSION}")
+            nxNapps.gitCheckout("v${RC_VERSION}")
           }
         }
       }
@@ -167,7 +231,7 @@ pipeline {
       steps {
         container('maven') {
           script {
-            pipelineLib.updateVersion("${VERSION}")
+            nxNapps.updateVersion("${VERSION}")
           }
         }
       }
@@ -176,7 +240,7 @@ pipeline {
       steps {
         container('maven') {
           script {
-            pipelineLib.compile()
+            nxNapps.mavenCompile()
           }
         }
       }
@@ -185,7 +249,7 @@ pipeline {
       steps {
         container('maven') {
           script {
-            pipelineLib.lint()
+            nxNapps.lint("${FRONTEND_FOLDER}")
           }
         }
       }
@@ -194,8 +258,8 @@ pipeline {
       steps {
         script {
           def stages = [:]
-          stages['backend'] = pipelineLib.runBackEndUnitTests()
-          stages['frontend'] = pipelineLib.runFrontEndUnitTests()
+          stages['backend'] = runBackEndUnitTests()
+          stages['frontend'] = runFrontEndUnitTests()
           parallel stages
         }
       }
@@ -220,23 +284,24 @@ pipeline {
           steps {
             container('maven') {
               script {
-                pipelineLib.gitCommit("${MESSAGE}", '-a')
-                pipelineLib.gitTag("${TAG}", "${MESSAGE}")
+                nxNapps.gitCommit("${MESSAGE}", '-a')
+                nxNapps.gitTag("${TAG}", "${MESSAGE}")
               }
             }
           }
         }
-        stage('Publish Coldstorage Package') {
+        stage('Publish') {
           steps {
             container('maven') {
               script {
                 echo """
-                  -------------------------------------------------
+                  ------------------------------------------------------------
                   Upload Coldstorage Package ${VERSION} to ${CONNECT_PROD_URL}
-                  -------------------------------------------------
+                  ------------------------------------------------------------
                 """
                 if (env.DRY_RUN_RELEASE == 'false') {
-                  pipelineLib.uploadPackage("${VERSION}", 'connect-prod', "${CONNECT_PROD_URL}")
+                  String packageFile = "nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-${VERSION}.zip"
+                  connectUploadPackage.set("${packageFile}", 'connect-preprod', "${CONNECT_PREPROD_URL}")
                 }
               }
             }
@@ -260,7 +325,7 @@ pipeline {
               """
               script {
                 if (env.DRY_RUN_RELEASE == 'false') {
-                  pipelineLib.gitPush("${TAG}")
+                  nxNapps.gitPush("${TAG}")
                 }
               }
             }
@@ -289,11 +354,11 @@ pipeline {
               Update ${REFERENCE_BRANCH} version from ${CURRENT_VERSION} to ${nextVersion}
               -----------------------------------------------
             """
-            pipelineLib.gitCheckout("${REFERENCE_BRANCH}")
-            pipelineLib.updateVersion("${nextVersion}")
-            pipelineLib.gitCommit("Release ${VERSION}, update ${CURRENT_VERSION} to ${nextVersion}", '-a')
+            nxNapps.gitCheckout("${REFERENCE_BRANCH}")
+            nxNapps.updateVersion("${nextVersion}")
+            nxNapps.gitCommit("Release ${VERSION}, update ${CURRENT_VERSION} to ${nextVersion}", '-a')
             if (env.DRY_RUN_RELEASE == 'false') {
-              pipelineLib.gitPush("${REFERENCE_BRANCH}")
+              nxNapps.gitPush("${REFERENCE_BRANCH}")
             }
           }
         }
@@ -310,14 +375,14 @@ pipeline {
       script {
         // update Slack Channel
         String message = "Successfully released ${VERSION} from build ${params.BUILD_VERSION}: ${BUILD_URL} :tada:"
-        pipelineLib.setSlackBuildStatus("${SLACK_CHANNEL}", "${message}", 'good')
+        slackBuildStatus.set("${SLACK_CHANNEL}", "${message}", 'good')
       }
     }
     unsuccessful {
       script {
         // update Slack Channel
         String message = "Failed to release ${VERSION} from build ${params.BUILD_VERSION}: ${BUILD_URL}"
-        pipelineLib.setSlackBuildStatus("${SLACK_CHANNEL}", "${message}", 'danger')
+        slackBuildStatus.set("${SLACK_CHANNEL}", "${message}", 'danger')
       }
     }
   }
