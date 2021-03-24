@@ -59,7 +59,6 @@ express or implied. See the License for the specific language governing permissi
             notify: true,
             value: [],
           },
-
           /**
            * Current user.
            */
@@ -71,20 +70,24 @@ express or implied. See the License for the specific language governing permissi
         this.$.contentsToMoveDialog.toggle();
       }
 
+      _hasAdministrationPermissions(user) {
+        return user && (user.isAdministrator || this.isMember(user, 'powerusers'));
+      }
+
       _canMoveDocument(doc) {
         return (
-          (this.hasAdministrationPermissions(this.currentUser) || this.hasPermission(doc, 'WriteColdStorage')) &&
+          (this._hasAdministrationPermissions(this.currentUser) || this.hasPermission(doc, 'WriteColdStorage')) &&
           !this.hasFacet(doc, 'ColdStorage') &&
           this.hasContent(doc)
         );
       }
 
       _isAvailable(documents) {
-        return documents.length > 0 && documents.every((doc) => this._canMoveDocument(doc));
+        return documents.length > 0 && documents.every(doc => this._canMoveDocument(doc));
       }
 
       _toggle() {
-        const uids = this.documents.map((doc) => doc.uid).join(',');
+        const uids = this.documents.map(doc => doc.uid).join(',');
         this.$.opMove.input = `docs:${uids}`;
         this.$.opMove
           .execute()

@@ -1,0 +1,207 @@
+<!--
+@license
+(C) Copyright Nuxeo Corp. (http://nuxeo.com/)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../bower_components/web-component-tester/browser.js"></script>
+    <script src="../bower_components/moment/min/moment-with-locales.min.js"></script>
+    <script>
+      window.fetch = null;
+    </script>
+    <script src="../bower_components/nuxeo-elements/test/test-helpers.js"></script>
+    <link rel="import" href="../bower_components/iron-test-helpers/mock-interactions.html">
+
+    <link rel="import" href="../bower_components/polymer/polymer.html">
+    <link rel="import" href="../bower_components/nuxeo-elements/nuxeo-connection.html"></script>
+    <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+    <link rel="import" href="../bower_components/nuxeo-ui-elements/widgets/nuxeo-tooltip.html">
+    <link rel="import" href="../bower_components/nuxeo-ui-elements/widgets/nuxeo-dialog.html">
+    <link rel="import" href="../bower_components/paper-button/paper-button.html">
+    <link rel="import" href="../bower_components/nuxeo-elements/nuxeo-operation.html">
+    <link rel="import" href="../bower_components/nuxeo-ui-elements/nuxeo-layout-behavior.html">
+    <link rel="import" href="../bower_components/nuxeo-ui-elements/nuxeo-filters-behavior.html">
+    <link rel="import" href="../src/main/resources/web/nuxeo.war/ui/coldstorage/nuxeo-move-contents-to-coldstorage-button.html">
+
+  </head>
+
+  <body>
+    <test-fixture id="nx">
+      <template>
+        <nuxeo-connection url="/dummy" user='{}'></nuxeo-connection>
+      </template>
+    </test-fixture>
+    <test-fixture id="no_docs_provided">
+      <template>
+        <nuxeo-move-contents-to-coldstorage-button></nuxeo-move-contents-to-coldstorage-button>
+      </template>
+    </test-fixture>
+    <test-fixture id="docs_provided">
+      <template>
+        <nuxeo-move-content-to-coldstorage-button documents='[]'></nuxeo-move-content-to-coldstorage-button>
+      </template>
+    </test-fixture>
+    <script>
+      /* eslint-disable no-unused-expressions */
+      suite('Cold Storage', () => {
+        suite('nuxeo-move-contents-to-coldstorage-button', () => {
+          let documents;
+          let server;
+
+          setup(() => {
+            server = sinon.fakeServer.create();
+            server.autoRespond = true;
+            documents = [
+              {
+                'entity-type': 'document',
+                contextParameters: {
+                  permissions: ['Read'],
+                },
+                facets: [],
+                properties: {
+                  'file:content': 'someContent',
+                },
+                type: 'File',
+                uid: '123',
+              },
+              {
+                'entity-type': 'document',
+                contextParameters: {
+                  permissions: ['Read'],
+                },
+                facets: [],
+                properties: {
+                  'file:content': 'otherContent',
+                },
+                type: 'File',
+                uid: '456',
+              },
+            ];
+            const nx = fixture('nx');
+            return login(server, nx);
+          });
+
+          teardown(() => {
+            server.restore();
+          });
+
+          suite('Visibility', () => {
+            test('Should not be visible when documents are not provided', () => {
+              const button = fixture('no_docs_provided');
+
+              Polymer.dom.flush(button);
+              expect(isElementVisible(button)).to.be.false;
+            });
+
+            test('Should not be visible when user is null', () => {
+              const button = fixture('docs_provided');
+              button.documents = documents;
+              button.currentUser = null;
+
+              Polymer.dom.flush(button);
+              expect(isElementVisible(button)).to.be.false;
+            });
+
+            test('Should be visible when user is administrator ', () => {
+              const button = fixture('docs_provided');
+              button.documents = documents;
+
+              Polymer.dom.flush(button);
+              expect(isElementVisible(button)).to.be.true;
+            });
+
+            test('Should be visible when user is member of "powerusers"', () => {
+              const button = fixture('docs_provided');
+              button.documents = documents;
+              button.currentUser = {
+                properties: {
+                  username: 'Mary',
+                },
+                extendedGroups: [{ name: 'powerusers' }],
+              };
+
+              Polymer.dom.flush(button);
+              expect(isElementVisible(button)).to.be.true;
+            });
+
+            test("Should not visible when at least one of the documents selected doesn't have content", () => {
+              documents[0].properties = {};
+              const button = fixture('docs_provided');
+              button.documents = documents;
+
+              Polymer.dom.flush(button);
+              expect(isElementVisible(button)).to.be.false;
+            });
+
+            test('Should be visible when all the documents selected have content', () => {
+              const button = fixture('docs_provided');
+              button.documents = documents;
+
+              Polymer.dom.flush(button);
+              expect(isElementVisible(button)).to.be.true;
+            });
+
+            test('Should not visible when at least one of the documents selected has "ColdStorage" facet', () => {
+              documents[0].facets.push('ColdStorage');
+              const button = fixture('docs_provided');
+              button.documents = documents;
+
+              Polymer.dom.flush(button);
+              expect(isElementVisible(button)).to.be.false;
+            });
+
+            test('Should be visible when all the documents selected don\'t have "ColdStorage" facet', () => {
+              const button = fixture('docs_provided');
+              button.documents = documents;
+
+              Polymer.dom.flush(button);
+              expect(isElementVisible(button)).to.be.true;
+            });
+
+            test(
+              "Should not visible when at least one of the documents selected doesn't have " +
+                '"WriteColdStorage" permission',
+               () => {
+                documents[0].contextParameters.permissions.push('WriteToColdStorage');
+                const button = fixture('docs_provided');
+                button.documents = documents;
+                button.currentUser = {
+                  properties: {
+                    username: 'Mary',
+                  },
+                };
+
+                Polymer.dom.flush(button);
+                expect(isElementVisible(button)).to.be.false;
+              },
+            );
+
+            test('Should be visible when all the documents selected have "WriteColdStorage" permission', () => {
+              documents[0].contextParameters.permissions.push('WriteToColdStorage');
+              documents[1].contextParameters.permissions.push('WriteToColdStorage');
+              const button = fixture('docs_provided');
+              button.documents = documents;
+
+              Polymer.dom.flush(button);
+              expect(isElementVisible(button)).to.be.true;
+            });
+          });
+        });
+      });   
+    </script>
+  </body>
+</html>
