@@ -57,7 +57,8 @@ nuxeo:
       timeoutSeconds: 10
       failureThreshold: 5
     customParams: |-
-      nuxeo.templates=default,s3-coldstorage
+      # Override Nuxeo connect configuration
+      org.nuxeo.connect.url=https://nos-preprod-connect.nuxeocloud.com/nuxeo/site/
       # AWS
       nuxeo.aws.accessKeyId=${env:AWS_ACCESS_KEY}
       nuxeo.aws.secretKey=${env:AWS_ACCESS_SECRET}
