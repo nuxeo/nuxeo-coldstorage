@@ -11,12 +11,8 @@ LABEL org.nuxeo.scm-ref=$SCM_REF
 LABEL org.nuxeo.version=$VERSION
 
 COPY --chown=900:0 nuxeo-coldstorage-package-*.zip /packages/
-COPY --chown=900:0 templates/s3-coldstorage /opt/nuxeo/server/templates/s3-coldstorage
 
 USER root
-RUN /install-packages.sh --offline /packages/*.zip
-RUN chown -R 900:0 $NUXEO_HOME \
-  && chmod -R g+rwX $NUXEO_HOME
 # install RPM Fusion free repository
 RUN yum -y localinstall --nogpgcheck https://mirrors.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm
 # install ffmpeg and ImageMagick packages
