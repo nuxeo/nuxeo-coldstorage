@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=nuxeo/nuxeo:10.10
+ARG BASE_IMAGE=docker-private.packages.nuxeo.com/nuxeo/nuxeo:10.10-HF44
 
 FROM ${BASE_IMAGE}
 
@@ -11,7 +11,6 @@ LABEL org.nuxeo.scm-ref=$SCM_REF
 LABEL org.nuxeo.version=$VERSION
 
 COPY --chown=1000:0 nuxeo-coldstorage-package-*.zip /packages/nuxeo-coldstorage-package.zip
-COPY --chown=1000:0 templates/s3-coldstorage /opt/nuxeo/server/templates/s3-coldstorage
 
 USER root
 
