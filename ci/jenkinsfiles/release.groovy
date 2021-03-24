@@ -21,21 +21,6 @@ def appName = 'nuxeo-coldstorage'
 def pipelineLib
 def repositoryUrl = 'https://github.com/nuxeo/nuxeo-coldstorage/'
 
-properties([
-  [
-    $class: 'BuildDiscarderProperty',
-    strategy: [
-      $class: 'LogRotator',
-      daysToKeepStr: '15', numToKeepStr: '10',
-      artifactNumToKeepStr: '5'
-    ]
-  ],
-  [
-    $class: 'GithubProjectProperty', projectUrlStr: repositoryUrl
-  ],
-  disableConcurrentBuilds(),
-])
-
 String currentVersion() {
   return readMavenPom().getVersion()
 }
@@ -55,6 +40,10 @@ pipeline {
       name: 'dryRun', defaultValue: true,
       description: 'if true all steps will be run without publishing the artifact'
     )
+  }
+  options {
+    disableConcurrentBuilds()
+    buildDiscarder(logRotator(daysToKeepStr: '15', numToKeepStr: '10', artifactNumToKeepStr: '5'))
   }
   environment {
     APP_NAME = "${appName}"
