@@ -17,5 +17,32 @@
   "globals": {
     "Nuxeo": false,
     "Polymer": false
-  }
+  },
+  "overrides": [
+    {
+      "files": ["test/**/*.test.js"],
+      "env": {
+        "mocha": true
+      },
+      "rules": {
+        "import/no-unresolved": "off",
+        "no-unused-expressions": "off"
+      },
+      "globals": {
+        "assert": "readable",
+        "sinon": "readable"
+      }
+    },
+    {
+      "files": ["ftest/**/*.js"],
+      "rules": {
+        "func-names": "off",
+        "import/no-extraneous-dependencies": ["error", { "devDependencies": true }]
+      },
+      "globals": {
+        "driver": true,
+        "fixtures": true
+      }
+    }
+  ]
 }

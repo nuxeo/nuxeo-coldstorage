@@ -33,6 +33,7 @@ nashorn_code_cache/
 chromedriver.log
 *.log
 *.pyc
+package-lock.json
 bower_components/
 ci/napps-test-coldstorage-policy.json
 doc.txt
