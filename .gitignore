@@ -33,3 +33,4 @@ nashorn_code_cache/
 chromedriver.log
 *.log
 *.pyc
+package-lock.json
