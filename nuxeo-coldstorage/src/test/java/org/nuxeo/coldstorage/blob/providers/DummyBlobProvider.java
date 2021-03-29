@@ -1,12 +1,13 @@
 package org.nuxeo.coldstorage.blob.providers;
 
-import org.nuxeo.ecm.core.blob.*;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DummyBlobProvider extends org.nuxeo.ecm.core.DummyBlobProvider  {
+import org.nuxeo.ecm.core.blob.BlobStatus;
+import org.nuxeo.ecm.core.blob.ManagedBlob;
+
+public class DummyBlobProvider extends org.nuxeo.ecm.core.DummyBlobProvider {
 
     /** @since 11.1 **/
     protected Map<String, BlobStatus> blobsStatus;
