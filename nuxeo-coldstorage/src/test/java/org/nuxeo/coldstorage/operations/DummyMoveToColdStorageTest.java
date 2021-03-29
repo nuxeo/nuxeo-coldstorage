@@ -33,6 +33,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.junit.Test;
+import org.nuxeo.coldstorage.DummyColdStorageFeature;
 import org.nuxeo.ecm.automation.OperationException;
 import org.nuxeo.ecm.core.api.CoreInstance;
 import org.nuxeo.ecm.core.api.CoreSession;
@@ -40,11 +41,13 @@ import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.NuxeoException;
 import org.nuxeo.ecm.core.api.security.ACE;
 import org.nuxeo.ecm.core.api.security.SecurityConstants;
+import org.nuxeo.runtime.test.runner.Features;
 
 /**
  * @since 11.1
  */
-public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
+@Features(DummyColdStorageFeature.class)
+public class DummyMoveToColdStorageTest extends AbstractTestColdStorageOperation {
 
     @Inject
     protected CoreSession session;
