@@ -32,6 +32,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import org.junit.Test;
+import org.nuxeo.coldstorage.DummyColdStorageFeature;
 import org.nuxeo.coldstorage.helpers.ColdStorageHelper;
 import org.nuxeo.ecm.automation.OperationContext;
 import org.nuxeo.ecm.automation.OperationException;
@@ -40,12 +41,13 @@ import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.NuxeoException;
 import org.nuxeo.ecm.platform.ec.notification.NotificationConstants;
 import org.nuxeo.ecm.platform.notification.api.NotificationManager;
-import org.nuxeo.runtime.test.runner.Deploy;
+import org.nuxeo.runtime.test.runner.Features;
 
 /**
  * @since 11.1
  */
-public class RequestRetrievalFromColdStorageTest extends AbstractTestColdStorageOperation {
+@Features(DummyColdStorageFeature.class)
+public class DummyRequestRetrievalFromColdStorageTest extends AbstractTestColdStorageOperation {
 
     protected static final int NUMBER_OF_DAYS_OF_AVAILABILITY = 5;
 
@@ -79,7 +81,6 @@ public class RequestRetrievalFromColdStorageTest extends AbstractTestColdStorage
 
         // move the blob to cold storage
         moveContentToColdStorage(session, documentModel);
-
         // request a retrieval from the cold storage
         requestRetrievalContentFromColdStorage(documentModel, NUMBER_OF_DAYS_OF_AVAILABILITY);
 
