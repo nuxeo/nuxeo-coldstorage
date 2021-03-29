@@ -34,3 +34,5 @@ chromedriver.log
 *.log
 *.pyc
 bower_components/
+ci/napps-test-coldstorage-policy.json
+doc.txt

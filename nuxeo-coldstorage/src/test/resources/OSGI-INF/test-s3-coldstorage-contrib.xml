@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<component name="org.nuxeo.ecm.core.coldstorage.test.glacier">
+    <extension target="org.nuxeo.ecm.core.blob.BlobManager" point="configuration">
+        <blobprovider name="s3">
+            <class>org.nuxeo.ecm.blob.s3.S3BlobProvider</class>
+            <property name="awsid">${nuxeo.s3storage.awsid}</property>
+            <property name="awssecret">${nuxeo.s3storage.awssecret}</property>
+            <property name="bucket">${nuxeo.s3storage.bucket}</property>
+            <property name="region">${nuxeo.s3storage.region}</property>
+            <property name="bucket_prefix">${nuxeo.s3storage.bucket_prefix}</property>
+            <property name="digestAsync">false</property>
+            <property name="keyStrategy">managed</property>
+        </blobprovider>
+    </extension>
+    <extension target="org.nuxeo.ecm.core.blob.BlobManager" point="configuration">
+        <blobprovider name="glacier">
+            <class>org.nuxeo.ecm.blob.s3.S3BlobProvider</class>
+            <property name="transient">true</property>
+            <property name="awsid">${nuxeo.s3storage.awsid}</property>
+            <property name="awssecret">${nuxeo.s3storage.awssecret}</property>
+            <property name="region">${nuxeo.s3storage.region}</property>
+            <property name="bucket">${nuxeo.aws.glacier.bucket}</property>
+            <property name="bucket_prefix">${nuxeo.s3storage.bucket_prefix}</property>
+            <property name="digestAsync">false</property>
+            <property name="keyStrategy">managed</property>
+        </blobprovider>
+    </extension>
+    <extension target="org.nuxeo.ecm.core.blob.DocumentBlobManager" point="configuration">
+        <blobdispatcher>
+            <class>org.nuxeo.ecm.core.blob.DefaultBlobDispatcher</class>
+            <property name="blob:xpath=coldstorage:coldContent">glacier</property>
+            <property name="default">s3</property>
+        </blobdispatcher>
+    </extension>
+</component>
