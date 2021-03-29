@@ -23,27 +23,48 @@
 def appName = 'nuxeo-coldstorage'
 def repositoryUrl = 'https://github.com/nuxeo/nuxeo-coldstorage/'
 
+def getAwsEnvironnmentVariables(String bucketSecretName, String credentialSecret, String namespace, String bucketPrefix) {
+  def envVars = [
+    "AWS_ACCESS_KEY=${getEnvironmentVariable('access_key_id', credentialSecret, namespace)}",
+    "AWS_SECRET_ACCESS_KEY=${getEnvironmentVariable('secret_access_key', credentialSecret, namespace)}",
+    "COLDSTORAGE_AWS_MAIN_BUCKET_NAME=${getEnvironmentVariable('coldstorage.bucket', bucketSecretName, namespace)}",
+    "COLDSTORAGE_AWS_GLACIER_BUCKET_NAME=${getEnvironmentVariable('coldstorage.bucket.glacier', bucketSecretName, namespace)}",
+    "COLDSTORAGE_AWS_REGION=${getEnvironmentVariable('region', bucketSecretName, namespace)}",
+    "COLDSTORAGE_AWS_BUCKET_PREFIX=${bucketPrefix}"
+  ]
+  return envVars
+}
+
+String getEnvironmentVariable(String secretKey, String secretName, String namespace) {
+  return sh(script: "jx step credential -s ${secretName} -n ${namespace} -k ${secretKey}", returnStdout: true)
+}
+
 def runBackEndUnitTests() {
   return {
     stage('BackEnd') {
       container('maven') {
         script {
-          gitHubBuildStatus.set('utests/backend')
           try {
             echo '''
               ----------------------------------------
               Run BackEnd Unit tests
               ----------------------------------------
             '''
-            sh """
-              cd ${BACKEND_FOLDER}
-              mvn ${MAVEN_ARGS} -V -T0.8C test
-            """
+            String awsBucketPrefix = "${BRANCH_LC}-${BUILD_NUMBER}-${env}"
+            def envVars = getAwsEnvironnmentVariables(
+              "${AWS_BUCKET_SECRET_NAME}", "${AWS_CREDENTIAL_SECRET_NAME}",
+              "${AWS_SECRET_NAMESPACE}",  "${awsBucketPrefix}"
+            )
+            withEnv(envVars) {
+              sh """
+                cd ${BACKEND_FOLDER}
+                mvn ${MAVEN_ARGS} -V -T0.8C test
+              """
+            }
           } catch (err) {
             throw err
           } finally {
             junit allowEmptyResults: true, testResults: "**/target/surefire-reports/*.xml"
-            gitHubBuildStatus.set('utests/backend')
           }
         }
       }
@@ -61,20 +82,16 @@ def runFrontEndUnitTests() {
             Run FrontEnd Unit tests
             ----------------------------------------
           '''
-          gitHubBuildStatus.set('utests/frontend')
           try {
             withEnv(["SAUCE_USERNAME=", "SAUCE_ACCESS_KEY="]) {
               sh """
                 cd ${FRONTEND_FOLDER}
-                npm install
                 npm run test
               """
             }
           } catch (err) {
             //Allow Fronted test to fail
             echo hudson.Functions.printThrowable(err)
-          } finally {
-            gitHubBuildStatus.set('utests/frontend')
           }
         }
       }
@@ -92,6 +109,9 @@ pipeline {
   }
   environment {
     APP_NAME = "${appName}"
+    AWS_CREDENTIAL_SECRET_NAME = 'aws-iam-user-credentials'
+    AWS_BUCKET_SECRET_NAME = 'aws-config-napps'
+    AWS_SECRET_NAMESPACE = 'napps'
     BACKEND_FOLDER = "${WORKSPACE}/nuxeo-coldstorage"
     BRANCH_LC = "${BRANCH_NAME.toLowerCase().replace('.', '-')}"
     BUCKET_PREFIX = "${appName}-${BRANCH_LC}-${BUILD_NUMBER}"
@@ -164,7 +184,11 @@ pipeline {
           script {
             gitHubBuildStatus.set('lint')
             try {
-              nxNapps.lint("${FRONTEND_FOLDER}")
+              sh """
+                cd ${FRONTEND_FOLDER}
+                npm install
+                npm run lint
+              """
             } catch (err) {
               //Allow lint to fail
               echo hudson.Functions.printThrowable(err)
@@ -186,9 +210,19 @@ pipeline {
       steps {
         script {
           def stages = [:]
-          stages['backend'] = runBackEndUnitTests();
-          stages['frontend'] = runFrontEndUnitTests();
+          stages['backend'] = runBackEndUnitTests()
+          stages['frontend'] = runFrontEndUnitTests()
+          gitHubBuildStatus.set('utests/backend')
+          gitHubBuildStatus.set('utests/frontend')
           parallel stages
+        }
+      }
+      post {
+        always {
+          script {
+            gitHubBuildStatus.set('utests/backend')
+            gitHubBuildStatus.set('utests/frontend')
+          }
         }
       }
     }

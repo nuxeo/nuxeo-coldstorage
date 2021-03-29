@@ -32,7 +32,6 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.junit.runner.RunWith;
-import org.nuxeo.coldstorage.ColdStorageFeature;
 import org.nuxeo.coldstorage.helpers.ColdStorageHelper;
 import org.nuxeo.coldstorage.thumbnail.DummyThumbnailFactory;
 import org.nuxeo.ecm.automation.AutomationService;
@@ -48,14 +47,12 @@ import org.nuxeo.ecm.core.api.security.ACL;
 import org.nuxeo.ecm.core.api.security.ACP;
 import org.nuxeo.ecm.core.test.CoreFeature;
 import org.nuxeo.runtime.test.runner.Deploy;
-import org.nuxeo.runtime.test.runner.Features;
 import org.nuxeo.runtime.test.runner.FeaturesRunner;
 
 /**
  * @since 11.1
  */
 @RunWith(FeaturesRunner.class)
-@Features(ColdStorageFeature.class)
 @Deploy("org.nuxeo.ecm.platform.notification.api")
 @Deploy("org.nuxeo.ecm.automation.features")
 @Deploy("org.nuxeo.ecm.platform.notification.core")
@@ -74,7 +71,7 @@ public abstract class AbstractTestColdStorageOperation {
         try (OperationContext context = new OperationContext(session)) {
             context.setInput(documentModel);
             DocumentModel updatedDocModel = (DocumentModel) automationService.run(context, MoveToColdStorage.ID);
-            checkMoveContent(Collections.singletonList(documentModel) , Collections.singletonList(updatedDocModel));
+            checkMoveContent(Collections.singletonList(documentModel), Collections.singletonList(updatedDocModel));
         }
     }
 
