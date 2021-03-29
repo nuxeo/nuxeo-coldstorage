@@ -22,6 +22,22 @@
 def appName = 'nuxeo-coldstorage'
 def repositoryUrl = 'https://github.com/nuxeo/nuxeo-coldstorage/'
 
+def getAwsEnvironnmentVariables(String bucketSecretName, String credentialSecret, String namespace, String bucketPrefix) {
+  def envVars = [
+    "AWS_ACCESS_KEY=${getEnvironmentVariable('access_key_id', credentialSecret, namespace)}",
+    "AWS_SECRET_ACCESS_KEY=${getEnvironmentVariable('secret_access_key', credentialSecret, namespace)}",
+    "COLDSTORAGE_AWS_MAIN_BUCKET_NAME=${getEnvironmentVariable('coldstorage.bucket', bucketSecretName, namespace)}",
+    "COLDSTORAGE_AWS_GLACIER_BUCKET_NAME=${getEnvironmentVariable('coldstorage.bucket.glacier', bucketSecretName, namespace)}",
+    "COLDSTORAGE_AWS_REGION=${getEnvironmentVariable('region', bucketSecretName, namespace)}",
+    "COLDSTORAGE_AWS_BUCKET_PREFIX=${bucketPrefix}"
+  ]
+  return envVars
+}
+
+String getEnvironmentVariable(String secretKey, String secretName, String namespace) {
+  return sh(script: "jx step credential -s ${secretName} -n ${namespace} -k ${secretKey}", returnStdout: true)
+}
+
 def runBackEndUnitTests() {
   return {
     stage('backend') {
@@ -33,10 +49,16 @@ def runBackEndUnitTests() {
               Run BackEnd Unit tests
               ----------------------------------------
             '''
-            sh """
-              cd ${BACKEND_FOLDER}
-              mvn ${MAVEN_ARGS} -V -T0.8C test
-            """
+            def envVars = getAwsEnvironnmentVariables(
+              "${AWS_BUCKET_SECRET_NAME}", "${AWS_CREDENTIAL_SECRET_NAME}",
+              "${AWS_SECRET_NAMESPACE}",  "${BUCKET_PREFIX}-unit-tests"
+            )
+            withEnv(envVars) {
+              sh """
+                cd ${BACKEND_FOLDER}
+                mvn ${MAVEN_ARGS} -V -T0.8C test
+              """
+            }
           } catch (err) {
             throw err
           } finally {
@@ -96,6 +118,9 @@ pipeline {
   }
   environment {
     APP_NAME = "${appName}"
+    AWS_CREDENTIAL_SECRET_NAME = 'aws-iam-user-credentials'
+    AWS_BUCKET_SECRET_NAME = 'aws-config-napps'
+    AWS_SECRET_NAMESPACE = 'napps'
     BACKEND_FOLDER = "${WORKSPACE}/nuxeo-coldstorage"
     BRANCH_LC = "${BRANCH_NAME.toLowerCase()}"
     BUCKET_PREFIX = "${appName}-${BRANCH_LC}-${BUILD_NUMBER}"
@@ -185,9 +210,27 @@ pipeline {
           def stages = [:]
           stages['backend'] = runBackEndUnitTests()
           stages['frontend'] = runFrontEndUnitTests()
-          gitHubBuildStatus.set('utests/frontend')
           gitHubBuildStatus.set('utests/backend')
+          gitHubBuildStatus.set('utests/frontend')
           parallel stages
+        }
+      }
+      post {
+        always {
+          script {
+            gitHubBuildStatus.set('utests/backend')
+            gitHubBuildStatus.set('utests/frontend')
+          }
+        }
+      }
+    }
+    stage('Package') {
+      steps {
+        container('maven') {
+          script {
+            gitHubBuildStatus.set('package')
+            nxNapps.mavenPackage()
+          }
         }
       }
       post {
