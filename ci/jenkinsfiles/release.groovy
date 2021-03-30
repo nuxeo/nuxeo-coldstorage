@@ -264,6 +264,60 @@ pipeline {
         }
       }
     }
+    stage('Deploy ColdStorage Preview') {
+      steps {
+        container('maven') {
+          script {
+            nxKube.helmDeployPreview(
+              "${PREVIEW_NAMESPACE}", "${CHART_DIR}", "${repositoryUrl}", "${IS_REFERENCE_BRANCH}"
+            )
+          }
+        }
+      }
+    }
+    stage('Run Functional Tests') {
+      steps {
+        container('maven') {
+          script {
+            try {
+              retry(3) {
+                nxNapps.runFunctionalTests(
+                  "${FRONTEND_FOLDER}", "--nuxeoUrl=http://preview.${PREVIEW_NAMESPACE}.svc.cluster.local/nuxeo"
+                )
+              }
+            } catch(err) {
+              throw err
+            } finally {
+              //retrieve preview logs
+              nxKube.helmGetPreviewLogs("${PREVIEW_NAMESPACE}")
+              cucumber (
+                fileIncludePattern: '**/*.json',
+                jsonReportDirectory: "${FRONTEND_FOLDER}/target/cucumber-reports/",
+                sortingMethod: 'NATURAL'
+              )
+              archiveArtifacts (
+                allowEmptyArchive: true,
+                artifacts: 'nuxeo-coldstorage-web/target/**, logs/*.log' //we can't use full path when archiving artifacts
+              )
+            }
+          }
+        }
+      }
+      post {
+        always {
+          container('maven') {
+            script {
+              //cleanup the preview
+              try {
+                if (nxNapps.needsPreviewCleanup() == 'true') {
+                  nxKube.helmDeleteNamespace("${PREVIEW_NAMESPACE}")
+                }
+              }
+            }
+          }
+        }
+      }
+    }
     stage('Publish') {
       when {
         allOf {

@@ -236,26 +236,59 @@ pipeline {
         }
       }
     }
-    stage('Deploy Preview') {
-      when {
-        anyOf {
-          not {
-            branch 'PR-*'
-          }
-          allOf {
-            branch 'PR-*'
-            expression {
-              return pullRequest.labels.contains('preview')
-            }
-          }
-        }
-      }
+    stage('Deploy ColdStorage Preview') {
       steps {
         container('maven') {
           script {
             nxKube.helmDeployPreview(
               "${PREVIEW_NAMESPACE}", "${CHART_DIR}", "${repositoryUrl}", "${IS_REFERENCE_BRANCH}"
             )
+          }
+        }
+      }
+    }
+    stage('Run Functional Tests') {
+      steps {
+        container('maven') {
+          script {
+            gitHubBuildStatus.set('ftests')
+            try {
+              retry(3) {
+                nxNapps.runFunctionalTests(
+                  "${FRONTEND_FOLDER}", "--nuxeoUrl=http://preview.${PREVIEW_NAMESPACE}.svc.cluster.local/nuxeo"
+                )
+              }
+            } catch(err) {
+              throw err
+            } finally {
+              //retrieve preview logs
+              nxKube.helmGetPreviewLogs("${PREVIEW_NAMESPACE}")
+              cucumber (
+                fileIncludePattern: '**/*.json',
+                jsonReportDirectory: "${FRONTEND_FOLDER}/target/cucumber-reports/",
+                sortingMethod: 'NATURAL'
+              )
+              archiveArtifacts (
+                allowEmptyArchive: true,
+                artifacts: 'nuxeo-coldstorage-web/target/**, logs/*.log' //we can't use full path when archiving artifacts
+              )
+            }
+          }
+        }
+      }
+      post {
+        always {
+          container('maven') {
+            script {
+              //cleanup the preview
+              try {
+                if (nxNapps.needsPreviewCleanup() == 'true') {
+                  nxKube.helmDeleteNamespace("${PREVIEW_NAMESPACE}")
+                }
+              } finally {
+                gitHubBuildStatus.set('ftests')
+              }
+            }
           }
         }
       }
@@ -293,7 +326,7 @@ pipeline {
                 gitHubBuildStatus.set('publish/package')
                 echo """
                   -------------------------------------------------------------
-                  Upload Retention Package ${VERSION} to ${CONNECT_PREPROD_URL}
+                  Upload Coldstorage Package ${VERSION} to ${CONNECT_PREPROD_URL}
                   -------------------------------------------------------------
                 """
                 String packageFile = "nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-${VERSION}.zip"
