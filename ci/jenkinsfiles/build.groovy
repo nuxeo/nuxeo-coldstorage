@@ -269,19 +269,6 @@ pipeline {
       }
     }
     stage('Deploy ColdStorage Preview') {
-      when {
-        anyOf {
-          not {
-            branch 'PR-*'
-          }
-          allOf {
-            branch 'PR-*'
-            expression {
-              return pullRequest.labels.contains('preview')
-            }
-          }
-        }
-      }
       steps {
         container('maven') {
           script {
@@ -296,6 +283,52 @@ pipeline {
         always {
           script {
             gitHubBuildStatus.set('helm/chart/deploy')
+          }
+        }
+      }
+    }
+    stage('Run Functional Tests') {
+      steps {
+        container('maven') {
+          script {
+            gitHubBuildStatus.set('ftests')
+            try {
+              retry(3) {
+                nxNapps.runFunctionalTests(
+                  "${FRONTEND_FOLDER}", "--nuxeoUrl=http://preview.${PREVIEW_NAMESPACE}.svc.cluster.local/nuxeo"
+                )
+              }
+            } catch(err) {
+              throw err
+            } finally {
+              //retrieve preview logs
+              nxKube.helmGetPreviewLogs("${PREVIEW_NAMESPACE}")
+              cucumber (
+                fileIncludePattern: '**/*.json',
+                jsonReportDirectory: "${FRONTEND_FOLDER}/target/cucumber-reports/",
+                sortingMethod: 'NATURAL'
+              )
+              archiveArtifacts (
+                allowEmptyArchive: true,
+                artifacts: 'nuxeo-coldstorage-web/target/**, logs/*.log' //we can't use full path when archiving artifacts
+              )
+            }
+          }
+        }
+      }
+      post {
+        always {
+          container('maven') {
+            script {
+              //cleanup the preview
+              try {
+                if (nxNapps.needsPreviewCleanup() == 'true') {
+                  nxKube.helmDeleteNamespace("${PREVIEW_NAMESPACE}")
+                }
+              } finally {
+                gitHubBuildStatus.set('ftests')
+              }
+            }
           }
         }
       }
@@ -332,9 +365,9 @@ pipeline {
               script {
                 gitHubBuildStatus.set('publish/package')
                 echo """
-                  -------------------------------------------------
-                  Upload ColdStorage Package ${VERSION} to ${CONNECT_PREPROD_URL}
-                  -------------------------------------------------
+                  -------------------------------------------------------------
+                  Upload Coldstorage Package ${VERSION} to ${CONNECT_PREPROD_URL}
+                  -------------------------------------------------------------
                 """
                 nxNapps.uploadPackage("${VERSION}", 'connect-preprod', "${CONNECT_PREPROD_URL}")
               }
