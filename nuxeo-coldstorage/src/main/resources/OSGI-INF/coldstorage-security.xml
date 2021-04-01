@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<component name="org.nuxeo.coldstorage.security">
+    <require>org.nuxeo.ecm.core.security.defaultPermissions</require>
+    <extension target="org.nuxeo.ecm.core.security.SecurityService"
+               point="permissions">
+        <permission name="WriteColdStorage">
+            <include>ReadWrite</include>
+            <include>WriteColdStorage</include>
+        </permission>
+    </extension>
+
+    <extension target="org.nuxeo.ecm.core.security.SecurityService"
+               point="permissionsVisibility">
+
+        <visibility>
+            <item show="true" order="80">WriteColdStorage</item>
+        </visibility>
+
+    </extension>
+</component>
