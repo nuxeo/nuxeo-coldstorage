@@ -6,3 +6,4 @@ Bundle-Version: 1.0.0
 Bundle-Name: nuxeo-coldstorage-web
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: nuxeo-coldstorage-web;singleton=true
+Nuxeo-Component: OSGI-INF/coldstorage-webresources-contrib.xml
