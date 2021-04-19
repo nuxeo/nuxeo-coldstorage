@@ -56,12 +56,10 @@ express or implied. See the License for the specific language governing permissi
           /**
            * Input document.
            */
-
           document: Object,
           /**
            * Current user.
            */
-
           currentUser: Object,
         };
       }
@@ -70,10 +68,14 @@ express or implied. See the License for the specific language governing permissi
         this.$.contentToMoveDialog.toggle();
       }
 
+      _hasAdministrationPermissions(user) {
+        return user && (user.isAdministrator || this.isMember(user, 'powerusers'));
+      }
+
       _isAvailable(document, currentUser) {
         return (
           !this.hasFacet(document, 'ColdStorage') &&
-          (this.hasAdministrationPermissions(currentUser) || this.hasPermission(document, 'WriteColdStorage')) &&
+          (this._hasAdministrationPermissions(currentUser) || this.hasPermission(document, 'WriteColdStorage')) &&
           this.hasContent(document)
         );
       }

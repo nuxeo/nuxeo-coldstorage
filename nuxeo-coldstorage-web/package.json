@@ -4,42 +4,22 @@
   "author": "Nuxeo",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@nuxeo/nuxeo-web-ui-ftest": "^2.4.29",
-    "cucumber": "^4.1.0",
-    "eslint": "^7.0.0",
-    "eslint-config-airbnb-base": "^14.1.0",
-    "eslint-config-prettier": "^6.11.0",
-    "eslint-plugin-html": "^6.0.2",
-    "eslint-plugin-import": "^2.20.2",
-    "glob": "^7.1.6",
-    "husky": "^4.2.5",
-    "lint-staged": "^10.2.2",
-    "minimist": "^1.2.5",
-    "nuxeo-cli": "^1.9.1",
-    "polymer-cli": "^1.9.11",
-    "prettier": "2.0.5"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "*.{js,html}": [
-      "prettier --write",
-      "eslint --fix"
-    ]
+    "check-engine": "1.8.1",
+    "coveralls": "^3.0.2",
+    "eslint": "^4.14.0",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-html": "^4.0.1",
+    "eslint-plugin-import": "^2.8.0",
+    "polymer-cli": "^1.8.0",
+    "wct-istanbul": "^0.14.3"
   },
   "scripts": {
-    "lint": "npm run lint:eslint && npm run lint:polymer && npm run lint:prettier",
-    "lint:eslint": "eslint . --ext .js,.mjs,.html",
-    "lint:polymer": "polymer lint",
-    "lint:prettier": "prettier \"**/*.{js,mjs,html}\" --check || (echo '↑↑ these files are not prettier formatted ↑↑' && exit 1)",
-    "format": "npm run format:prettier && npm run format:eslint",
-    "format:eslint": "eslint --ext .js,.mjs,.html . --fix",
-    "format:polymer": "polymer lint --fix",
-    "format:prettier": "prettier \"**/*.{js,mjs,html}\" --write",
-    "test": "web-test-runner",
-    "test:watch": "web-test-runner --watch"
+    "postinstall": "check-engine || true",
+    "eslint": "eslint *.html --ext html",
+    "polylint": "polymer lint",
+    "lint": "npm run eslint && npm run polylint",
+    "test": "polymer test  --expanded -l chrome -p",
+    "docs": "polymer analyze > analysis.json && polymer serve",
+    "coveralls": "cat coverage/lcov.info | coveralls"
   }
 }
