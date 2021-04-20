@@ -21,6 +21,11 @@ library identifier: "nuxeo-napps-tools@0.0.6"
 
 def appName = 'nuxeo-coldstorage'
 def repositoryUrl = 'https://github.com/nuxeo/nuxeo-coldstorage/'
+def mcontainers = [
+  'mongodb': 'maven-mongodb',
+  'pgsql': 'maven',
+]
+def targetTestEnvs = ['mongodb', 'pgsql',]
 
 def runBackEndUnitTests() {
   return {
@@ -114,6 +119,7 @@ pipeline {
     REFERENCE_BRANCH = 'master'
     IS_REFERENCE_BRANCH = "${BRANCH_NAME == REFERENCE_BRANCH}"
     SLACK_CHANNEL = "${env.DRY_RUN == 'true' ? 'infra-napps' : 'napps-notifs'}"
+    UNIT_TEST_NAMESPACE_SUFFIX = "${APP_NAME}-${BRANCH_NAME}".toLowerCase()
   }
   stages {
     stage('Set Labels') {
@@ -213,6 +219,58 @@ pipeline {
         always {
           gitHubBuildStatus('utests/frontend')
           gitHubBuildStatus('utests/backend')
+        }
+      }
+    }
+    stage('Deploy Env') {
+      steps {
+        script {
+          def stages = [:]
+          targetTestEnvs.each { env ->
+            String containerName = mcontainers["${env}"]
+            stages["Deploy - ${env}"] =
+              nxKube.helmDeployUnitTestEnvStage(
+                "${containerName}", "${env}", "${UNIT_TEST_NAMESPACE_SUFFIX}-${env}", 'ci/helm/utests'
+              )
+          }
+          parallel stages
+        }
+      }
+    }
+    stage('Unit Tests') {
+      steps {
+        script {
+          targetTestEnvs.each { env ->
+            gitHubBuildStatus("utests/${env}")
+          }
+          def stages = [:]
+          def parameters = [:]
+          targetTestEnvs.each { env ->
+            String containerName = mcontainers["${env}"]
+            String namespace  = "${UNIT_TEST_NAMESPACE_SUFFIX}-${env}"
+            parameters["${env}"] = ["TEST=${env}"]
+            stages["JUnit - ${env}"] = nxNapps.runUnitTestStage("${containerName}", "${env}", "${WORKSPACE}", "${namespace}", parameters["${env}"])
+          }
+          parallel stages
+        }
+      }
+      post {
+        always {
+          script {
+            try {
+              targetTestEnvs.each { env ->
+                container('maven') {
+                  nxKube.helmDestroyUnitTestsEnv(
+                    "${UNIT_TEST_NAMESPACE_SUFFIX}-${env}"
+                  )
+                }
+              }
+            } finally {
+              targetTestEnvs.each { env ->
+                gitHubBuildStatus("utests/${env}")
+              }
+            }
+          }
         }
       }
     }
