@@ -10,11 +10,11 @@ LABEL org.nuxeo.build-tag=$BUILD_TAG
 LABEL org.nuxeo.scm-ref=$SCM_REF
 LABEL org.nuxeo.version=$VERSION
 
-COPY --chown=900:0 nuxeo-coldstorage-package-*.zip /packages/
-
 USER root
 # install RPM Fusion free repository
 RUN yum -y localinstall --nogpgcheck https://mirrors.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm
 # install ffmpeg and ImageMagick packages
 RUN yum -y install ffmpeg ImageMagick
 USER 900
+
+COPY --chown=900:0 nuxeo-coldstorage-package-*.zip /packages/
