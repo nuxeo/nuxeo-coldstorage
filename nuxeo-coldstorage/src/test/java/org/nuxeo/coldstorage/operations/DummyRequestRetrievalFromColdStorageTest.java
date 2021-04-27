@@ -68,17 +68,26 @@ public class DummyRequestRetrievalFromColdStorageTest extends AbstractTestColdSt
     }
 
     @Test
+    public void shouldRequestRetrievalWithDefaultValue() throws OperationException, IOException {
+        DocumentModel documentModel = createFileDocument(session, true);
+        // first make the move to cold storage
+        moveContentToColdStorage(session, documentModel);
+        // request a retrieval from the cold storage
+        requestRetrievalContentFromColdStorage(documentModel);
+    }
+
+    @Test
     public void shouldFailRequestRetrievalBeingRetrieved() throws IOException, OperationException {
         DocumentModel documentModel = createFileDocument(session, true);
 
         // move the blob to cold storage
         moveContentToColdStorage(session, documentModel);
         // request a retrieval from the cold storage
-        requestRetrievalContentFromColdStorage(documentModel);
+        requestRetrievalContentFromColdStorage(documentModel, NUMBER_OF_DAYS_OF_AVAILABILITY);
 
         // request a retrieval for a second time
         try {
-            requestRetrievalContentFromColdStorage(documentModel);
+            requestRetrievalContentFromColdStorage(documentModel, NUMBER_OF_DAYS_OF_AVAILABILITY);
             fail("Should fail because the cold storage content is being retrieved.");
         } catch (NuxeoException e) {
             assertEquals(SC_FORBIDDEN, e.getStatusCode());
@@ -90,7 +99,7 @@ public class DummyRequestRetrievalFromColdStorageTest extends AbstractTestColdSt
         DocumentModel documentModel = createFileDocument(session, true);
         try {
             // request a retrieval from the cold storage
-            requestRetrievalContentFromColdStorage(documentModel);
+            requestRetrievalContentFromColdStorage(documentModel, NUMBER_OF_DAYS_OF_AVAILABILITY);
             fail("Should fail because there no cold storage content associated to this document.");
         } catch (NuxeoException e) {
             assertEquals(SC_NOT_FOUND, e.getStatusCode());
@@ -98,10 +107,14 @@ public class DummyRequestRetrievalFromColdStorageTest extends AbstractTestColdSt
     }
 
     protected void requestRetrievalContentFromColdStorage(DocumentModel documentModel) throws OperationException {
+        requestRetrievalContentFromColdStorage(documentModel, 0);
+    }
+
+    protected void requestRetrievalContentFromColdStorage(DocumentModel documentModel, int numberOfAvailabilityDays) throws OperationException {
         try (OperationContext context = new OperationContext(session)) {
             context.setInput(documentModel);
             Map<String, Integer> params = new HashMap<>();
-            params.put("numberOfDaysOfAvailability", NUMBER_OF_DAYS_OF_AVAILABILITY);
+            params.put("numberOfDaysOfAvailability", numberOfAvailabilityDays);
             DocumentModel updatedDocument = (DocumentModel) automationService.run(context,
                     RequestRetrievalFromColdStorage.ID, params);
             assertEquals(documentModel.getRef(), updatedDocument.getRef());
