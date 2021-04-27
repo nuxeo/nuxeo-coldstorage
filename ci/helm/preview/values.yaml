@@ -43,7 +43,7 @@ nuxeo:
       pullPolicy: Always
     persistence:
       enabled: disable
-    packages: nuxeo-web-ui amazon-s3-online-storage ${JSF_ENABLED} /packages/nuxeo-coldstorage-package.zip
+    packages: nuxeo-web-ui-2.4.46-NAPPS-SNAPSHOT amazon-s3-online-storage ${JSF_ENABLED} /packages/nuxeo-coldstorage-package.zip
     livenessProbe:
       initialDelaySeconds: 420
       periodSeconds: 20
@@ -100,6 +100,8 @@ nuxeo:
             key: coldstorage.bucket.glacier
       - name: AWS_S3_BUCKET_PREFIX
         value: $BUCKET_PREFIX
+      - name: NUXEO_MPINSTALL_OPTIONS
+        value: "--force --nodeps"
     tolerations:
       - key: team
         operator: Equal
