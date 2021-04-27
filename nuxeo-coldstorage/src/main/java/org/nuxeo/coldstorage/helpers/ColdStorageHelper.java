@@ -76,6 +76,9 @@ public class ColdStorageHelper {
 
     public static final String COLD_STORAGE_CONTENT_ARCHIVE_LOCATION_MAIL_TEMPLATE_KEY = "archiveLocation";
 
+    /** @since 10.10 **/
+    public static final String COLD_STORAGE_NUMBER_OF_DAYS_OF_AVAILABILITY_PROPERTY_NAME = "nuxeo.coldstorage.numberOfDaysOfAvailability.value.default";
+
     /**
      * Moves the main content associated with the document of the given {@link DocumentRef} to a cold storage.
      * <p/>
