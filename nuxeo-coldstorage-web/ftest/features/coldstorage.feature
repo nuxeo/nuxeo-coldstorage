@@ -8,7 +8,7 @@ Feature: Cold Storage
     And I have a File document
     And This document has file "sample.png" for content
     When I browse to the document
-    And I give writeColdStorage permission to "Jack" on the document
+    And I give WriteColdStorage permission to "Jack" on the document
     Then I can see that "Jack" has the WriteColdStorage permission
 
   Scenario: User with WriteColdStorage permission can send file to cold storage
