@@ -19,6 +19,8 @@
 
 package org.nuxeo.coldstorage.operations;
 
+import static org.nuxeo.coldstorage.helpers.ColdStorageHelper.COLD_STORAGE_NUMBER_OF_DAYS_OF_AVAILABILITY_PROPERTY_NAME;
+
 import java.time.Duration;
 
 import org.nuxeo.coldstorage.helpers.ColdStorageHelper;
@@ -48,7 +50,7 @@ public class RequestRetrievalFromColdStorage {
 
     public static final String ID = "Document.RequestRetrievalFromColdStorage";
 
-    @Param(name = "numberOfDaysOfAvailability", description = "The number of days that you want your cold storage content to be accessible.")
+    @Param(name = "numberOfDaysOfAvailability", description = "The number of days that you want your cold storage content to be accessible.", required = false)
     protected int numberOfDaysOfAvailability;
 
     @Context
@@ -59,6 +61,11 @@ public class RequestRetrievalFromColdStorage {
 
     @OperationMethod(collector = DocumentModelCollector.class)
     public DocumentModel run(DocumentModel doc) {
+        if (numberOfDaysOfAvailability == 0) {
+            String value = Framework.getProperties()
+                                    .getProperty(COLD_STORAGE_NUMBER_OF_DAYS_OF_AVAILABILITY_PROPERTY_NAME, "1");
+            numberOfDaysOfAvailability = Integer.valueOf(value);
+        }
         DocumentModel documentModel = ColdStorageHelper.requestRetrievalFromColdStorage(session, doc.getRef(),
                 Duration.ofDays(numberOfDaysOfAvailability));
 
