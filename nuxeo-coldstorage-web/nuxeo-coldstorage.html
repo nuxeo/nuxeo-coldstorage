@@ -20,6 +20,14 @@ limitations under the License.
   </template>
 </nuxeo-slot-content>
 
+<nuxeo-slot-content name="retrieveFromColdStorageDocumentContentAction" slot="BLOB_ACTIONS" order="120">
+  <template>
+    <nuxeo-retrieve-content-from-coldstorage-button
+      document="[[document]]"
+    ></nuxeo-retrieve-content-from-coldstorage-button>
+  </template>
+</nuxeo-slot-content>
+
 <nuxeo-slot-content name="moveSelectionContentToColdStorageAction" slot="RESULTS_SELECTION_ACTIONS" order="-50">
   <template>
     <nuxeo-move-contents-to-coldstorage-button
