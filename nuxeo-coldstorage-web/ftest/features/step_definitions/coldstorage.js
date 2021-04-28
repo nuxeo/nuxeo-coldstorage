@@ -1,4 +1,47 @@
-import { When, Then } from 'cucumber';
+import { Given, When, Then } from 'cucumber';
+
+Given('I have the following documents in the platform', function (table) {
+  driver.pause(1000);
+  const tasks = table.hashes().map((row) => () => {
+    const { doctype, title, creator, nature, subjects, coverage, path, collections, tag, file } = row;
+
+    const doc = fixtures.documents.init(doctype, title);
+
+    // assign basic dc properties (unprefixed)
+    Object.assign(doc.properties, {
+      'dc:title': title,
+      'dc:creator': creator,
+      'dc:nature': nature,
+      'dc:subjects': Array.isArray(subjects) ? subjects : [subjects],
+      'dc:coverage': coverage,
+    });
+
+    // fill in dummy note content
+    if (doctype === 'Note') {
+      doc.properties['note:note'] = 'Lorem Ipsum';
+    }
+
+    // fill in any other properties (prefixed)
+    Object.keys(row)
+      .filter((k) => k.indexOf(':') !== -1)
+      .forEach((k) => {
+        doc.properties[k] = row[k];
+      });
+
+    // create the document
+    return (
+      fixtures.documents
+        .create(path, doc)
+        // add to collection
+        .then((d) => (collections && collections.length > 0 ? fixtures.collections.addToCollection(d, collections) : d))
+        // add tag
+        .then((d) => (tag && tag.length > 0 ? fixtures.documents.addTag(d, tag) : d))
+        // attach files
+        .then((d) => (file && file.length > 0 ? fixtures.documents.attach(d, fixtures.blobs.get(file)) : d))
+    );
+  });
+  return tasks.reduce((current, next) => current.then(next), Promise.resolve([]));
+});
 
 When('I click the Send file to cold storage action button', function () {
   this.ui.browser.clickDocumentActionMenu('nuxeo-move-content-to-coldstorage-button');
