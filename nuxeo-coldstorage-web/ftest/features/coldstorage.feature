@@ -43,7 +43,7 @@ Feature: Cold Storage
 
   Scenario: User can send multiple files to cold storage in Workspace view
     Given I login as "Jack"
-    And I have the following documents
+    And I have the following documents in the platform
       | doctype    | title    | path                | file        |
       | Workspace  | ws       | /default-domain     |             |
       | File       | sample1  | /default-domain/ws  | sample.png  |
@@ -68,7 +68,7 @@ Feature: Cold Storage
 
   Scenario: User without WriteColdStorage permission on all selected documents cannot send them to cold storage
     Given I login as "Jack"
-    And I have the following documents
+    And I have the following documents in the platform
       | doctype    | title    | path                | file        |
       | Workspace  | ws       | /default-domain     |             |
       | File       | sample1  | /default-domain/ws  | sample.png  |

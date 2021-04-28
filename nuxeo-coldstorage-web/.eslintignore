@@ -1,3 +1,4 @@
 node_modules/
 coverage/
 target/
+ftest/features/step_definitions/coldstorage.js
