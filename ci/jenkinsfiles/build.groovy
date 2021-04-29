@@ -384,7 +384,8 @@ pipeline {
                   Upload Coldstorage Package ${VERSION} to ${CONNECT_PREPROD_URL}
                   -------------------------------------------------------------
                 """
-                connectUploadPackage("${VERSION}", 'connect-preprod', "${CONNECT_PREPROD_URL}")
+                String packageFile = "nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-${VERSION}.zip"
+                connectUploadPackage("${packageFile}", 'connect-preprod', "${CONNECT_PREPROD_URL}")
               }
             }
           }
