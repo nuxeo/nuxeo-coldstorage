@@ -44,18 +44,6 @@ nuxeo:
     persistence:
       enabled: disable
     packages: nuxeo-web-ui amazon-s3-online-storage /packages/nuxeo-coldstorage-package-*.zip
-    livenessProbe:
-      initialDelaySeconds: 420
-      periodSeconds: 20
-      successThreshold: 1
-      failureThreshold: 5
-      timeoutSeconds: 10
-    readinessProbe:
-      periodSeconds: 20
-      initialDelaySeconds: 420
-      successThreshold: 1
-      timeoutSeconds: 10
-      failureThreshold: 5
     customParams: |-
       # Override Nuxeo connect configuration
       org.nuxeo.connect.url=https://nos-preprod-connect.nuxeocloud.com/nuxeo/site/

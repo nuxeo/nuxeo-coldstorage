@@ -17,7 +17,7 @@
 *     Abdoul BA <aba@nuxeo.com>
 */
 /* Using a version specifier, such as branch, tag, etc */
-@Library('nuxeo-napps-tools@0.0.4') _
+library identifier: "nuxeo-napps-tools@0.0.6"
 
 def appName = 'nuxeo-coldstorage'
 def repositoryUrl = 'https://github.com/nuxeo/nuxeo-coldstorage/'
@@ -41,7 +41,7 @@ String getEnvironmentVariable(String secretKey, String secretName, String namesp
 def runBackEndUnitTests() {
   return {
     stage('backend') {
-      container('maven-default') {
+      container('maven') {
         script {
           try {
             echo '''
@@ -73,7 +73,7 @@ def runBackEndUnitTests() {
 def runFrontEndUnitTests() {
   return {
     stage('frontend') {
-      container('maven-mongodb') {
+      container('maven') {
         script {
           echo '''
             ----------------------------------------
@@ -92,11 +92,13 @@ def runFrontEndUnitTests() {
             }
             withEnv(["SAUCE_USERNAME=${sauceUsername}", "SAUCE_ACCESS_KEY=${sauceAccessKey}"]) {
               container('playwright') {
-                sh """
-                  cd ${FRONTEND_FOLDER}
-                  npm install
-                  npm run test
-                """
+                retry(2) {
+                  sh """
+                    cd ${FRONTEND_FOLDER}
+                    npm install
+                    npm run test
+                  """
+                }
               }
             }
           } catch (err) {
@@ -174,16 +176,14 @@ pipeline {
       steps {
         container('maven') {
           script {
-            gitHubBuildStatus.set('compile')
+            gitHubBuildStatus('compile')
             nxNapps.mavenCompile()
           }
         }
       }
       post {
         always {
-          script {
-            gitHubBuildStatus.set('compile')
-          }
+          gitHubBuildStatus('compile')
         }
       }
     }
@@ -191,16 +191,14 @@ pipeline {
       steps {
         container('maven') {
           script {
-            gitHubBuildStatus.set('lint')
+            gitHubBuildStatus('lint')
             nxNapps.lint("${FRONTEND_FOLDER}")
           }
         }
       }
       post {
         always {
-          script {
-            gitHubBuildStatus.set('lint')
-          }
+          gitHubBuildStatus('lint')
         }
       }
     }
@@ -210,17 +208,15 @@ pipeline {
           def stages = [:]
           stages['backend'] = runBackEndUnitTests()
           stages['frontend'] = runFrontEndUnitTests()
-          gitHubBuildStatus.set('utests/backend')
-          gitHubBuildStatus.set('utests/frontend')
+          gitHubBuildStatus('utests/backend')
+          gitHubBuildStatus('utests/frontend')
           parallel stages
         }
       }
       post {
         always {
-          script {
-            gitHubBuildStatus.set('utests/backend')
-            gitHubBuildStatus.set('utests/frontend')
-          }
+          gitHubBuildStatus('utests/backend')
+          gitHubBuildStatus('utests/frontend')
         }
       }
     }
@@ -228,7 +224,7 @@ pipeline {
       steps {
         container('maven') {
           script {
-            gitHubBuildStatus.set('package')
+            gitHubBuildStatus('package')
             nxNapps.mavenPackage()
           }
         }
@@ -236,8 +232,8 @@ pipeline {
       post {
         always {
           script {
-            gitHubBuildStatus.set('utests/frontend')
-            gitHubBuildStatus.set('utests/backend')
+            gitHubBuildStatus('utests/frontend')
+            gitHubBuildStatus('utests/backend')
           }
         }
       }
@@ -246,7 +242,7 @@ pipeline {
       steps {
         container('maven') {
           script {
-            gitHubBuildStatus.set('docker/build')
+            gitHubBuildStatus('docker/build')
             nxNapps.dockerBuild(
               "${WORKSPACE}/nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-*.zip",
               "${WORKSPACE}/ci/docker","${WORKSPACE}/ci/docker/skaffold.yaml"
@@ -256,9 +252,7 @@ pipeline {
       }
       post {
         always {
-          script {
-            gitHubBuildStatus.set('docker/build')
-          }
+          gitHubBuildStatus('docker/build')
         }
       }
     }
@@ -266,16 +260,14 @@ pipeline {
       steps {
         container('maven') {
           script {
-            gitHubBuildStatus.set('helm/chart/build')
+            gitHubBuildStatus('helm/chart/build')
             nxKube.helmBuildChart("${CHART_DIR}", 'values.yaml')
           }
         }
       }
       post {
         always {
-          script {
-            gitHubBuildStatus.set('helm/chart/build')
-          }
+          gitHubBuildStatus('helm/chart/build')
         }
       }
     }
@@ -294,7 +286,7 @@ pipeline {
       steps {
         container('maven') {
           script {
-            gitHubBuildStatus.set('ftests')
+            gitHubBuildStatus('ftests')
             try {
               retry(3) {
                 nxNapps.runFunctionalTests(
@@ -308,7 +300,7 @@ pipeline {
               nxKube.helmGetPreviewLogs("${PREVIEW_NAMESPACE}")
               cucumber (
                 fileIncludePattern: '**/*.json',
-                jsonReportDirectory: "${FRONTEND_FOLDER}/target/cucumber-reports/",
+                jsonReportDirectory: "${FRONTEND_FOLDER}/ftest/target/cucumber-reports/",
                 sortingMethod: 'NATURAL'
               )
               archiveArtifacts (
@@ -329,7 +321,7 @@ pipeline {
                   nxKube.helmDeleteNamespace("${PREVIEW_NAMESPACE}")
                 }
               } finally {
-                gitHubBuildStatus.set('ftests')
+                gitHubBuildStatus('ftests')
               }
             }
           }
@@ -366,14 +358,14 @@ pipeline {
           steps {
             container('maven') {
               script {
-                gitHubBuildStatus.set('publish/package')
+                gitHubBuildStatus('publish/package')
                 echo """
                   -------------------------------------------------------------
                   Upload Coldstorage Package ${VERSION} to ${CONNECT_PREPROD_URL}
                   -------------------------------------------------------------
                 """
                 String packageFile = "nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-${VERSION}.zip"
-                connectUploadPackage.set("${packageFile}", 'connect-preprod', "${CONNECT_PREPROD_URL}")
+                connectUploadPackage("${packageFile}", 'connect-preprod', "${CONNECT_PREPROD_URL}")
               }
             }
           }
@@ -383,9 +375,7 @@ pipeline {
                 allowEmptyArchive: true,
                 artifacts: 'nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-*.zip'
               )
-              script {
-                gitHubBuildStatus.set('publish/package')
-              }
+              gitHubBuildStatus('publish/package')
             }
           }
         }
@@ -420,14 +410,14 @@ pipeline {
       script {
         // update Slack Channel
         String message = "${JOB_NAME} - #${BUILD_NUMBER} ${currentBuild.currentResult} (<${BUILD_URL}|Open>)"
-        slackBuildStatus.set("${SLACK_CHANNEL}", "${message}", 'good')
+        slackBuildStatus("${SLACK_CHANNEL}", "${message}", 'good')
       }
     }
     unsuccessful {
       script {
         // update Slack Channel
         String message = "${JOB_NAME} - #${BUILD_NUMBER} ${currentBuild.currentResult} (<${BUILD_URL}|Open>)"
-        slackBuildStatus.set("${SLACK_CHANNEL}", "${message}", 'danger')
+        slackBuildStatus("${SLACK_CHANNEL}", "${message}", 'danger')
       }
     }
   }
