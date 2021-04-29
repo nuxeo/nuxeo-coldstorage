@@ -9,6 +9,7 @@
   "documentContentView.moveToColdStorage.success": "Dokumentuaren edukia behar bezala bidali da biltegiratze hotzera.",
   "documentContentView.moveToColdStorage.tooltip": "Bidali biltegiratze hotzera",
   "documentPage.content.storedInColdStorage": "Fitxategi maisua biltegiratze hotzean dago.",
+  "label.security.permission.writeColdStorage": "WriteColdStorage",
   "moveDocumentsContentsToColdStorage.ask.confirmation": "Dokumentuen edukiak biltegiratze hotzera bidali?",
   "moveDocumentsContentsToColdStorage.description": "Honen ondorioz, fitxategia eskuratzeko denborak handituko dira, eta aurrebista bereizmen txikian erakutsiko da.",
   "moveDocumentsContentsToColdStorage.cancel": "Utzi",

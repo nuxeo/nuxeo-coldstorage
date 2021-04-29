@@ -9,6 +9,7 @@
   "documentContentView.moveToColdStorage.success": "Dokumentinnehåll har flyttats till kallagring.",
   "documentContentView.moveToColdStorage.tooltip": "Skicka till kallagring",
   "documentPage.content.storedInColdStorage": "Masterfilen förvaras i kallagring.",
+  "label.security.permission.writeColdStorage": "WriteColdStorage",
   "moveDocumentsContentsToColdStorage.ask.confirmation": "Skicka dokumentinnehåll till kallagring?",
   "moveDocumentsContentsToColdStorage.description": "Detta leder till längre filhämtningstider och förhandsvisning med lägre upplösning.",
   "moveDocumentsContentsToColdStorage.cancel": "Avbryt",

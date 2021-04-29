@@ -9,6 +9,7 @@
   "documentContentView.moveToColdStorage.success": "Dokumentinhalt in kalten Speicher verschoben.",
   "documentContentView.moveToColdStorage.tooltip": "An kalten Speicher senden",
   "documentPage.content.storedInColdStorage": "Die Master-Datei wurde im kalten Speicher abgelegt.",
+  "label.security.permission.writeColdStorage": "WriteColdStorage",
   "moveDocumentsContentsToColdStorage.ask.confirmation": "Die Dokumentinhalte an kalten Speicher senden?",
   "moveDocumentsContentsToColdStorage.description": "Dadurch werden die Abfragezeiten für die Datei erhöht und eine Vorschau mit niedriger Auflösung erhalten.",
   "moveDocumentsContentsToColdStorage.cancel": "Abbrechen",

@@ -9,6 +9,7 @@
   "documentContentView.moveToColdStorage.success": "Le contenu du document a été déplacé vers le stockage à froid avec succès.",
   "documentContentView.moveToColdStorage.tooltip": "Envoyer vers le stockage à froid",
   "documentPage.content.storedInColdStorage": "Le fichier principal est stocké en stockage à froid.",
+  "label.security.permission.writeColdStorage": "WriteColdStorage",
   "moveDocumentsContentsToColdStorage.ask.confirmation": "Envoyer le contenu des documents au stockage à froid ?",
   "moveDocumentsContentsToColdStorage.description": "Cela entraînera une augmentation des temps de récupération des fichiers et un aperçu de faible résolution.",
   "moveDocumentsContentsToColdStorage.cancel": "Annuler",

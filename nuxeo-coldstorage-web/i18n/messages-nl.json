@@ -9,6 +9,7 @@
   "documentContentView.moveToColdStorage.success": "Documentinhoud is verplaatst naar cold-opslag.",
   "documentContentView.moveToColdStorage.tooltip": "Verzenden naar cold-opslag",
   "documentPage.content.storedInColdStorage": "Het hoofdbestand is opgeslagen in cold-opslag.",
+  "label.security.permission.writeColdStorage": "WriteColdStorage",
   "moveDocumentsContentsToColdStorage.ask.confirmation": "Documentinhoud verzenden naar cold-opslag?",
   "moveDocumentsContentsToColdStorage.description": "Dit heeft tot gevolg dat het ophalen van bestanden langer zal duren en dat de voorbeeldweergave een lage resolutie heeft.",
   "moveDocumentsContentsToColdStorage.cancel": "Annuleren",

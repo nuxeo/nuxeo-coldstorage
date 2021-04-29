@@ -9,6 +9,7 @@
   "documentContentView.moveToColdStorage.success": "Document content moved to cold storage successfully.",
   "documentContentView.moveToColdStorage.tooltip": "Send to cold storage",
   "documentPage.content.storedInColdStorage": "The master file is stored in cold storage.",
+  "label.security.permission.writeColdStorage": "WriteColdStorage",
   "moveDocumentsContentsToColdStorage.ask.confirmation": "Send the documents contents to cold storage?",
   "moveDocumentsContentsToColdStorage.description": "This will result in increased file retrieval times and a low resolution preview.",
   "moveDocumentsContentsToColdStorage.cancel": "Cancel",
