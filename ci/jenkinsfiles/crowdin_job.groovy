@@ -17,8 +17,9 @@
  *     Abdoul BA <aba@nuxeo.com>
  *     Nuno Cunha <ncunha@nuxeo.com>
  */
+library identifier: "nuxeo-napps-tools@0.0.6"
 
-appName='nuxeo-coldstorage'
+appName = 'nuxeo-coldstorage'
 repositoryUrl = 'https://github.com/nuxeo/nuxeo-coldstorage/'
 
 pipeline {
@@ -139,6 +140,20 @@ pipeline {
         }
         findText regexp: 'Spotted new languages', alsoCheckConsoleOutput: true , unstableIfFound: true
       }
+    }
+  }
+  post {
+    failure {
+      script {
+        // update Slack Channel
+        String message = "${JOB_NAME} - #${BUILD_NUMBER} ${currentBuild.currentResult} (<${BUILD_URL}|Open>)"
+        slackBuildStatus("${SLACK_CHANNEL}", "${message}", 'danger')
+      }
+    }
+    unstable {
+      // update Slack Channel
+      String message = "${JOB_NAME} - #${BUILD_NUMBER} ${currentBuild.currentResult} (<${BUILD_URL}|Open>)"
+      slackBuildStatus("${SLACK_CHANNEL}", "${message}", 'gray')
     }
   }
 }
