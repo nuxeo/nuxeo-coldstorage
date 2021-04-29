@@ -10,7 +10,7 @@
   "documentContentView.moveToColdStorage.tooltip": "Send to cold storage",
   "documentContentView.retrieveFromColdStorage.confirm" : "Confirm",
   "documentContentView.retrieveFromColdStorage.cancel" : "Cancel",
-  "documentContentView.retrieveFromColdStorage.ask.confirmation": "Retrieve this document from Colstorage?",
+  "documentContentView.retrieveFromColdStorage.ask.confirmation": "Retrieve this document from cold storage?",
   "documentContentView.retrieveFromColdStorage.description": "This will result in an asynchronous call and you’ll get an email once the document is ready.",
   "documentContentView.retrieveFromColdStorage.label": "Retrieve from cold storage",
   "documentContentView.retrieveFromColdStorage.tooltip": "Retrieve from cold storage",
