@@ -3,6 +3,9 @@ nuxeo.template.includes=s3binaries
 #GLACIER
 coldstorage.target=.
 
+# Every hour at the 7th minute
+nuxeo.coldstorage.check.retrieve.state.cronExpression=0 7 * ? * * *
+
 # mandatory
 nuxeo.aws.glacier.bucket=
 nuxeo.core.binarymanager=org.nuxeo.ecm.blob.s3.S3BlobProvider

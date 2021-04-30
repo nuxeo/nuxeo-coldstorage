@@ -19,17 +19,23 @@
 
 package org.nuxeo.coldstorage.operations;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.nuxeo.coldstorage.thumbnail.DummyThumbnailFactory.DUMMY_THUMBNAIL_CONTENT;
+
 import java.io.IOException;
 
 import org.nuxeo.coldstorage.S3ColdStorageFeature;
 import org.nuxeo.coldstorage.S3TestHelper;
+import org.nuxeo.coldstorage.helpers.ColdStorageHelper;
 import org.nuxeo.ecm.automation.OperationException;
+import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.runtime.test.runner.Features;
 
 @Features(S3ColdStorageFeature.class)
-public class S3MoveToColdStorageTest extends AbstractTestMoveColdStorageOperation {
+public class S3RestoreFromColdStorageTest extends AbstractTestRestoreFromColdStorageOperation {
 
     protected S3TestHelper s3TestHelper = S3TestHelper.getInstance();
 
@@ -39,5 +45,22 @@ public class S3MoveToColdStorageTest extends AbstractTestMoveColdStorageOperatio
         super.moveContentToColdStorage(session, documentModel);
         // Mock AWS Lifecycle rule
         s3TestHelper.moveBlobContentToGlacier(session.getDocument(documentModel.getRef()));
+    }
+
+    @Override
+    protected void checkRestoreContent(DocumentModel documentModel) throws IOException {
+        // The storage class for the main blob is Glacier, the restore should be done by retrieve
+        // re-check document
+        assertTrue(documentModel.hasFacet(ColdStorageHelper.COLD_STORAGE_FACET_NAME));
+
+        // should being restored by retrieve
+        assertEquals(Boolean.TRUE,
+                documentModel.getPropertyValue(ColdStorageHelper.COLD_STORAGE_BEING_RETRIEVED_PROPERTY));
+        assertEquals(Boolean.TRUE,
+                documentModel.getPropertyValue(ColdStorageHelper.COLD_STORAGE_TO_BE_RESTORED_PROPERTY));
+
+        // check main blobs
+        Blob fileContent = (Blob) documentModel.getPropertyValue(ColdStorageHelper.FILE_CONTENT_PROPERTY);
+        assertEquals(DUMMY_THUMBNAIL_CONTENT, fileContent.getString());
     }
 }

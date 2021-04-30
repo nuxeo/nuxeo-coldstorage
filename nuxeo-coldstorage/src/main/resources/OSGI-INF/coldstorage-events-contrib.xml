@@ -3,8 +3,7 @@
 
   <extension target="org.nuxeo.ecm.core.scheduler.SchedulerService" point="schedule">
     <schedule id="checkAvailabilityOfBlobsBeingRetrieved">
-      <!-- every hour at the 7th minute -->
-      <cronExpression>0 7 * ? * * *</cronExpression>
+      <cronExpression>${nuxeo.coldstorage.check.retrieve.state.cronExpression}</cronExpression>
       <event>checkColdStorageContentAvailability</event>
     </schedule>
   </extension>
@@ -18,19 +17,29 @@
               class="org.nuxeo.coldstorage.events.CheckUpdateMainContentInColdStorage">
       <event>beforeDocumentModification</event>
     </listener>
+    <listener name="checkColdStorageContentRestoreListener" async="true"
+              class="org.nuxeo.coldstorage.events.CheckColdStorageContentRestoreListener">
+      <event>coldStorageContentToRestore</event>
+    </listener>
   </extension>
 
   <extension
-    target="org.nuxeo.ecm.platform.ec.notification.service.NotificationService" point="notifications">
+          target="org.nuxeo.ecm.platform.ec.notification.service.NotificationService" point="notifications">
     <notification name="ColdStorageContentAvailable" channel="email" availableIn="*"
                   subject="Archive content available on '${docTitle}'" template="coldStorageContentAvailable"
                   label="label.document.download">
       <event name="coldStorageContentAvailable" />
     </notification>
+    <notification name="ColdStorageContentRestored" channel="email" availableIn="*"
+                  subject="Main content '${docTitle}' restored" template="coldStorageContentRestored"
+                  label="label.document.download">
+      <event name="coldStorageContentRestored" />
+    </notification>
   </extension>
 
   <extension target="org.nuxeo.ecm.platform.ec.notification.service.NotificationService" point="templates">
     <template name="coldStorageContentAvailable" src="templates/coldStorageContentAvailable.ftl" />
+    <template name="coldStorageContentRestored" src="templates/coldStorageContentRestored.ftl" />
   </extension>
 
 </component>
