@@ -65,14 +65,26 @@ public class ColdStorageHelper {
 
     public static final String COLD_STORAGE_BEING_RETRIEVED_PROPERTY = "coldstorage:beingRetrieved";
 
+    /** @since 10.10 **/
+    public static final String COLD_STORAGE_TO_BE_RESTORED_PROPERTY = "coldstorage:toBeRestored";
+
     public static final String GET_DOCUMENTS_TO_CHECK_QUERY = String.format(
             "SELECT * FROM Document, Relation WHERE %s = 1", COLD_STORAGE_BEING_RETRIEVED_PROPERTY);
+
+    /** @since 10.10 **/
+    public static final String COLD_STORAGE_CONTENT_RESTORED_EVENT_NAME = "coldStorageContentRestored";
+
+    /** @since 10.10 **/
+    public static final String COLD_STORAGE_CONTENT_TO_RESTORE_EVENT_NAME = "coldStorageContentToRestore";
 
     public static final String COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME = "coldStorageContentAvailable";
 
     public static final String COLD_STORAGE_CONTENT_AVAILABLE_UNTIL_MAIL_TEMPLATE_KEY = "coldStorageAvailableUntil";
 
     public static final String COLD_STORAGE_CONTENT_AVAILABLE_NOTIFICATION_NAME = "ColdStorageContentAvailable";
+
+    /** @since 10.10 **/
+    public static final String COLD_STORAGE_CONTENT_RESTORED_NOTIFICATION_NAME = "ColdStorageContentRestored";
 
     public static final String COLD_STORAGE_CONTENT_ARCHIVE_LOCATION_MAIL_TEMPLATE_KEY = "archiveLocation";
 
@@ -166,6 +178,76 @@ public class ColdStorageHelper {
     }
 
     /**
+     * Restores the cold content associated with the document of the given {@link DocumentRef} into its main storage.
+     * <p/>
+     * The permission {@value org.nuxeo.ecm.core.api.security.SecurityConstants#WRITE_COLD_STORAGE} is required.
+     *
+     * @implSpec This method will rely on the {@link org.nuxeo.ecm.core.blob.BlobProvider#getStatus(ManagedBlob)} to
+     *           check if the restore can be done, otherwise it will request a retrieval
+     *           {@link #requestRetrievalFromColdStorage(CoreSession, DocumentRef, Duration)}
+     * @return the updated document model if the restore succeeds
+     * @throws NuxeoException if the cold content is already in the main storage, if there is no cold content associated
+     *             with the given document, or if the user does not have the permissions needed to perform the action.
+     * @since 10.10
+     */
+    public static DocumentModel restoreContentFromColdStorage(CoreSession session, DocumentRef documentRef) {
+        DocumentModel documentModel = session.getDocument(documentRef);
+        log.debug("Restore from cold storage the main content of document: {}", documentModel);
+
+        if (!session.hasPermission(documentRef, SecurityConstants.WRITE_COLD_STORAGE)) {
+            log.debug("The user {} does not have the right permissions to move the content of document",
+                    session::getPrincipal);
+            throw new NuxeoException(
+                    String.format("The document: %s cannot be restored from cold storage", documentRef), SC_FORBIDDEN);
+        }
+
+        if (!documentModel.hasFacet(COLD_STORAGE_FACET_NAME)
+                || documentModel.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY) == null) {
+            throw new NuxeoException(
+                    String.format("The cold content for document: %s isn't under cold storage.", documentModel),
+                    SC_CONFLICT);
+        }
+
+        Serializable coldContent = documentModel.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
+        if (coldContent == null) {
+            throw new NuxeoException(String.format("There is no cold storage content for document: %s.", documentModel),
+                    SC_NOT_FOUND);
+        }
+
+        Serializable beingRestore = documentModel.getPropertyValue(COLD_STORAGE_TO_BE_RESTORED_PROPERTY);
+        if (Boolean.TRUE.equals(beingRestore)) {
+            throw new NuxeoException(
+                    String.format("The cold storage content associated with the document: %s is being restored.",
+                            documentModel),
+                    SC_CONFLICT);
+        }
+
+        documentModel.setPropertyValue(COLD_STORAGE_TO_BE_RESTORED_PROPERTY, true);
+        session.saveDocument(documentModel);
+        BlobStatus blobStatus = ColdStorageHelper.getBlobStatus(documentModel);
+        if (blobStatus.isDownloadable()) {
+            restoreMainContent(documentModel);
+        } else {
+            documentModel = requestRetrievalFromColdStorage(session, documentModel.getRef(),
+                    Duration.ofDays(getNumberOfDaysOfAvailability()));
+        }
+        return documentModel;
+    }
+
+    /**
+     * Gets the number of the days where the document's blob is available, once it's retrieved from cold storage.
+     *
+     * @return the number of days of availability if property
+     *         {@value COLD_STORAGE_NUMBER_OF_DAYS_OF_AVAILABILITY_PROPERTY_NAME} is configured, {@code 1} otherwise.
+     * @since 10.10
+     */
+    public static int getNumberOfDaysOfAvailability() {
+        String value = Framework.getProperties()
+                                .getProperty(COLD_STORAGE_NUMBER_OF_DAYS_OF_AVAILABILITY_PROPERTY_NAME, "1");
+        return Integer.parseInt(value);
+    }
+
+    /**
      * Checks if the retrieved cold storage contents are available for download.
      *
      * @implSpec: Queries all documents with a cold storage content which are being retrieved, meaning
@@ -185,15 +267,8 @@ public class ColdStorageHelper {
         EventService eventService = Framework.getService(EventService.class);
         DownloadService downloadService = Framework.getService(DownloadService.class);
         for (DocumentModel doc : documents) {
-            Blob coldContent = (Blob) doc.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
-            BlobStatus blobStatus;
-            try {
-                blobStatus = Framework.getService(BlobManager.class)
-                                      .getBlobProvider(coldContent)
-                                      .getStatus((ManagedBlob) coldContent);
-            } catch (IOException e) {
-                // log the failure and continue the check process
-                log.error("Unable to get the cold storage blob status for document: {}", doc, e);
+            BlobStatus blobStatus = getBlobStatus(doc);
+            if (blobStatus == null) {
                 continue;
             }
 
@@ -201,18 +276,24 @@ public class ColdStorageHelper {
                 available++;
                 beingRetrieved--;
 
-                doc.setPropertyValue(COLD_STORAGE_BEING_RETRIEVED_PROPERTY, false);
-                session.saveDocument(doc);
+                // Check if the Document should be restored definitively
+                Serializable undoMove = doc.getPropertyValue(COLD_STORAGE_TO_BE_RESTORED_PROPERTY);
+                if (Boolean.TRUE.equals(undoMove)) {
+                    restoreMainContent(doc);
+                } else {
+                    doc.setPropertyValue(COLD_STORAGE_BEING_RETRIEVED_PROPERTY, false);
+                    session.saveDocument(doc);
 
-                DocumentEventContext ctx = new DocumentEventContext(session, session.getPrincipal(), doc);
-                Instant downloadableUntil = blobStatus.getDownloadableUntil();
-                if (downloadableUntil != null) {
-                    ctx.getProperties()
-                       .put(COLD_STORAGE_CONTENT_AVAILABLE_UNTIL_MAIL_TEMPLATE_KEY, downloadableUntil.toString());
+                    DocumentEventContext ctx = new DocumentEventContext(session, session.getPrincipal(), doc);
+                    Instant downloadableUntil = blobStatus.getDownloadableUntil();
+                    if (downloadableUntil != null) {
+                        ctx.getProperties()
+                           .put(COLD_STORAGE_CONTENT_AVAILABLE_UNTIL_MAIL_TEMPLATE_KEY, downloadableUntil.toString());
+                    }
+                    String downloadUrl = downloadService.getDownloadUrl(doc, COLD_STORAGE_CONTENT_PROPERTY, null);
+                    ctx.getProperties().put(COLD_STORAGE_CONTENT_ARCHIVE_LOCATION_MAIL_TEMPLATE_KEY, downloadUrl);
+                    eventService.fireEvent(ctx.newEvent(COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME));
                 }
-                String downloadUrl = downloadService.getDownloadUrl(doc, COLD_STORAGE_CONTENT_PROPERTY, null);
-                ctx.getProperties().put(COLD_STORAGE_CONTENT_ARCHIVE_LOCATION_MAIL_TEMPLATE_KEY, downloadUrl);
-                eventService.fireEvent(ctx.newEvent(COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME));
             }
         }
 
@@ -221,6 +302,31 @@ public class ColdStorageHelper {
                 session.getRepositoryName(), beingRetrieved, available);
 
         return new ColdStorageContentStatus(beingRetrieved, available);
+    }
+
+    /**
+     * Restores the main content from ColdStorage.
+     *
+     * @implSpec: fires a {@value COLD_STORAGE_CONTENT_TO_RESTORE_EVENT_NAME} event.
+     * @see #restoreContentFromColdStorage(CoreSession, DocumentRef)
+     */
+    protected static void restoreMainContent(DocumentModel documentModel) {
+        CoreSession session = documentModel.getCoreSession();
+        DocumentEventContext ctx = new DocumentEventContext(session, session.getPrincipal(), documentModel);
+        EventService eventService = Framework.getService(EventService.class);
+        eventService.fireEvent(ctx.newEvent(ColdStorageHelper.COLD_STORAGE_CONTENT_TO_RESTORE_EVENT_NAME));
+    }
+
+    protected static BlobStatus getBlobStatus(DocumentModel doc) {
+        try {
+            Blob coldContent = (Blob) doc.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
+            return Framework.getService(BlobManager.class)
+                                  .getBlobProvider(coldContent)
+                                  .getStatus((ManagedBlob) coldContent);
+        } catch (IOException e) {
+            log.error("Unable to get the cold storage blob status for document: {}", doc, e);
+            return null;
+        }
     }
 
     protected static String getContentBlobKey(Blob coldContent) {
