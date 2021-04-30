@@ -66,12 +66,16 @@ public abstract class AbstractTestColdStorageOperation {
     @Inject
     protected CoreFeature coreFeature;
 
+    @Inject
+    protected CoreSession session;
+
     protected void moveContentToColdStorage(CoreSession session, DocumentModel documentModel)
             throws OperationException, IOException {
         try (OperationContext context = new OperationContext(session)) {
             context.setInput(documentModel);
             DocumentModel updatedDocModel = (DocumentModel) automationService.run(context, MoveToColdStorage.ID);
             checkMoveContent(Collections.singletonList(documentModel), Collections.singletonList(updatedDocModel));
+            session.saveDocument(documentModel);
         }
     }
 

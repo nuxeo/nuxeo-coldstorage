@@ -66,6 +66,25 @@ public class S3TestColdStorage extends AbstractTestColdStorageHelper {
         assertEquals(Boolean.TRUE, s3TestHelper.isBlobContentBeingRetrieved(documentModel));
     }
 
+    @Test
+    public void shouldRestore() {
+        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
+
+        // move the blob to cold storage
+        documentModel = moveContentToColdStorage(session, documentModel.getRef());
+        session.saveDocument(documentModel);
+        // undo move from the cold storage
+        documentModel = ColdStorageHelper.restoreContentFromColdStorage(session, documentModel.getRef());
+        session.saveDocument(documentModel);
+        transactionalFeature.nextTransaction();
+        documentModel.refresh();
+
+        assertEquals(Boolean.TRUE,
+                documentModel.getPropertyValue(ColdStorageHelper.COLD_STORAGE_UNDO_MOVE_PROPERTY));
+
+        assertEquals(Boolean.TRUE, s3TestHelper.isBlobContentBeingRetrieved(documentModel));
+    }
+
     @Override
     protected void moveAndVerifyContent(CoreSession session, DocumentModel documentModel) throws IOException {
         documentModel = moveContentToColdStorage(session, documentModel.getRef());

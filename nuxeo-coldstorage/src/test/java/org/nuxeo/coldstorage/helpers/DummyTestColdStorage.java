@@ -28,6 +28,7 @@ import java.util.List;
 import org.junit.Test;
 import org.nuxeo.coldstorage.DummyColdStorageFeature;
 import org.nuxeo.coldstorage.blob.providers.DummyBlobProvider;
+import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.IdRef;
 import org.nuxeo.ecm.core.blob.BlobStatus;
 import org.nuxeo.ecm.core.blob.ManagedBlob;
@@ -39,6 +40,21 @@ public class DummyTestColdStorage extends AbstractTestColdStorageHelper {
     @Override
     protected String getBlobProviderName() {
         return "dummy";
+    }
+
+    @Test
+    public void shouldRestore() {
+        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
+
+        // move the blob to cold storage
+        documentModel = moveContentToColdStorage(session, documentModel.getRef());
+        session.saveDocument(documentModel);
+        // undo move from the cold storage
+        documentModel = ColdStorageHelper.restoreContentFromColdStorage(session, documentModel.getRef());
+        session.saveDocument(documentModel);
+        transactionalFeature.nextTransaction();
+        documentModel.refresh();
+
     }
 
     @Test
