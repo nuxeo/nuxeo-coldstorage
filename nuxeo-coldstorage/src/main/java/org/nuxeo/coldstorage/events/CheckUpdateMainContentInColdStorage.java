@@ -21,6 +21,8 @@ package org.nuxeo.coldstorage.events;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.nuxeo.coldstorage.helpers.ColdStorageHelper;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.NuxeoException;
@@ -30,7 +32,6 @@ import org.nuxeo.ecm.core.event.Event;
 import org.nuxeo.ecm.core.event.EventContext;
 import org.nuxeo.ecm.core.event.EventListener;
 import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
-import org.nuxeo.ecm.core.schema.FacetNames;
 
 /**
  * A synchronous listener that prevents any main content replacement when it's stored in cold storage.
@@ -39,10 +40,23 @@ import org.nuxeo.ecm.core.schema.FacetNames;
  */
 public class CheckUpdateMainContentInColdStorage implements EventListener {
 
+    /** @since 10.10 **/
+    private static final Logger log = LogManager.getLogger(CheckUpdateMainContentInColdStorage.class);
+
+    /** @since 10.10 **/
+    public static final String DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER = "disableColdStorageCheckUpdateMainContentListener";
+
     @Override
     public void handleEvent(Event event) {
         EventContext eventContext = event.getContext();
         if (!(eventContext instanceof DocumentEventContext)) {
+            return;
+        }
+
+        DocumentEventContext docCtx = (DocumentEventContext) eventContext;
+        DocumentModel doc = docCtx.getSourceDocument();
+        if (Boolean.TRUE.equals(docCtx.getProperty(DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER))) {
+            log.trace("Checking the main blob replacement in cold storage is disabled for document {}", doc::getId);
             return;
         }
 
