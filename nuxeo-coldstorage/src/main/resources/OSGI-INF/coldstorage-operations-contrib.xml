@@ -4,6 +4,7 @@
   <extension target="org.nuxeo.ecm.core.operation.OperationServiceComponent" point="operations">
     <operation class="org.nuxeo.coldstorage.operations.MoveToColdStorage" />
     <operation class="org.nuxeo.coldstorage.operations.RequestRetrievalFromColdStorage" />
+    <operation class="org.nuxeo.coldstorage.operations.RestoreFromColdStorage" />
   </extension>
 
 </component>

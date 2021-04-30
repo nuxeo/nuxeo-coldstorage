@@ -5,4 +5,5 @@ Bundle-SymbolicName: org.nuxeo.coldstorage.test;singleton:=true
 Bundle-Vendor: Nuxeo
 Bundle-Localization: bundle
 Eclipse-LazyStart: true
-Nuxeo-Component: OSGI-INF/test-dummy-thumbnail-factory-contrib.xml
+Nuxeo-Component: OSGI-INF/test-dummy-thumbnail-factory-contrib.xml,
+ OSGI-INF/coldstorage-scheduler-contrib-test-disable.xml
