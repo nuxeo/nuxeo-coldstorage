@@ -23,6 +23,7 @@ import static javax.servlet.http.HttpServletResponse.SC_CONFLICT;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -248,6 +249,30 @@ public abstract class AbstractTestColdStorageHelper {
         List<Map<String, Serializable>> actualAttachments = (List<Map<String, Serializable>>) documentModel.getPropertyValue(
                 "files:files");
         assertTrue(CollectionUtils.isEqualCollection(attachments, actualAttachments));
+    }
+
+    @Test
+    public void shouldMakeRestoreImmediately() throws IOException {
+        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
+        documentModel = moveAndRestore(documentModel);
+        session.saveDocument(documentModel);
+        transactionalFeature.nextTransaction();
+        documentModel.refresh();
+
+        // check main blobs
+        Blob fileContent = (Blob) documentModel.getPropertyValue(ColdStorageHelper.FILE_CONTENT_PROPERTY);
+        assertEquals(FILE_CONTENT, fileContent.getString());
+
+        // we shouldn't have any ColdStorage content
+        assertFalse(documentModel.hasFacet(ColdStorageHelper.COLD_STORAGE_FACET_NAME));
+
+    }
+
+    protected DocumentModel moveAndRestore(DocumentModel documentModel) throws IOException {
+        // move the blob to cold storage and verify the content
+        moveAndVerifyContent(session, documentModel);
+        // undo move from the cold storage
+        return ColdStorageHelper.restoreContentFromColdStorage(session, documentModel.getRef());
     }
 
     protected void moveAndVerifyContent(CoreSession session, DocumentModel documentModel) throws IOException {

@@ -20,20 +20,13 @@
 package org.nuxeo.coldstorage.helpers;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
 
 import org.junit.Test;
 import org.nuxeo.coldstorage.S3ColdStorageFeature;
 import org.nuxeo.coldstorage.S3TestHelper;
-import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentRef;
-import org.nuxeo.ecm.core.blob.ManagedBlob;
 import org.nuxeo.runtime.test.runner.Features;
 
 @Features(S3ColdStorageFeature.class)
@@ -67,31 +60,26 @@ public class S3TestColdStorage extends AbstractTestColdStorageHelper {
     }
 
     @Override
-    protected void moveAndVerifyContent(CoreSession session, DocumentModel documentModel) throws IOException {
-        documentModel = moveContentToColdStorage(session, documentModel.getRef());
-        session.saveDocument(documentModel);
-        // Mock AWS Lifecycle rule
-        s3TestHelper.moveBlobContentToGlacier(documentModel);
-        transactionalFeature.nextTransaction();
-        documentModel.refresh();
-
-        assertTrue(documentModel.hasFacet(ColdStorageHelper.COLD_STORAGE_FACET_NAME));
-
-        assertNull(documentModel.getPropertyValue(ColdStorageHelper.FILE_CONTENT_PROPERTY));
-
-        // check if the `coldstorage:coldContent` property contains the original file content
-        Blob content = (Blob) documentModel.getPropertyValue(ColdStorageHelper.COLD_STORAGE_CONTENT_PROPERTY);
-        assertNotNull(content);
-        assertEquals(FILE_CONTENT, content.getString());
-        assertEquals(getBlobProviderName(), ((ManagedBlob) content).getProviderId());
+    protected DocumentModel moveAndRestore(DocumentModel documentModel) {
+        // move the blob to cold storage
+        moveContentToColdStorage(session, documentModel.getRef(), false);
+        // undo move from the cold storage
+        return ColdStorageHelper.restoreContentFromColdStorage(session, documentModel.getRef());
     }
 
     @Override
     protected DocumentModel moveContentToColdStorage(CoreSession session, DocumentRef documentRef) {
+        return moveContentToColdStorage(session, documentRef, true);
+    }
+
+    protected DocumentModel moveContentToColdStorage(CoreSession session, DocumentRef documentRef,
+            boolean changeStorageClass) {
         DocumentModel documentModel = super.moveContentToColdStorage(session, documentRef);
         session.saveDocument(documentModel);
         // Mock AWS Lifecycle rule
-        s3TestHelper.moveBlobContentToGlacier(session.getDocument(documentRef));
+        if (changeStorageClass) {
+            s3TestHelper.moveBlobContentToGlacier(session.getDocument(documentRef));
+        }
         return documentModel;
     }
 }
