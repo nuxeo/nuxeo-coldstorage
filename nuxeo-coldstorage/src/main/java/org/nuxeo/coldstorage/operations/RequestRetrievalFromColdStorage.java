@@ -63,7 +63,7 @@ public class RequestRetrievalFromColdStorage {
     public DocumentModel run(DocumentModel doc) {
         if (numberOfDaysOfAvailability == 0) {
             String value = Framework.getProperties()
-                                    .getProperty(COLD_STORAGE_NUMBER_OF_DAYS_OF_AVAILABILITY_PROPERTY_NAME, "1");
+                                    .getProperty(COLD_STORAGE_NUMBER_OF_DAYS_OF_AVAILABILITY_PROPERTY_NAME, "5");
             numberOfDaysOfAvailability = Integer.valueOf(value);
         }
         DocumentModel documentModel = ColdStorageHelper.requestRetrievalFromColdStorage(session, doc.getRef(),
