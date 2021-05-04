@@ -18,8 +18,8 @@ Feature: Cold Storage
     And I have permission WriteColdStorage for this document
     When I browse to the document
     And I click the Send file to cold storage action button
-    Then I can see the confirmation dialog
-    When I click the confirm button in confirmation dialog
+    Then I can see the "Send" confirmation dialog
+    When I click the confirm button in the "Send" confirmation dialog
     Then I can see the file is stored in cold storage
 
   Scenario: User can Cancel the send file to cold storage action in confirmation dialog
@@ -29,8 +29,8 @@ Feature: Cold Storage
     And I have permission WriteColdStorage for this document
     When I browse to the document
     And I click the Send file to cold storage action button
-    Then I can see the confirmation dialog
-    When I click the cancel button in confirmation dialog
+    Then I can see the "Send" confirmation dialog
+    When I click the cancel button in the "Send" confirmation dialog
     Then I can see the file is not stored in cold storage
 
   Scenario: User with ReadWrite permission can't send file to cold storage
@@ -85,3 +85,18 @@ Feature: Cold Storage
     Then I can see the Send the selected files to cold storage action button
     And I select the "sample3" document
     Then I cannot see the Send the selected files to cold storage action button
+
+  Scenario: User with WriteColdStorage permission can Restore file from cold storage
+    Given I login as "Jack"
+    And I have a File document
+    And This document has file "sample.png" for content
+    And I have permission WriteColdStorage for this document
+    When I browse to the document
+    And I click the Send file to cold storage action button
+    Then I can see the "Send" confirmation dialog
+    When I click the confirm button in the "Send" confirmation dialog
+    Then I can see the file is stored in cold storage
+    When I click the Restore file from cold storage action button
+    Then I can see the "Restore" confirmation dialog
+    When I click the confirm button in the "Restore" confirmation dialog
+    Then I can see the file is not stored in cold storage
