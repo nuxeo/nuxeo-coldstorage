@@ -47,13 +47,23 @@ When('I click the Send file to cold storage action button', function () {
   this.ui.browser.clickDocumentActionMenu('nuxeo-move-content-to-coldstorage-button');
 });
 
-When('I can see the confirmation dialog', function () {
-  const dialog = this.ui.browser.el.element('nuxeo-dialog#contentToMoveDialog');
+When('I click the Restore file from cold storage action button', function () {
+  this.ui.browser.clickDocumentActionMenu('nuxeo-restore-content-from-coldstorage-button');
+});
+
+When('I can see the {string} confirmation dialog', function (dialogType) {
+  let dialog;
+  if (dialogType === 'Send') {
+    dialog = this.ui.browser.el.element('nuxeo-dialog#contentToMoveDialog');
+  } else dialog = this.ui.browser.el.element('nuxeo-dialog#contentToRestoreDialog');
   dialog.waitForVisible();
 });
 
-When('I click the {word} button in confirmation dialog', function (btn) {
-  const dialog = this.ui.browser.el.element('nuxeo-dialog#contentToMoveDialog');
+When('I click the {word} button in the {string} confirmation dialog', function (btn, dialogType) {
+  let dialog;
+  if (dialogType === 'Send') {
+    dialog = this.ui.browser.el.element('nuxeo-dialog#contentToMoveDialog');
+  } else dialog = this.ui.browser.el.element('nuxeo-dialog#contentToRestoreDialog');
   dialog.click(`paper-button[name="${btn}"]`);
   driver.pause(1000);
 });
