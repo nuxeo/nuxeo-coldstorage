@@ -1,0 +1,117 @@
+<!-- 
+(C) Copyright Nuxeo Corp. (http://nuxeo.com/) Licensed under the Apache License, Version 2.0 (the "License"); you
+may not use this file except in compliance with the License. You may obtain a copy of the License at
+http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+express or implied. See the License for the specific language governing permissions and limitations under the License.
+-->
+
+<!--
+`nuxeo-move-content-to-coldstorage-button`
+@group Nuxeo UI
+@element nuxeo-move-content-to-coldstorage-button 
+-->
+
+<dom-module id="nuxeo-restore-content-from-coldstorage-button">
+  <template>
+    <style include="nuxeo-action-button-styles nuxeo-styles"></style>
+    <nuxeo-operation id="opRestore" op="Document.RestoreFromColdStorage" input="[[document.uid]]"></nuxeo-operation>
+    <nuxeo-connection id="nxcon" user="{{currentUser}}"></nuxeo-connection>
+
+    <dom-if if="[[_isAvailable(document, currentUser)]]">
+      <template>
+        <div class="action" on-click="_toggleDialog">
+          <paper-icon-button icon="nuxeo:coldstorage" noink></paper-icon-button>
+          <span class="label">[[i18n('documentContentView.restoreFromColdStorage.label')]]</span>
+          <nuxeo-tooltip>[[i18n('documentContentView.restoreFromColdStorage.tooltip')]]</nuxeo-tooltip>
+        </div>
+      </template>
+    </dom-if>
+
+    <nuxeo-dialog id="contentToRestoreDialog" with-backdrop>
+      <h2>[[i18n('documentContentView.restoreFromColdStorage.ask.confirmation')]]</h2>
+      <p>[[i18n('documentContentView.restoreFromColdStorage.description')]]</p>
+
+      <div class="buttons">
+        <paper-button id="cancel" name="cancel" noink dialog-dismiss>
+          [[i18n('documentContentView.restoreFromColdStorage.cancel')]]
+        </paper-button>
+        <paper-button id="confirm" name="confirm" class="primary" noink dialog-confirm on-click="_toggle">
+          [[i18n('documentContentView.restoreFromColdStorage.confirm')]]
+        </paper-button>
+      </div>
+    </nuxeo-dialog>
+  </template>
+  <script>
+    class RestoreFromColdStorage extends Polymer.mixinBehaviors(
+      [Nuxeo.FiltersBehavior, Nuxeo.FormatBehavior],
+      Nuxeo.Element,
+    ) {
+      static get is() {
+        return 'nuxeo-restore-content-from-coldstorage-button';
+      }
+
+      static get properties() {
+        return {
+          /**
+           * Input document.
+           */
+          document: Object,
+          /**
+           * Current user.
+           */
+          currentUser: Object,
+        };
+      }
+
+      _toggleDialog() {
+        this.$.contentToRestoreDialog.toggle();
+      }
+
+      _hasAdministrationPermissions(user) {
+        return user && (user.isAdministrator || this.isMember(user, 'powerusers'));
+      }
+
+      _isAvailable(document, currentUser) {
+        return (
+          this.hasFacet(document, 'ColdStorage')
+      && !document.properties['coldstorage:beingRestored']
+      && (this._hasAdministrationPermissions(currentUser) || this.hasPermission(document, 'WriteColdStorage'))
+      && this.hasContent(document)
+        );
+      }
+
+      _toggle() {
+        this.$.opRestore
+          .execute()
+          .then(() => {
+            this.dispatchEvent(
+              new CustomEvent('document-updated', {
+                composed: true,
+                bubbles: true,
+              }),
+            );
+
+            this.dispatchEvent(
+              new CustomEvent('notify', {
+                composed: true,
+                bubbles: true,
+                detail: { message: this.i18n('documentContentView.restoreFromColdStorage.success') },
+              }),
+            );
+          })
+          .catch((error) => {
+            this.dispatchEvent(
+              new CustomEvent('notify', {
+                composed: true,
+                bubbles: true,
+                detail: { message: this.i18n('documentContentView.restoreFromColdStorage.error') },
+              }),
+            );
+            throw error;
+          });
+      }
+    }
+    window.customElements.define(RestoreFromColdStorage.is, RestoreFromColdStorage);
+  </script>
+</dom-module>
