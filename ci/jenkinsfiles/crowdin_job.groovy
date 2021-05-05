@@ -62,6 +62,7 @@ pipeline {
     INPUT_FILE = "${PROJECT_PATH}/nuxeo-coldstorage-web/i18n/messages.json"
     OUTPUT_FOLDER = "${PROJECT_PATH}/nuxeo-coldstorage-web/i18n"
     ORG = 'nuxeo'
+    SLACK_CHANNEL = "${env.DRY_RUN == 'true' ? 'infra-napps' : 'napps-notifs'}"
   }
   stages {
     stage('Check parameters') {
@@ -151,9 +152,11 @@ pipeline {
       }
     }
     unstable {
-      // update Slack Channel
-      String message = "${JOB_NAME} - #${BUILD_NUMBER} ${currentBuild.currentResult} (<${BUILD_URL}|Open>)"
-      slackBuildStatus("${SLACK_CHANNEL}", "${message}", 'gray')
+      script {
+        // update Slack Channel
+        String message = "${JOB_NAME} - #${BUILD_NUMBER} ${currentBuild.currentResult} (<${BUILD_URL}|Open>)"
+        slackBuildStatus("${SLACK_CHANNEL}", "${message}", 'gray')
+      }
     }
   }
 }
