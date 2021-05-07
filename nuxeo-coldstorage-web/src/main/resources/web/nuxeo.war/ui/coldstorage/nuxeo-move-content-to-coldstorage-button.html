@@ -21,7 +21,7 @@ express or implied. See the License for the specific language governing permissi
     <dom-if if="[[_isAvailable(document, currentUser)]]">
       <template>
         <div class="action" on-click="_toggleDialog">
-          <paper-icon-button icon="nuxeo:coldstorage" noink></paper-icon-button>
+          <paper-icon-button icon="coldstorage:default" noink></paper-icon-button>
           <span class="label">[[i18n('documentContentView.moveToColdStorage.label')]]</span>
           <nuxeo-tooltip>[[i18n('documentContentView.moveToColdStorage.tooltip')]]</nuxeo-tooltip>
         </div>
@@ -74,9 +74,9 @@ express or implied. See the License for the specific language governing permissi
 
       _isAvailable(document, currentUser) {
         return (
-          !this.hasFacet(document, 'ColdStorage') &&
-          (this._hasAdministrationPermissions(currentUser) || this.hasPermission(document, 'WriteColdStorage')) &&
-          this.hasContent(document)
+          !this.hasFacet(document, 'ColdStorage')
+      && (this._hasAdministrationPermissions(currentUser) || this.hasPermission(document, 'WriteColdStorage'))
+      && this.hasContent(document)
         );
       }
 
