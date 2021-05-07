@@ -47,7 +47,7 @@ class RetrieveFromColdStorage extends mixinBehaviors([FiltersBehavior, FormatBeh
       <dom-if if="[[_isAvailable(document, currentUser)]]">
         <template>
           <div class="action" on-click="_toggleDialog">
-            <paper-icon-button icon="nuxeo:coldstorage" noink></paper-icon-button>
+            <paper-icon-button icon="coldstorage:default" noink></paper-icon-button>
             <span class="label">[[i18n('documentContentView.retrieveFromColdStorage.label')]]</span>
             <nuxeo-tooltip>[[i18n('documentContentView.retrieveFromColdStorage.tooltip')]]</nuxeo-tooltip>
           </div>
