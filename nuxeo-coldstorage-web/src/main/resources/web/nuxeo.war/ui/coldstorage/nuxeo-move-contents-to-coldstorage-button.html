@@ -20,7 +20,7 @@ express or implied. See the License for the specific language governing permissi
     <dom-if if="[[_isAvailable(documents, currentUser)]]">
       <template>
         <div class="action" on-click="_toggleDialog">
-          <paper-icon-button icon="nuxeo:coldstorage" noink></paper-icon-button>
+          <paper-icon-button icon="coldstorage:default" noink></paper-icon-button>
           <nuxeo-tooltip>[[i18n('moveDocumentsContentsToColdStorage.tooltip')]]</nuxeo-tooltip>
         </div>
       </template>
@@ -76,18 +76,18 @@ express or implied. See the License for the specific language governing permissi
 
       _canMoveDocument(doc) {
         return (
-          (this._hasAdministrationPermissions(this.currentUser) || this.hasPermission(doc, 'WriteColdStorage')) &&
-          !this.hasFacet(doc, 'ColdStorage') &&
-          this.hasContent(doc)
+          (this._hasAdministrationPermissions(this.currentUser) || this.hasPermission(doc, 'WriteColdStorage'))
+      && !this.hasFacet(doc, 'ColdStorage')
+      && this.hasContent(doc)
         );
       }
 
       _isAvailable(documents) {
-        return documents.length > 0 && documents.every(doc => this._canMoveDocument(doc));
+        return documents.length > 0 && documents.every((doc) => this._canMoveDocument(doc));
       }
 
       _toggle() {
-        const uids = this.documents.map(doc => doc.uid).join(',');
+        const uids = this.documents.map((doc) => doc.uid).join(',');
         this.$.opMove.input = `docs:${uids}`;
         this.$.opMove
           .execute()
