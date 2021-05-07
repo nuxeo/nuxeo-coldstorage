@@ -46,7 +46,7 @@ class BulkMoveToColdStorage extends mixinBehaviors([FiltersBehavior, FormatBehav
       <dom-if if="[[_isAvailable(documents, currentUser)]]">
         <template>
           <div class="action" on-click="_toggleDialog">
-            <paper-icon-button icon="nuxeo:coldstorage" noink></paper-icon-button>
+            <paper-icon-button icon="coldstorage:default" noink></paper-icon-button>
             <nuxeo-tooltip>[[i18n('moveDocumentsContentsToColdStorage.tooltip')]]</nuxeo-tooltip>
           </div>
         </template>
