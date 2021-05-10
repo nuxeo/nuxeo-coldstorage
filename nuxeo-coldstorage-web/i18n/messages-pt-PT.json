@@ -16,6 +16,7 @@
   "documentContentView.retrieveFromColdStorage.tooltip": "Retrieve from cold storage",
   "documentContentView.retrieveFromColdStorage.success": "Start retrieving document content from cold storage",
   "documentContentView.retrieveFromColdStorage.error": "Error retrieving the document content from cold storage.",
+  "documentPage.content.lowResolutionPreview": "This is a low resolution preview.",  
   "documentPage.content.storedInColdStorage": "The master file is stored in cold storage.",
   "label.security.permission.writeColdStorage": "WriteColdStorage",
   "moveDocumentsContentsToColdStorage.ask.confirmation": "Send the documents contents to cold storage?",
