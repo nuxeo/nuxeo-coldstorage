@@ -18,5 +18,6 @@ import './elements/nuxeo-move-content-to-coldstorage-button.js';
 import './elements/nuxeo-move-contents-to-coldstorage-button.js';
 import './elements/nuxeo-retrieve-content-from-coldstorage-button.js';
 import './elements/icons/coldstorage-icons.js';
+import './elements/nuxeo-coldstorage-infobar.js';
 
 import './nuxeo-coldstorage.html';
