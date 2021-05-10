@@ -16,6 +16,7 @@
   "documentContentView.retrieveFromColdStorage.tooltip": "Récupérer à partir du stockage à froid",
   "documentContentView.retrieveFromColdStorage.success": "Commencez à récupérer le contenu du document à partir du stockage à froid",
   "documentContentView.retrieveFromColdStorage.error": "Erreur lors de la récupération du contenu du document à partir du stockage à froid",
+  "documentPage.content.lowResolutionPreview": "Ceci est un aperçu en basse résolution.",  
   "documentPage.content.storedInColdStorage": "Le fichier principal est stocké en stockage à froid.",
   "label.security.permission.writeColdStorage": "WriteColdStorage",
   "moveDocumentsContentsToColdStorage.ask.confirmation": "Envoyer le contenu des documents au stockage à froid ?",
