@@ -7,12 +7,10 @@ import org.nuxeo.coldstorage.S3TestHelper;
 import org.nuxeo.ecm.automation.OperationException;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
-import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.Features;
 
 @Features(S3ColdStorageFeature.class)
-@Deploy("org.nuxeo.coldstorage.test:OSGI-INF/test-s3-coldstorage-contrib.xml")
-public class S3RequestRetrievalFromColdStorageTest extends DummyRequestRetrievalFromColdStorageTest {
+public class S3RequestRetrievalFromColdStorageTest extends AbstractTestRequestRetrievalColdStorageOperation {
 
     protected S3TestHelper s3TestHelper = S3TestHelper.getInstance();
 
