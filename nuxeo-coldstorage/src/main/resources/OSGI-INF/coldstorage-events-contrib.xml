@@ -3,8 +3,8 @@
 
   <extension target="org.nuxeo.ecm.core.scheduler.SchedulerService" point="schedule">
     <schedule id="checkAvailabilityOfBlobsBeingRetrieved">
-      <!-- every hour at the 7th minute -->
-      <cronExpression>0 7 * ? * * *</cronExpression>
+      <!-- every 5 minute -->
+      <cronExpression>0 0/5 * ? * * *</cronExpression>
       <event>checkColdStorageContentAvailability</event>
     </schedule>
   </extension>
