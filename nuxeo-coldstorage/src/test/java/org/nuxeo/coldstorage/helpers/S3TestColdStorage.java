@@ -80,7 +80,7 @@ public class S3TestColdStorage extends AbstractTestColdStorageHelper {
         documentModel.refresh();
 
         assertEquals(Boolean.TRUE,
-                documentModel.getPropertyValue(ColdStorageHelper.COLD_STORAGE_UNDO_MOVE_PROPERTY));
+                documentModel.getPropertyValue(ColdStorageHelper.COLD_STORAGE_TO_BE_RESTORED_PROPERTY));
 
         assertEquals(Boolean.TRUE, s3TestHelper.isBlobContentBeingRetrieved(documentModel));
     }

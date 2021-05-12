@@ -37,20 +37,15 @@ public class RestoreFromColdStorage {
     @Param(name = "save", required = false, values = "true")
     protected boolean save = true;
 
-
     @OperationMethod
     public DocumentModel run(DocumentModel document) {
-        DocumentModel documentModel = ColdStorageHelper.restoreContentFromColdStorage(session, document.getRef());
-
         // auto-subscribe the user, this way they will receive the mail notification when the content is available
         NuxeoPrincipal principal = session.getPrincipal();
         String username = NotificationConstants.USER_PREFIX + principal.getName();
         NotificationManager notificationManager = Framework.getService(NotificationManager.class);
-        notificationManager.addSubscription(username,
-                ColdStorageHelper.COLD_STORAGE_CONTENT_RESTORED_NOTIFICATION_NAME, documentModel, false, principal,
-                ColdStorageHelper.COLD_STORAGE_CONTENT_RESTORED_NOTIFICATION_NAME);
-
-
+        notificationManager.addSubscription(username, ColdStorageHelper.COLD_STORAGE_CONTENT_RESTORED_NOTIFICATION_NAME,
+                document, false, principal, ColdStorageHelper.COLD_STORAGE_CONTENT_RESTORED_NOTIFICATION_NAME);
+        DocumentModel documentModel = ColdStorageHelper.restoreContentFromColdStorage(session, document.getRef());
         if (save) {
             documentModel = session.saveDocument(documentModel);
         }
