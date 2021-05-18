@@ -45,8 +45,6 @@ nuxeo:
       enabled: disable
     packages: nuxeo-web-ui amazon-s3-online-storage /packages/nuxeo-coldstorage-package-*.zip
     customParams: |-
-      # Override Nuxeo connect configuration
-      org.nuxeo.connect.url=https://nos-preprod-connect.nuxeocloud.com/nuxeo/site/
       # AWS
       nuxeo.aws.accessKeyId=${env:AWS_ACCESS_KEY}
       nuxeo.aws.secretKey=${env:AWS_ACCESS_SECRET}
