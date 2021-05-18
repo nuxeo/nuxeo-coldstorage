@@ -26,24 +26,23 @@ import org.apache.logging.log4j.Logger;
 import org.nuxeo.coldstorage.helpers.ColdStorageHelper;
 import org.nuxeo.ecm.core.api.CloseableCoreSession;
 import org.nuxeo.ecm.core.api.CoreInstance;
-import org.nuxeo.ecm.core.api.CoreSession;
-import org.nuxeo.ecm.core.event.Event;
-import org.nuxeo.ecm.core.event.EventListener;
+import org.nuxeo.ecm.core.event.EventBundle;
+import org.nuxeo.ecm.core.event.PostCommitEventListener;
 import org.nuxeo.ecm.core.repository.RepositoryService;
 import org.nuxeo.runtime.api.Framework;
 
 /**
- * A synchronous listener that checks if the contents being retrieved form cold storage are available.
+ * An asynchronous listener that checks if the contents being retrieved from cold storage are available.
  *
  * @apiNote: This listener is designed to be called from a scheduler.
  * @since 11.1
  */
-public class CheckColdStorageContentAvailabilityListener implements EventListener {
+public class CheckColdStorageContentAvailabilityListener implements PostCommitEventListener {
 
     private static final Logger log = LogManager.getLogger(CheckColdStorageContentAvailabilityListener.class);
 
     @Override
-    public void handleEvent(final Event event) {
+    public void handleEvent(EventBundle events) {
         log.debug("Start checking the available cold storage content");
         List<String> repositoryNames = Framework.getService(RepositoryService.class).getRepositoryNames();
         for (String repository : repositoryNames) {
