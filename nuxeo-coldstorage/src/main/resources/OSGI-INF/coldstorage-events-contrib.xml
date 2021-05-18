@@ -10,7 +10,7 @@
   </extension>
 
   <extension target="org.nuxeo.ecm.core.event.EventServiceComponent" point="listener">
-    <listener name="checkColdStorageContentAvailability"
+    <listener name="checkColdStorageContentAvailability" async="true"
               class="org.nuxeo.coldstorage.events.CheckColdStorageContentAvailabilityListener">
       <event>checkColdStorageContentAvailability</event>
     </listener>
