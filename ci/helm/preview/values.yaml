@@ -38,12 +38,12 @@ nuxeo:
         resource: service
         usage: preview
     image:
-      repository: ${DOCKER_REGISTRY}/${ORG}/nuxeo-coldstorage
-      tag: ${VERSION}
+      repository: 10.63.243.100:5000/nuxeo/nuxeo-coldstorage
+      tag: 10.0.0-rc.6
       pullPolicy: Always
     persistence:
       enabled: disable
-    packages: nuxeo-web-ui-2.4.46-NAPPS-SNAPSHOT amazon-s3-online-storage ${JSF_ENABLED} /packages/nuxeo-coldstorage-package.zip
+    packages: nuxeo-web-ui-2.4.46-NAPPS-SNAPSHOT amazon-s3-online-storage  /packages/nuxeo-coldstorage-package.zip
     custom_params: |-
       org.nuxeo.connect.url=https://nos-preprod-connect.nuxeocloud.com/nuxeo/site/
       nuxeo.templates=default
@@ -87,7 +87,7 @@ nuxeo:
             name: aws-config-napps
             key: coldstorage.bucket.glacier
       - name: AWS_S3_BUCKET_PREFIX
-        value: $BUCKET_PREFIX
+        value: nuxeo-coldstorage-10-10-8
       - name: NUXEO_MPINSTALL_OPTIONS
         value: "--force --nodeps"
     tolerations:
