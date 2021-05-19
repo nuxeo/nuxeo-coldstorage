@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.nuxeo.coldstorage</groupId>
     <artifactId>nuxeo-coldstorage-parent</artifactId>
-    <version>2021.0-SNAPSHOT</version>
+    <version>2021.0.12-rc.12</version>
   </parent>
 
   <artifactId>nuxeo-coldstorage-package</artifactId>
