@@ -225,7 +225,10 @@ public class ColdStorageHelper {
         documentModel.setPropertyValue(COLD_STORAGE_TO_BE_RESTORED_PROPERTY, true);
         session.saveDocument(documentModel);
         BlobStatus blobStatus = ColdStorageHelper.getBlobStatus(documentModel);
-        if (blobStatus.isDownloadable()) {
+        // FIXME NXP-XXX: Fix downloadable on the platform level
+        boolean downloadable = blobStatus.getStorageClass() == null ? blobStatus.isDownloadable()
+                : (blobStatus.isDownloadable() && blobStatus.getDownloadableUntil() != null);
+        if (downloadable) {
             restoreMainContent(documentModel);
         } else {
             documentModel = requestRetrievalFromColdStorage(session, documentModel.getRef(),
