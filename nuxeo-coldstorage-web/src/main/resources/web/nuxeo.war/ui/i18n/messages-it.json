@@ -17,6 +17,7 @@
   "documentContentView.retrieveFromColdStorage.success": "Iniziare a recuperare il contenuto dei documenti dal cold storage",
   "documentContentView.retrieveFromColdStorage.error": "Errore nel recupero del contenuto del documento da cold storage.",
   "documentPage.content.storedInColdStorage": "Il file principale viene immagazzinato al cold storage.",
+  "documentPage.content.lowResolutionPreview": "Questa è un'anteprima a bassa risoluzione.",
   "label.security.permission.writeColdStorage": "WriteColdStorage",
   "moveDocumentsContentsToColdStorage.ask.confirmation": "Inviare il contenuto dei documenti al cold storage?",
   "moveDocumentsContentsToColdStorage.description": "Questo risulterà in tempi di recupero dei file aumentati e un'anteprima a bassa risoluzione.",
