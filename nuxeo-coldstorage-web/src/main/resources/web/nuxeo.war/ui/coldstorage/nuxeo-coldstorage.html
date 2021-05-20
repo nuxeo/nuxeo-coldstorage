@@ -19,6 +19,7 @@ limitations under the License.
 <link rel="import" href="./nuxeo-move-contents-to-coldstorage-button.html" />
 <link rel="import" href="./nuxeo-retrieve-content-from-coldstorage-button.html" />
 <link rel="import" href="./icons/coldstorage-icons.html" />
+<link rel="import" href="./nuxeo-coldstorage-infobar.html" />
 
 <nuxeo-slot-content name="moveToColdStorageDocumentContentAction" slot="DOCUMENT_ACTIONS" order="120">
   <template>
@@ -39,5 +40,11 @@ limitations under the License.
     <nuxeo-move-contents-to-coldstorage-button
       documents="[[selectedItems]]"
     ></nuxeo-move-contents-to-coldstorage-button>
+  </template>
+</nuxeo-slot-content>
+
+<nuxeo-slot-content name="coldStorageDocumentInfoBar" slot="DOCUMENT_INFO_BAR">
+  <template>
+    <nuxeo-coldstorage-infobar document="[[document]]"></nuxeo-coldstorage-infobar>
   </template>
 </nuxeo-slot-content>
