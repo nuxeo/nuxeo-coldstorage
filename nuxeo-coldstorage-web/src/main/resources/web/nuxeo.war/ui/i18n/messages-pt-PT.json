@@ -17,6 +17,7 @@
   "documentContentView.retrieveFromColdStorage.success": "Comece a recuperar o conteúdo do documento a partir do cold storage",
   "documentContentView.retrieveFromColdStorage.error": "Erro ao recuperar o conteúdo do documento do cold storage.",
   "documentPage.content.storedInColdStorage": "O arquivo master está arquivado no cold storage.",
+  "documentPage.content.lowResolutionPreview": "This is a low resolution preview.",  
   "label.security.permission.writeColdStorage": "WriteColdStorage",
   "moveDocumentsContentsToColdStorage.ask.confirmation": "Enviar os conteúdos do documento para o cold storage?",
   "moveDocumentsContentsToColdStorage.description": "Isto resultará num aumento dos tempos de recuperação de ficheiros e numa pré-visualização de baixa resolução.",

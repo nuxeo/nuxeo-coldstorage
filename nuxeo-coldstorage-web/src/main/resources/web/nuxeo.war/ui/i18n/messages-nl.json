@@ -17,6 +17,7 @@
   "documentContentView.retrieveFromColdStorage.success": "Start met ophalen van documentinhoud uit cold-opslag",
   "documentContentView.retrieveFromColdStorage.error": "Fout bij het ophalen van de inhoud van het document uit cold-opslag.",
   "documentPage.content.storedInColdStorage": "Het hoofdbestand is opgeslagen in cold-opslag.",
+  "documentPage.content.lowResolutionPreview": "Dit is een lage resolutie preview.",
   "label.security.permission.writeColdStorage": "WriteColdStorage",
   "moveDocumentsContentsToColdStorage.ask.confirmation": "Documentinhoud verzenden naar cold-opslag?",
   "moveDocumentsContentsToColdStorage.description": "Dit heeft tot gevolg dat het ophalen van bestanden langer zal duren en dat de voorbeeldweergave een lage resolutie heeft.",
