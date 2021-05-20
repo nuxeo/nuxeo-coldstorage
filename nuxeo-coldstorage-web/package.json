@@ -29,8 +29,8 @@
     "rollup-plugin-terser": "^7.0.2"
   },
   "dependencies": {
-    "@nuxeo/nuxeo-elements": "~3.0.2-rc.0",
-    "@nuxeo/nuxeo-ui-elements": "~3.0.2-rc.0",
+    "@nuxeo/nuxeo-elements": "~3.0.3-rc.0",
+    "@nuxeo/nuxeo-ui-elements": "~3.0.3-rc.0",
     "@polymer/iron-icon": "^3.0.0",
     "@polymer/iron-icons": "^3.0.1",
     "@polymer/paper-button": "^3.0.0",
