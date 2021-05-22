@@ -16,7 +16,7 @@
   "documentContentView.retrieveFromColdStorage.tooltip": "コールドストレージから取得",
   "documentContentView.retrieveFromColdStorage.success": "コールドストレージからのドキュメントコンテンツの取得を開始します",
   "documentContentView.retrieveFromColdStorage.error": "コールドストレージからのドキュメントコンテンツの取得中にエラーが発生しました。",
-  "documentPage.content.lowResolutionPreview": "これは低解像度のプレビューです。",
+  "documentPage.content.lowResolutionPreview": "This is a low resolution preview.",
   "documentPage.content.storedInColdStorage": "マスターファイルはコールドストレージに保存されます。",
   "label.security.permission.writeColdStorage": "WriteColdStorage",
   "moveDocumentsContentsToColdStorage.ask.confirmation": "文書のコンテンツをコールドストレージに送信しますか？",
