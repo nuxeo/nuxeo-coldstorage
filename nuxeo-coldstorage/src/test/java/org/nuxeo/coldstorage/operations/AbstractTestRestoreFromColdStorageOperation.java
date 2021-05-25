@@ -50,6 +50,8 @@ public abstract class AbstractTestRestoreFromColdStorageOperation extends Abstra
         DocumentModel documentModel = createFileDocument(session, true);
         // first make the move to cold storage
         moveContentToColdStorage(session, documentModel);
+        transactionalFeature.nextTransaction();
+        documentModel.refresh();
         restoreContentFromColdStorage(documentModel);
     }
 
@@ -59,6 +61,8 @@ public abstract class AbstractTestRestoreFromColdStorageOperation extends Abstra
 
         // first make the move to cold storage
         moveContentToColdStorage(session, documentModel);
+        transactionalFeature.nextTransaction();
+        documentModel.refresh();
         restoreContentFromColdStorage(documentModel);
         // request a retrieval for a second time
         try {
