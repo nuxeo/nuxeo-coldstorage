@@ -20,6 +20,7 @@
 
 package org.nuxeo.coldstorage.helpers;
 
+import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_CONFLICT;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
@@ -34,6 +35,7 @@ import java.util.Objects;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.nuxeo.coldstorage.action.DeduplicationColdStorageContentActions;
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
@@ -45,6 +47,9 @@ import org.nuxeo.ecm.core.blob.BlobManager;
 import org.nuxeo.ecm.core.blob.BlobStatus;
 import org.nuxeo.ecm.core.blob.BlobUpdateContext;
 import org.nuxeo.ecm.core.blob.ManagedBlob;
+import org.nuxeo.ecm.core.bulk.BulkService;
+import org.nuxeo.ecm.core.bulk.message.BulkCommand;
+import org.nuxeo.ecm.core.bulk.message.BulkStatus;
 import org.nuxeo.ecm.core.event.EventService;
 import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
 import org.nuxeo.ecm.core.io.download.DownloadService;
@@ -85,6 +90,9 @@ public class ColdStorageHelper {
 
     public static final String COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME = "coldStorageContentAvailable";
 
+    /** @since 10.10 **/
+    public static final String COLD_STORAGE_CONTENT_MOVED_EVENT_NAME = "coldStorageContentMoved";
+
     public static final String COLD_STORAGE_CONTENT_AVAILABLE_UNTIL_MAIL_TEMPLATE_KEY = "coldStorageAvailableUntil";
 
     public static final String COLD_STORAGE_CONTENT_AVAILABLE_NOTIFICATION_NAME = "ColdStorageContentAvailable";
@@ -108,6 +116,8 @@ public class ColdStorageHelper {
      * <p/>
      * The permission {@value org.nuxeo.ecm.core.api.security.SecurityConstants#WRITE_COLD_STORAGE} is required.
      *
+     * @implSpec moves the main content to ColdStorage and fires an {@value COLD_STORAGE_CONTENT_MOVED_EVENT_NAME}
+     *             event.
      * @return the updated document model if the move succeeds
      * @throws NuxeoException if the main content is already in the cold storage, if there is no main content
      *             associated with the given document, or if the user does not have the permissions needed to
@@ -143,6 +153,11 @@ public class ColdStorageHelper {
         // THUMBNAIL_UPDATED: disabling is needed otherwise as the content is now `null` the thumbnail will be also
         // `null` See CheckBlobUpdateListener#handleEvent
         COLD_STORAGE_DISABLED_RECOMPUTATION_LISTENERS.forEach(name -> documentModel.putContextData(name, true));
+
+        DocumentEventContext ctx = new DocumentEventContext(session, session.getPrincipal(), documentModel);
+        EventService eventService = Framework.getService(EventService.class);
+        eventService.fireEvent(ctx.newEvent(ColdStorageHelper.COLD_STORAGE_CONTENT_MOVED_EVENT_NAME));
+
         return documentModel;
     }
 
@@ -354,6 +369,45 @@ public class ColdStorageHelper {
             key = key.substring(colon + 1);
         }
         return key;
+    }
+
+    /**
+     * Move to ColdStorage all duplicated documents with the same content.
+     *
+     * @param session the session
+     * @param documentModel the document model
+     */
+    public static void moveDuplicatedBlobToColdStorage(CoreSession session, DocumentModel documentModel) {
+        String blobDigest = ((Blob) documentModel.getPropertyValue(
+                ColdStorageHelper.COLD_STORAGE_CONTENT_PROPERTY)).getDigest();
+        String documentId = documentModel.getId();
+        String query = String.format(
+                "SELECT * FROM Document WHERE (ecm:isVersion = 0 AND file:content/digest = '%s') "
+                        + "OR (ecm:isVersion = 1 AND ecm:versionVersionableId = '%s' AND file:content/digest = '%s')",
+                blobDigest, documentModel.getId(), blobDigest);
+
+        BulkService bulkService = Framework.getService(BulkService.class);
+        BulkCommand.Builder builder = new BulkCommand. //
+                Builder(DeduplicationColdStorageContentActions.ACTION_NAME, query) //
+                                                                                  .user(SecurityConstants.SYSTEM_USERNAME)
+                                                                                  .repository(
+                                                                                          session.getRepositoryName());
+
+        BulkCommand bulkCommand = builder.build();
+        String commandId;
+        try {
+            commandId = bulkService.submit(bulkCommand);
+        } catch (IllegalArgumentException e) {
+            throw new NuxeoException(e.getMessage(), e, SC_BAD_REQUEST);
+        }
+
+        BulkStatus status = bulkService.getStatus(commandId);
+        if (status == null) {
+            log.error("Unable to move duplicated blob: {} to cold storage", documentId);
+        } else {
+            log.debug("Moving duplicated blob for document: {} status {}", documentId, status.getState());
+        }
+
     }
 
     /**
