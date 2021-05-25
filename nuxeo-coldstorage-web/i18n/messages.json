@@ -1,4 +1,6 @@
-{
+{"documentContentView.infobar.storedInColdStorage": "This is a low resolution preview. The original file can be requested by clicking on retrieve file action.",
+  "documentContentView.infobar.beingRetrieved": "This is a low resolution preview. The original file has been requested. An email notification will be sent when it is available.",
+  "documentContentView.infobar.retrieved": "This is a low resolution preview. The original file will be available until {0}",
   "documentContentView.moveToColdStorage.ask.confirmation": "Send the document content to cold storage?",
   "documentContentView.moveToColdStorage.cancel": "Cancel",
   "documentContentView.moveToColdStorage.confirm": "Confirm",
@@ -24,8 +26,6 @@
   "documentContentView.retrieveFromColdStorage.tooltip": "Retrieve from cold storage",
   "documentContentView.retrieveFromColdStorage.success": "Start retrieving document content from cold storage",
   "documentContentView.retrieveFromColdStorage.error": "Error retrieving the document content from cold storage.",
-  "documentPage.content.lowResolutionPreview": "This is a low resolution preview.",
-  "documentPage.content.storedInColdStorage": "The master file is stored in cold storage.",
   "label.security.permission.writeColdStorage": "WriteColdStorage",
   "moveDocumentsContentsToColdStorage.ask.confirmation": "Send the documents contents to cold storage?",
   "moveDocumentsContentsToColdStorage.description": "This will result in increased file retrieval times and a low resolution preview.",
