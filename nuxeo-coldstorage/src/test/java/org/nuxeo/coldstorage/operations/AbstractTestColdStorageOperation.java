@@ -48,6 +48,7 @@ import org.nuxeo.ecm.core.api.security.ACP;
 import org.nuxeo.ecm.core.test.CoreFeature;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.FeaturesRunner;
+import org.nuxeo.runtime.test.runner.TransactionalFeature;
 
 /**
  * @since 11.1
@@ -65,6 +66,9 @@ public abstract class AbstractTestColdStorageOperation {
 
     @Inject
     protected CoreFeature coreFeature;
+
+    @Inject
+    protected TransactionalFeature transactionalFeature;
 
     protected void moveContentToColdStorage(CoreSession session, DocumentModel documentModel)
             throws OperationException, IOException {

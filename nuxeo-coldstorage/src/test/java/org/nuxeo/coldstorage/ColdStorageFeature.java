@@ -19,6 +19,7 @@
 
 package org.nuxeo.coldstorage;
 
+import org.nuxeo.ecm.core.bulk.CoreBulkFeature;
 import org.nuxeo.ecm.core.test.CoreFeature;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.Features;
@@ -27,7 +28,7 @@ import org.nuxeo.runtime.test.runner.RunnerFeature;
 /**
  * @since 11.1
  */
-@Features(CoreFeature.class)
+@Features({ CoreFeature.class, CoreBulkFeature.class })
 @Deploy("org.nuxeo.ecm.platform.notification.api")
 @Deploy("org.nuxeo.ecm.automation.core")
 @Deploy("org.nuxeo.ecm.core.management")

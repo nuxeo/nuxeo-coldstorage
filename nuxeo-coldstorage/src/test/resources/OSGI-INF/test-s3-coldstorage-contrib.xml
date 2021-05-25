@@ -32,4 +32,19 @@
             <property name="default">s3</property>
         </blobdispatcher>
     </extension>
+
+    <!--WIP to be extracted on its own file-->
+    <extension target="org.nuxeo.ecm.core.bulk" point="actions">
+        <action name="deduplicationColdContent" bucketSize="100" batchSize="50" httpEnabled="false" />
+    </extension>
+
+    <extension target="org.nuxeo.runtime.stream.service" point="streamProcessor">
+        <streamProcessor name="deduplicationColdContent"
+                         class="org.nuxeo.ecm.automation.core.operations.coldstorage.DeduplicationColdContentActions"
+                         logConfig="bulk" defaultConcurrency="2"
+                         defaultPartitions="2">
+            <policy name="default" maxRetries="3" delay="1s" maxDelay="10s" continueOnFailure="true" />
+            <option name="produceImmediate">false</option>
+        </streamProcessor>
+    </extension>
 </component>
