@@ -51,8 +51,7 @@ class ColdStorageInfobar extends mixinBehaviors([FiltersBehavior, FormatBehavior
           <div id="coldStorageInfoBar" class="bar coldStorage">
             <div class="layout horizontal center flex">
               <iron-icon noink icon="coldstorage:default"></iron-icon>
-              <span class="storedInColdStorage">[[i18n('documentPage.content.storedInColdStorage')]]</span>
-              <span>[[i18n('documentPage.content.lowResolutionPreview')]]</span>
+              <span class="storedInColdStorage"> [[_title]] </span>
             </div>
           </div>
         </template>
@@ -70,11 +69,45 @@ class ColdStorageInfobar extends mixinBehaviors([FiltersBehavior, FormatBehavior
        * Input document.
        */
       document: Object,
+      /**
+       * Document's Cold Storage status.
+       */
+      _documentStatus: {
+        type: String,
+        computed: '_getDocumentStatus(document)',
+      },
+      /**
+       * Infobar message.
+       */
+      _title: {
+        type: String,
+        computed: '_getTitle(document)',
+      },
     };
   }
 
   _contentStoredInColdStorage(doc) {
     return this.hasFacet(doc, 'ColdStorage') && doc.properties && doc.properties['coldstorage:coldContent'];
+  }
+
+  _getDocumentStatus(document) {
+    if (document.properties['coldstorage:beingRetrieved']) {
+      return 'beingRetrieved';
+    }
+    if (
+      document.properties['coldstorage:downloadableUntil'] &&
+      new Date(document.properties['coldstorage:downloadableUntil']).toString() >= Date()
+    ) {
+      return 'retrieved';
+    }
+    return 'storedInColdStorage';
+  }
+
+  _getTitle(doc) {
+    return this.i18n(
+      `documentContentView.infobar.${this._documentStatus}`,
+      this._formatDate(doc.properties['coldstorage:downloadableUntil']),
+    );
   }
 }
 
