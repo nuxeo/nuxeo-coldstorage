@@ -37,7 +37,6 @@ import org.nuxeo.ecm.core.api.NuxeoException;
 import org.nuxeo.ecm.core.api.impl.DocumentModelListImpl;
 import org.nuxeo.ecm.core.api.thumbnail.ThumbnailService;
 import org.nuxeo.runtime.api.Framework;
-
 /**
  * Moves the main content associated with the input {@link DocumentModel} or {@link DocumentModelList} to the cold
  * storage.
@@ -67,6 +66,7 @@ public class MoveToColdStorage {
 
         // replace the file content document by the thumbnail
         documentModel.setPropertyValue(ColdStorageHelper.FILE_CONTENT_PROPERTY, (Serializable) thumbnail);
+
         if (save) {
             documentModel = session.saveDocument(documentModel);
         }
