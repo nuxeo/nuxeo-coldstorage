@@ -16,7 +16,7 @@
   "documentContentView.retrieveFromColdStorage.tooltip": "Hämta från kall kallagring",
   "documentContentView.retrieveFromColdStorage.success": "Börja hämta dokumentinnehåll från kallagring",
   "documentContentView.retrieveFromColdStorage.error": "Fel vid hämtning av dokumentinnehållet från kallagring",
-  "documentPage.content.lowResolutionPreview": "This is a low resolution preview.",
+  "documentPage.content.lowResolutionPreview": "Detta är en förhandsgranskning med låg upplösning.",
   "documentPage.content.storedInColdStorage": "Masterfilen förvaras i kallagring.",
   "label.security.permission.writeColdStorage": "WriteColdStorage",
   "moveDocumentsContentsToColdStorage.ask.confirmation": "Skicka dokumentinnehåll till kallagring?",

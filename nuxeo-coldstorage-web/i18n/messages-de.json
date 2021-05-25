@@ -16,7 +16,7 @@
   "documentContentView.retrieveFromColdStorage.tooltip": "Vom cold storage abrufen",
   "documentContentView.retrieveFromColdStorage.success": "Dokumenteninhalt vom cold storage abrufen",
   "documentContentView.retrieveFromColdStorage.error": "Fehler beim Abrufen des Dokumenteninhalts vom cold storage.",
-  "documentPage.content.lowResolutionPreview": "This is a low resolution preview.",
+  "documentPage.content.lowResolutionPreview": "Dies ist eine Vorschau mit niedriger Auflösung.",
   "documentPage.content.storedInColdStorage": "Die Master-Datei wurde im kalten Speicher abgelegt.",
   "label.security.permission.writeColdStorage": "WriteColdStorage",
   "moveDocumentsContentsToColdStorage.ask.confirmation": "Die Dokumentinhalte an kalten Speicher senden?",
