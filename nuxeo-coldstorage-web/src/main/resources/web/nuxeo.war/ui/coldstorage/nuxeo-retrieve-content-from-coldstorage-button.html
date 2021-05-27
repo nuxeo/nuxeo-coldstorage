@@ -29,7 +29,7 @@ express or implied. See the License for the specific language governing permissi
       </template>
     </dom-if>
 
-    <nuxeo-dialog id="contentToMoveDialog" with-backdrop>
+    <nuxeo-dialog id="contentFromRetrieveDialog" with-backdrop>
       <h2>[[i18n('documentContentView.retrieveFromColdStorage.ask.confirmation')]]</h2>
       <p>[[i18n('documentContentView.retrieveFromColdStorage.description')]]</p>
 
@@ -66,7 +66,7 @@ express or implied. See the License for the specific language governing permissi
       }
 
       _toggleDialog() {
-        this.$.contentToMoveDialog.toggle();
+        this.$.contentFromRetrieveDialog.toggle();
       }
 
       _hasAdministrationPermissions(user) {
