@@ -28,6 +28,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.nuxeo.coldstorage.events.CheckUpdateMainContentInColdStorage.DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -58,12 +59,17 @@ import org.nuxeo.ecm.core.api.security.ACE;
 import org.nuxeo.ecm.core.api.security.ACL;
 import org.nuxeo.ecm.core.api.security.ACP;
 import org.nuxeo.ecm.core.api.security.SecurityConstants;
+import org.nuxeo.ecm.core.api.thumbnail.ThumbnailService;
 import org.nuxeo.ecm.core.blob.BlobManager;
 import org.nuxeo.ecm.core.blob.ManagedBlob;
+import org.nuxeo.ecm.core.blob.SimpleManagedBlob;
 import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
 import org.nuxeo.ecm.core.event.test.CapturingEventListener;
 import org.nuxeo.ecm.core.io.download.DownloadService;
 import org.nuxeo.ecm.core.test.CoreFeature;
+import org.nuxeo.ecm.platform.thumbnail.ThumbnailConstants;
+import org.nuxeo.ecm.platform.thumbnail.listener.UpdateThumbnailListener;
+import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.FeaturesRunner;
 import org.nuxeo.runtime.test.runner.TransactionalFeature;
 
@@ -93,6 +99,9 @@ public abstract class AbstractTestColdStorageHelper {
 
     @Inject
     protected CoreFeature coreFeature;
+
+    @Inject
+    protected ThumbnailService thumbnailService;
 
     protected abstract String getBlobProviderName();
 
@@ -273,6 +282,52 @@ public abstract class AbstractTestColdStorageHelper {
         moveAndVerifyContent(session, documentModel);
         // undo move from the cold storage
         return ColdStorageHelper.restoreContentFromColdStorage(session, documentModel.getRef());
+    }
+
+    @Test
+    @Deploy("org.nuxeo.coldstorage.test:OSGI-INF/test-thumbnail-recomputation-contrib.xml")
+    @Deploy("org.nuxeo.ecm.platform.thumbnail:OSGI-INF/thumbnail-listener-contrib.xml")
+    @Deploy("org.nuxeo.ecm.platform.thumbnail:OSGI-INF/thumbnail-core-types-contrib.xml")
+    @Deploy("org.nuxeo.ecm.platform.types.api")
+    @Deploy("org.nuxeo.ecm.platform.types.core")
+    public void shouldNotRecomputeThumbnail() throws IOException {
+        DocumentModel documentModel = session.createDocumentModel("/", DEFAULT_DOC_NAME, "MyCustomFile");
+        documentModel.setPropertyValue("file:content", (Serializable) Blobs.createBlob(FILE_CONTENT));
+        DocumentModel document = session.createDocument(documentModel);
+        documentModel = session.saveDocument(documentModel);
+        transactionalFeature.nextTransaction();
+        documentModel.refresh();
+
+        SimpleManagedBlob originalThumbnail = (SimpleManagedBlob) thumbnailService.getThumbnail(documentModel, session);
+        assertNotNull(originalThumbnail);
+
+        moveAndVerifyContent(session, documentModel);
+
+        SimpleManagedBlob thumbnailUpdateOne = (SimpleManagedBlob) thumbnailService.getThumbnail(documentModel,
+                session);
+        assertNotNull(thumbnailUpdateOne);
+        assertEquals(originalThumbnail.getKey(), thumbnailUpdateOne.getKey());
+
+
+
+        // Emulate the operation stuff
+        // retrieve the thumbnail which will be used to replace the content, once the move done
+        // replace the file content document by the thumbnail
+        documentModel.setPropertyValue(ColdStorageHelper.FILE_CONTENT_PROPERTY, (Serializable) thumbnailUpdateOne);
+
+        // Needed on the operation to avoid a new computation after setting file:content to its original thumbnail
+        documentModel.putContextData(ThumbnailConstants.DISABLE_THUMBNAIL_COMPUTATION, true);
+
+        //Only for tests purposes
+        documentModel.putContextData(DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER, true);
+        documentModel = session.saveDocument(documentModel);
+
+        transactionalFeature.nextTransaction();
+        documentModel.refresh();
+
+        SimpleManagedBlob lastThumbnail = (SimpleManagedBlob) thumbnailService.getThumbnail(documentModel, session);
+        assertNotNull(lastThumbnail);
+        assertEquals(originalThumbnail.getKey(), lastThumbnail.getKey());
     }
 
     protected void moveAndVerifyContent(CoreSession session, DocumentModel documentModel) throws IOException {

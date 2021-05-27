@@ -45,6 +45,8 @@ import org.nuxeo.ecm.core.blob.ManagedBlob;
 import org.nuxeo.ecm.core.event.EventService;
 import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
 import org.nuxeo.ecm.core.io.download.DownloadService;
+import org.nuxeo.ecm.platform.thumbnail.ThumbnailConstants;
+import org.nuxeo.ecm.platform.thumbnail.listener.UpdateThumbnailListener;
 import org.nuxeo.runtime.api.Framework;
 
 /**
@@ -131,6 +133,9 @@ public class ColdStorageHelper {
         documentModel.addFacet(COLD_STORAGE_FACET_NAME);
         documentModel.setPropertyValue(COLD_STORAGE_CONTENT_PROPERTY, mainContent);
         documentModel.setPropertyValue(FILE_CONTENT_PROPERTY, null);
+        // Needed otherwise as the content is now `null` the thumbnail will be also `null`
+        // if the save occurs just after a call to this method. See CheckBlobUpdateListener#handleEvent
+        documentModel.putContextData(UpdateThumbnailListener.THUMBNAIL_UPDATED, true);
         return documentModel;
     }
 
