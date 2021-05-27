@@ -36,6 +36,7 @@ import org.nuxeo.ecm.core.api.DocumentModelList;
 import org.nuxeo.ecm.core.api.NuxeoException;
 import org.nuxeo.ecm.core.api.impl.DocumentModelListImpl;
 import org.nuxeo.ecm.core.api.thumbnail.ThumbnailService;
+import org.nuxeo.ecm.platform.thumbnail.ThumbnailConstants;
 import org.nuxeo.runtime.api.Framework;
 
 /**
@@ -65,6 +66,7 @@ public class MoveToColdStorage {
         // make the move
         DocumentModel documentModel = ColdStorageHelper.moveContentToColdStorage(session, document.getRef());
 
+        documentModel.putContextData(ThumbnailConstants.DISABLE_THUMBNAIL_COMPUTATION, true);
         // replace the file content document by the thumbnail
         documentModel.setPropertyValue(ColdStorageHelper.FILE_CONTENT_PROPERTY, (Serializable) thumbnail);
         if (save) {

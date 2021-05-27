@@ -23,24 +23,25 @@ import static javax.servlet.http.HttpServletResponse.SC_CONFLICT;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.inject.Inject;
 
 import org.junit.Test;
-import org.nuxeo.coldstorage.helpers.ColdStorageHelper;
 import org.nuxeo.ecm.automation.OperationException;
-import org.nuxeo.ecm.core.api.CloseableCoreSession;
+import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.CoreInstance;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.NuxeoException;
 import org.nuxeo.ecm.core.api.security.ACE;
 import org.nuxeo.ecm.core.api.security.SecurityConstants;
+import org.nuxeo.ecm.core.api.thumbnail.ThumbnailService;
+import org.nuxeo.runtime.test.runner.Deploy;
 
 /**
  * @since 11.0
@@ -49,6 +50,9 @@ public abstract class AbstractTestMoveColdStorageOperation extends AbstractTestC
 
     @Inject
     protected CoreSession session;
+
+    @Inject
+    protected ThumbnailService thumbnailService;
 
     @Test
     public void shouldFailWithoutRightPermissions() throws OperationException, IOException {
@@ -126,5 +130,25 @@ public abstract class AbstractTestMoveColdStorageOperation extends AbstractTestC
         } catch (NuxeoException e) {
             assertEquals(SC_NOT_FOUND, e.getStatusCode());
         }
+    }
+
+    @Test
+    @Deploy("org.nuxeo.coldstorage.test:OSGI-INF/test-thumbnail-recomputation-contrib.xml")
+    @Deploy("org.nuxeo.ecm.platform.thumbnail:OSGI-INF/thumbnail-listener-contrib.xml")
+    @Deploy("org.nuxeo.ecm.platform.thumbnail:OSGI-INF/thumbnail-core-types-contrib.xml")
+    @Deploy("org.nuxeo.ecm.platform.types")
+    public void shouldNotRecomputeThumbnail() throws IOException, OperationException {
+        DocumentModel documentModel = createFileDocument(session, true);
+        Blob originalThumbnail = thumbnailService.getThumbnail(documentModel, session);
+        assertNotNull(originalThumbnail);
+
+        moveContentToColdStorage(session, documentModel);
+
+        transactionalFeature.nextTransaction();
+        documentModel.refresh();
+
+        Blob thumbnailUpdateOne = thumbnailService.getThumbnail(documentModel, session);
+        assertNotNull(thumbnailUpdateOne);
+        assertEquals(originalThumbnail.getString(), thumbnailUpdateOne.getString());
     }
 }
