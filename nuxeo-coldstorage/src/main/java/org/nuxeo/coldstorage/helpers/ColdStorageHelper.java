@@ -32,7 +32,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-
+import java.util.Date;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.nuxeo.coldstorage.action.DeduplicationColdStorageContentActions;
@@ -110,6 +110,9 @@ public class ColdStorageHelper {
             UpdateThumbnailListener.THUMBNAIL_UPDATED, ThumbnailConstants.DISABLE_THUMBNAIL_COMPUTATION,
             VideoChangedListener.DISABLE_VIDEO_CONVERSIONS_GENERATION_LISTENER,
             PictureViewsGenerationListener.DISABLE_PICTURE_VIEWS_GENERATION_LISTENER);
+    
+    /** @since 10.10 **/
+    public static final String COLD_STORAGE_CONTENT_DOWNLOADABLE_UNITL = "coldstorage:downloadableUntil";
 
     /**
      * Moves the main content associated with the document of the given {@link DocumentRef} to a cold storage.
@@ -321,7 +324,9 @@ public class ColdStorageHelper {
                     Instant downloadableUntil = blobStatus.getDownloadableUntil();
                     if (downloadableUntil != null) {
                         ctx.getProperties()
-                           .put(COLD_STORAGE_CONTENT_AVAILABLE_UNTIL_MAIL_TEMPLATE_KEY, downloadableUntil.toString());
+                            .put(COLD_STORAGE_CONTENT_AVAILABLE_UNTIL_MAIL_TEMPLATE_KEY, downloadableUntil.toString());
+                        doc.setPropertyValue(COLD_STORAGE_CONTENT_DOWNLOADABLE_UNITL, Date.from(downloadableUntil));
+                        session.saveDocument(doc);
                     }
                     String downloadUrl = downloadService.getDownloadUrl(doc, COLD_STORAGE_CONTENT_PROPERTY, null);
                     ctx.getProperties().put(COLD_STORAGE_CONTENT_ARCHIVE_LOCATION_MAIL_TEMPLATE_KEY, downloadUrl);
