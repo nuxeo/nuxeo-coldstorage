@@ -12,7 +12,9 @@ When('I can see the {string} confirmation dialog', function (dialogType) {
   let dialog;
   if (dialogType === 'Send') {
     dialog = this.ui.browser.el.element('nuxeo-dialog#contentToMoveDialog');
-  } else dialog = this.ui.browser.el.element('nuxeo-dialog#contentToRestoreDialog');
+  } else if (dialogType === 'Restore') {
+    dialog = this.ui.browser.el.element('nuxeo-dialog#contentToRestoreDialog');
+  } else dialog = this.ui.browser.el.element('nuxeo-dialog#contentFromRetrieveDialog');
   dialog.waitForVisible();
 });
 
@@ -20,7 +22,9 @@ When('I click the {word} button in the {string} confirmation dialog', function (
   let dialog;
   if (dialogType === 'Send') {
     dialog = this.ui.browser.el.element('nuxeo-dialog#contentToMoveDialog');
-  } else dialog = this.ui.browser.el.element('nuxeo-dialog#contentToRestoreDialog');
+  } else if (dialogType === 'Restore') {
+    dialog = this.ui.browser.el.element('nuxeo-dialog#contentToRestoreDialog');
+  } else dialog = this.ui.browser.el.element('nuxeo-dialog#contentFromRetrieveDialog');
   dialog.click(`paper-button[name="${btn}"]`);
   driver.pause(1000);
 });
@@ -32,6 +36,16 @@ When('I move the files to cold storage', function () {
   dialog.waitForVisible();
   dialog.click('paper-button[name="confirm"]');
   driver.pause(1000);
+});
+
+When('I click the Retrieve file from cold storage button', function () {
+  const page = this.ui.browser.documentPage('File');
+  const docView = page.view;
+  docView.waitForVisible();
+  docView.click('div.actions paper-menu-button#dropdownButton');
+  docView.waitForVisible('nuxeo-retrieve-content-from-coldstorage-button');
+  const retrieveBtn = docView.el.element('nuxeo-retrieve-content-from-coldstorage-button span');
+  retrieveBtn.click();
 });
 
 Then('I cannot see the Send file to cold storage button', function () {
