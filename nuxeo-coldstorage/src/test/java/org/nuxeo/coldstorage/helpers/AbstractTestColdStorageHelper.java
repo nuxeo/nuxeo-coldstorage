@@ -28,12 +28,12 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.nuxeo.coldstorage.events.CheckUpdateMainContentInColdStorage.DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -56,11 +56,15 @@ import org.nuxeo.ecm.core.api.security.ACE;
 import org.nuxeo.ecm.core.api.security.ACL;
 import org.nuxeo.ecm.core.api.security.ACP;
 import org.nuxeo.ecm.core.api.security.SecurityConstants;
+import org.nuxeo.ecm.core.api.thumbnail.ThumbnailService;
 import org.nuxeo.ecm.core.blob.BlobManager;
 import org.nuxeo.ecm.core.blob.ManagedBlob;
+import org.nuxeo.ecm.core.blob.SimpleManagedBlob;
 import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
 import org.nuxeo.ecm.core.event.test.CapturingEventListener;
 import org.nuxeo.ecm.core.io.download.DownloadService;
+import org.nuxeo.ecm.platform.thumbnail.ThumbnailConstants;
+import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.FeaturesRunner;
 import org.nuxeo.runtime.test.runner.TransactionalFeature;
 
@@ -87,6 +91,9 @@ public abstract class AbstractTestColdStorageHelper {
 
     @Inject
     protected DownloadService downloadService;
+
+    @Inject
+    protected ThumbnailService thumbnailService;
 
     protected abstract String getBlobProviderName();
 
@@ -255,6 +262,47 @@ public abstract class AbstractTestColdStorageHelper {
         // we shouldn't have any ColdStorage content
         assertFalse(documentModel.hasFacet(ColdStorageHelper.COLD_STORAGE_FACET_NAME));
 
+    }
+
+    @Test
+    @Deploy("org.nuxeo.coldstorage.test:OSGI-INF/test-thumbnail-recomputation-contrib.xml")
+    @Deploy("org.nuxeo.ecm.platform.thumbnail:OSGI-INF/thumbnail-listener-contrib.xml")
+    @Deploy("org.nuxeo.ecm.platform.thumbnail:OSGI-INF/thumbnail-core-types-contrib.xml")
+    @Deploy("org.nuxeo.ecm.platform.types")
+    public void shouldNotRecomputeThumbnail() throws IOException {
+        DocumentModel documentModel = session.createDocumentModel("/", DEFAULT_DOC_NAME, "MyCustomFile");
+        documentModel.setPropertyValue("file:content", (Serializable) Blobs.createBlob(FILE_CONTENT));
+        DocumentModel document = session.createDocument(documentModel);
+        documentModel = session.saveDocument(documentModel);
+        transactionalFeature.nextTransaction();
+        documentModel.refresh();
+
+        SimpleManagedBlob originalThumbnail = (SimpleManagedBlob) thumbnailService.getThumbnail(documentModel, session);
+        assertNotNull(originalThumbnail);
+
+        moveAndVerifyContent(session, documentModel);
+
+        SimpleManagedBlob thumbnailUpdateOne = (SimpleManagedBlob) thumbnailService.getThumbnail(documentModel,
+                session);
+        assertNotNull(thumbnailUpdateOne);
+        assertEquals(originalThumbnail.getKey(), thumbnailUpdateOne.getKey());
+
+        // Emulate the case where the content is updated
+        documentModel.setPropertyValue(ColdStorageHelper.FILE_CONTENT_PROPERTY, (Serializable) thumbnailUpdateOne);
+
+        // shouldn't recompute the thumbnail
+        documentModel.putContextData(ThumbnailConstants.DISABLE_THUMBNAIL_COMPUTATION, true);
+
+        // Only for tests purposes
+        documentModel.putContextData(DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER, true);
+        documentModel = session.saveDocument(documentModel);
+
+        transactionalFeature.nextTransaction();
+        documentModel.refresh();
+
+        SimpleManagedBlob lastThumbnail = (SimpleManagedBlob) thumbnailService.getThumbnail(documentModel, session);
+        assertNotNull(lastThumbnail);
+        assertEquals(originalThumbnail.getKey(), lastThumbnail.getKey());
     }
 
     protected DocumentModel moveAndRestore(DocumentModel documentModel) throws IOException {
