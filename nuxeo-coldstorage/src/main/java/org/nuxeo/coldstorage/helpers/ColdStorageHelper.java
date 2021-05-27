@@ -136,6 +136,11 @@ public class ColdStorageHelper {
         // Needed otherwise as the content is now `null` the thumbnail will be also `null`
         // if the save occurs just after a call to this method. See CheckBlobUpdateListener#handleEvent
         documentModel.putContextData(UpdateThumbnailListener.THUMBNAIL_UPDATED, true);
+        // for the caller in the case where it want to update the main content after the move
+        documentModel.putContextData(ThumbnailConstants.DISABLE_THUMBNAIL_COMPUTATION, true);
+        // Video et Picture TODO
+
+
         return documentModel;
     }
 
