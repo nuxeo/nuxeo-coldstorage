@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 import org.apache.logging.log4j.LogManager;
@@ -45,6 +47,10 @@ import org.nuxeo.ecm.core.blob.ManagedBlob;
 import org.nuxeo.ecm.core.event.EventService;
 import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
 import org.nuxeo.ecm.core.io.download.DownloadService;
+import org.nuxeo.ecm.platform.picture.listener.PictureViewsGenerationListener;
+import org.nuxeo.ecm.platform.thumbnail.ThumbnailConstants;
+import org.nuxeo.ecm.platform.thumbnail.listener.UpdateThumbnailListener;
+import org.nuxeo.ecm.platform.video.listener.VideoChangedListener;
 import org.nuxeo.runtime.api.Framework;
 
 /**
@@ -94,6 +100,12 @@ public class ColdStorageHelper {
     // FIXME we have to define the versioning policy for this addon
     public static final String WRITE_COLD_STORAGE = "WriteColdStorage";
 
+    /** @since 10.10 **/
+    protected static final List<String> COLD_STORAGE_DISABLED_RECOMPUTATION_LISTENERS = Arrays.asList(
+            UpdateThumbnailListener.THUMBNAIL_UPDATED, ThumbnailConstants.DISABLE_THUMBNAIL_COMPUTATION,
+            VideoChangedListener.DISABLE_VIDEO_CONVERSIONS_GENERATION_LISTENER,
+            PictureViewsGenerationListener.DISABLE_PICTURE_VIEWS_GENERATION_LISTENER);
+
     /**
      * Moves the main content associated with the document of the given {@link DocumentRef} to a cold storage.
      * <p/>
@@ -131,6 +143,9 @@ public class ColdStorageHelper {
         documentModel.addFacet(COLD_STORAGE_FACET_NAME);
         documentModel.setPropertyValue(COLD_STORAGE_CONTENT_PROPERTY, mainContent);
         documentModel.setPropertyValue(FILE_CONTENT_PROPERTY, null);
+        // THUMBNAIL_UPDATED: disabling is needed otherwise as the content is now `null` the thumbnail will be also
+        // `null` See CheckBlobUpdateListener#handleEvent
+        COLD_STORAGE_DISABLED_RECOMPUTATION_LISTENERS.forEach(name -> documentModel.putContextData(name, true));
         return documentModel;
     }
 
