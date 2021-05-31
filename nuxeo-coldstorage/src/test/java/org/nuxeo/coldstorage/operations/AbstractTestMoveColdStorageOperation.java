@@ -27,11 +27,13 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.List;
 
 import javax.inject.Inject;
 
 import org.junit.Test;
+import org.nuxeo.coldstorage.helpers.ColdStorageHelper;
 import org.nuxeo.ecm.automation.OperationException;
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.CoreInstance;
@@ -150,5 +152,24 @@ public abstract class AbstractTestMoveColdStorageOperation extends AbstractTestC
         Blob thumbnailUpdateOne = thumbnailService.getThumbnail(documentModel, session);
         assertNotNull(thumbnailUpdateOne);
         assertEquals(originalThumbnail.getString(), thumbnailUpdateOne.getString());
+    }
+
+    @Test
+    public void shouldNotReplaceColdStorageContent() throws IOException, OperationException {
+        DocumentModel documentModel = createFileDocument(session, true);
+        moveContentToColdStorage(session, documentModel);
+
+        transactionalFeature.nextTransaction();
+        documentModel.refresh();
+
+        try {
+            Blob BloThumbnail = thumbnailService.getThumbnail(documentModel, session);
+            documentModel.setPropertyValue(ColdStorageHelper.COLD_STORAGE_CONTENT_PROPERTY,
+                    (Serializable) BloThumbnail);
+            session.saveDocument(documentModel);
+            fail("Should fail because the document content can't be updated");
+        } catch (NuxeoException e) {
+            assertEquals(SC_FORBIDDEN, e.getStatusCode());
+        }
     }
 }

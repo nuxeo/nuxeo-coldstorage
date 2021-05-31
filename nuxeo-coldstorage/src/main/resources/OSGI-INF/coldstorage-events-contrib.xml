@@ -17,6 +17,10 @@
               class="org.nuxeo.coldstorage.events.CheckUpdateMainContentInColdStorageListener">
       <event>beforeDocumentModification</event>
     </listener>
+    <listener name="checkUpdateColdStorageContentListener"
+              class="org.nuxeo.coldstorage.events.CheckUpdateColdStorageContentListener">
+      <event>beforeDocumentModification</event>
+    </listener>
     <listener name="checkColdStorageContentRestoreListener" async="true"
               class="org.nuxeo.coldstorage.events.CheckColdStorageContentRestoreListener">
       <event>coldStorageContentToRestore</event>
