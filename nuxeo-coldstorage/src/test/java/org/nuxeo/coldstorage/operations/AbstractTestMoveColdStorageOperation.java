@@ -175,4 +175,21 @@ public abstract class AbstractTestMoveColdStorageOperation extends AbstractTestC
             assertEquals(SC_FORBIDDEN, e.getStatusCode());
         }
     }
+
+    @Test
+    public void shouldNotDeleteColdStorageFacet() throws IOException, OperationException {
+        DocumentModel documentModel = createFileDocument(session, true);
+        moveContentToColdStorage(session, documentModel);
+
+        transactionalFeature.nextTransaction();
+        documentModel.refresh();
+
+        try {
+            documentModel.removeFacet(ColdStorageHelper.COLD_STORAGE_FACET_NAME);
+            session.saveDocument(documentModel);
+            fail("Should fail because the document content can't be updated");
+        } catch (NuxeoException e) {
+            assertEquals(SC_FORBIDDEN, e.getStatusCode());
+        }
+    }
 }
