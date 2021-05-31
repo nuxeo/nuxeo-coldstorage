@@ -75,6 +75,7 @@ public abstract class AbstractTestColdStorageOperation {
             context.setInput(documentModel);
             DocumentModel updatedDocModel = (DocumentModel) automationService.run(context, MoveToColdStorage.ID);
             checkMoveContent(List.of(documentModel), List.of(updatedDocModel));
+            documentModel.refresh();
         }
     }
 
