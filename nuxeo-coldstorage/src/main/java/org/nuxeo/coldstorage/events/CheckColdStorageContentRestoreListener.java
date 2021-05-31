@@ -19,6 +19,7 @@
 
 package org.nuxeo.coldstorage.events;
 
+import static org.nuxeo.coldstorage.events.CheckUpdateColdStorageContentListener.DISABLE_COLD_STORAGE_CHECK_UPDATE_COLDSTORAGE_CONTENT_LISTENER;
 import static org.nuxeo.coldstorage.events.CheckUpdateMainContentInColdStorageListener.DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER;
 import static org.nuxeo.coldstorage.helpers.ColdStorageHelper.COLD_STORAGE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.helpers.ColdStorageHelper.COLD_STORAGE_CONTENT_RESTORED_EVENT_NAME;
@@ -55,8 +56,9 @@ public class CheckColdStorageContentRestoreListener implements PostCommitEventLi
                 DocumentEventContext docCtx = (DocumentEventContext) e.getContext();
                 DocumentModel documentModel = docCtx.getSourceDocument();
 
-                // Disable main content storage check otherwise, the restore action won't be allowed
+                // Disable main and ColdStorage storage contents check otherwise, the restore action won't be allowed
                 documentModel.putContextData(DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER, true);
+                documentModel.putContextData(DISABLE_COLD_STORAGE_CHECK_UPDATE_COLDSTORAGE_CONTENT_LISTENER, true);
 
                 // Restore the main content
                 CoreSession session = e.getContext().getCoreSession();
