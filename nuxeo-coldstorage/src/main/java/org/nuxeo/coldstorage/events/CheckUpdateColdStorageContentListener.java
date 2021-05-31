@@ -68,7 +68,12 @@ public class CheckUpdateColdStorageContentListener implements EventListener {
                             String.format("The Document %s content cannot be updated.", doc));
                 }
             }
-
+            // Prevent replacing the cold storage facet of a document whose is stored in S3 Glacier
+            if (Boolean.FALSE.equals(doc.hasFacet(ColdStorageHelper.COLD_STORAGE_FACET_NAME))) {
+                // mark the event to bubble the exception, which results on a TX rollback
+                event.markBubbleException();
+                throw new DocumentSecurityException(String.format("The Document %s facet cannot be updated.", doc));
+            }
         }
     }
 
