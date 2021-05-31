@@ -27,6 +27,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
@@ -154,5 +155,24 @@ public abstract class AbstractTestMoveColdStorageOperation extends AbstractTestC
         Blob thumbnailUpdateOne = thumbnailService.getThumbnail(documentModel, session);
         assertNotNull(thumbnailUpdateOne);
         assertEquals(originalThumbnail.getString(), thumbnailUpdateOne.getString());
+    }
+
+    @Test
+    public void shouldNotReplaceColdStorageContent() throws IOException, OperationException {
+        DocumentModel documentModel = createFileDocument(session, true);
+        moveContentToColdStorage(session, documentModel);
+
+        transactionalFeature.nextTransaction();
+        documentModel.refresh();
+
+        try {
+            Blob BloThumbnail = thumbnailService.getThumbnail(documentModel, session);
+            documentModel.setPropertyValue(ColdStorageHelper.COLD_STORAGE_CONTENT_PROPERTY,
+                    (Serializable) BloThumbnail);
+            session.saveDocument(documentModel);
+            fail("Should fail because the document content can't be updated");
+        } catch (NuxeoException e) {
+            assertEquals(SC_FORBIDDEN, e.getStatusCode());
+        }
     }
 }
