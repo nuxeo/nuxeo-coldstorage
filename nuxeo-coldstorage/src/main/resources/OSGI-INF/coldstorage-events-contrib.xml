@@ -14,7 +14,7 @@
       <event>checkColdStorageContentAvailability</event>
     </listener>
     <listener name="checkUpdateMainContentInColdStorage"
-              class="org.nuxeo.coldstorage.events.CheckUpdateMainContentInColdStorage">
+              class="org.nuxeo.coldstorage.events.CheckUpdateMainContentInColdStorageListener">
       <event>beforeDocumentModification</event>
     </listener>
     <listener name="checkColdStorageContentRestoreListener" async="true"
