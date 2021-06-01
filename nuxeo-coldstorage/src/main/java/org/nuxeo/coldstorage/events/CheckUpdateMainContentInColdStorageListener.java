@@ -38,10 +38,10 @@ import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
  * 
  * @since 11.1
  */
-public class CheckUpdateMainContentInColdStorage implements EventListener {
+public class CheckUpdateMainContentInColdStorageListener implements EventListener {
 
     /** @since 10.10 **/
-    private static final Logger log = LogManager.getLogger(CheckUpdateMainContentInColdStorage.class);
+    private static final Logger log = LogManager.getLogger(CheckUpdateMainContentInColdStorageListener.class);
 
     /** @since 10.10 **/
     public static final String DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER = "disableColdStorageCheckUpdateMainContentListener";

@@ -19,7 +19,7 @@
 
 package org.nuxeo.coldstorage.events;
 
-import static org.nuxeo.coldstorage.events.CheckUpdateMainContentInColdStorage.DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER;
+import static org.nuxeo.coldstorage.events.CheckUpdateMainContentInColdStorageListener.DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER;
 import static org.nuxeo.coldstorage.helpers.ColdStorageHelper.COLD_STORAGE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.helpers.ColdStorageHelper.COLD_STORAGE_CONTENT_RESTORED_EVENT_NAME;
 import static org.nuxeo.coldstorage.helpers.ColdStorageHelper.COLD_STORAGE_FACET_NAME;
