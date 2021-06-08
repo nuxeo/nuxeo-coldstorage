@@ -11,7 +11,7 @@
   "documentContentView.restoreFromColdStorage.confirm": "Bevestigen",
   "documentContentView.restoreFromColdStorage.cancel": "Annuleren",
   "documentContentView.restoreFromColdStorage.ask.confirmation": "Haal dit document op uit cold-opslag?",
-  "documentContentView.restoreFromColdStorage.description": "This will undo the send to cold storage action on the document.",
+  "documentContentView.restoreFromColdStorage.description": "Dit zal de verzending naar cold-opslag op het document ongedaan maken.",
   "documentContentView.restoreFromColdStorage.label": "Ophalen uit cold-opslag",
   "documentContentView.restoreFromColdStorage.tooltip": "Ophalen uit cold-opslag",
   "documentContentView.restoreFromColdStorage.success": "Start met ophalen van documentinhoud uit cold-opslag",
