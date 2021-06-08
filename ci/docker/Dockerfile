@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=docker-private.packages.nuxeo.com/nuxeo/nuxeo:10.10-HF45
+ARG BASE_IMAGE=docker-private.packages.nuxeo.com/nuxeo/nuxeo:10.10-HF47
 
 FROM ${BASE_IMAGE}
 
