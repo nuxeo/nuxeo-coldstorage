@@ -55,7 +55,6 @@ def runBackEndUnitTests() {
             )
             withEnv(envVars) {
               sh """
-                cd ${BACKEND_FOLDER}
                 mvn ${MAVEN_ARGS} -V -T0.8C test
               """
             }
@@ -232,8 +231,7 @@ pipeline {
       post {
         always {
           script {
-            gitHubBuildStatus('utests/frontend')
-            gitHubBuildStatus('utests/backend')
+            gitHubBuildStatus('package')
           }
         }
       }
