@@ -57,3 +57,33 @@ limitations under the License.
     <nuxeo-coldstorage-infobar document="[[document]]"></nuxeo-coldstorage-infobar>
   </template>
 </nuxeo-slot-content>
+
+<nuxeo-slot-content name="replaceBlobAction" slot="BLOB_ACTIONS" order="35" priority="1">
+  <template>
+    <nuxeo-filter document="[[document]]" expression="!this.hasFacet(document, 'ColdStorage')">
+      <template>
+        <nuxeo-replace-blob-button document="[[document]]" xpath="[[xpath]]"></nuxeo-replace-blob-button>
+      </template>
+    </nuxeo-filter>
+  </template>
+</nuxeo-slot-content>
+
+<nuxeo-slot-content name="deleteBlobAction" slot="BLOB_ACTIONS" order="30" priority="1">
+  <template>
+    <nuxeo-filter document="[[document]]" expression="!this.hasFacet(document, 'ColdStorage')">
+      <template>
+        <nuxeo-delete-blob-button document="[[document]]" xpath="[[xpath]]"></nuxeo-delete-blob-button>
+      </template>
+    </nuxeo-filter>
+  </template>
+</nuxeo-slot-content>
+
+<nuxeo-slot-content name="deleteDocumentAction" slot="DOCUMENT_ACTIONS" order="30" priority="1">
+  <template>
+    <nuxeo-filter document="[[document]]" expression="!this.hasFacet(document, 'ColdStorage')">
+      <template>
+        <nuxeo-delete-document-button document="[[document]]"></nuxeo-delete-document-button>
+      </template>
+    </nuxeo-filter>
+  </template>
+</nuxeo-slot-content>
