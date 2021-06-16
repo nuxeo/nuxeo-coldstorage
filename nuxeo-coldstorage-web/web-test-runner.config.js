@@ -10,7 +10,7 @@ const baseConfig = {
     playwrightLauncher({ product: 'webkit' }),
     playwrightLauncher({ product: 'firefox' }),
   ],
-  coverage: false,
+  coverage: true,
   nodeResolve: true,
   testFramework: {
     config: {
