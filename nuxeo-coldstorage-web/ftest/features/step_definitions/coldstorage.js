@@ -125,3 +125,17 @@ Then('I cannot see the Send the selected files to cold storage action button', f
   toolbar.waitForVisible();
   toolbar.isVisible('nuxeo-move-contents-to-coldstorage-button').should.be.equals(false);
 });
+
+Then('I can see the Remove button', function () {
+  const page = this.ui.browser.documentPage('File');
+  const docView = page.view;
+  docView.waitForVisible();
+  docView.isVisible('nuxeo-delete-blob-button .action').should.be.equals(true);
+});
+
+Then('I cannot see the Remove button', function () {
+  const page = this.ui.browser.documentPage('File');
+  const docView = page.view;
+  docView.waitForVisible();
+  docView.isVisible('nuxeo-delete-blob-button .action').should.be.equals(false);
+});
