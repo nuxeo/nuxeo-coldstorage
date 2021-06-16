@@ -21,6 +21,7 @@ Feature: Cold Storage
     Then I can see the "Send" confirmation dialog
     When I click the confirm button in the "Send" confirmation dialog
     Then I can see the file is stored in cold storage
+    And I cannot see the Remove button
 
   Scenario: User can Cancel the send file to cold storage action in confirmation dialog
     Given I login as "Jack"
@@ -61,6 +62,7 @@ Feature: Cold Storage
     And I move the files to cold storage
     When I browse to the document with path "/default-domain/ws/sample1"
     Then I can see the file is stored in cold storage
+    And I cannot see the Remove button
     When I browse to the document with path "/default-domain/ws/sample2"
     Then I can see the file is stored in cold storage
     When I browse to the document with path "/default-domain/ws/sample3"
@@ -100,6 +102,7 @@ Feature: Cold Storage
     Then I can see the "Restore" confirmation dialog
     When I click the confirm button in the "Restore" confirmation dialog
     Then I can see the file is not stored in cold storage
+    And I can see the Remove button
 
   Scenario: User with WriteColdStorage permission can Retrieve file from cold storage
     Given I login as "Jack"
