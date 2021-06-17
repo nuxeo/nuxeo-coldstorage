@@ -39,6 +39,14 @@ String getEnvironmentVariable(String secretKey, String secretName, String namesp
   return sh(script: "jx step credential -s ${secretName} -n ${namespace} -k ${secretKey}", returnStdout: true)
 }
 
+boolean needsJsfAddon() {
+  boolean enableJsf = false
+  if ( "${IS_REFERENCE_BRANCH}" == 'true' || (nxNapps.isPullRequest() && pullRequest.labels.contains('jsf'))) {
+     enableJsf = true
+  }
+  return enableJsf
+}
+
 def runBackEndUnitTests() {
   return {
     stage('BackEnd') {
@@ -267,7 +275,7 @@ pipeline {
       steps {
         container('maven') {
           script {
-            if (nxNapps.needsJsfAddon("${REFERENCE_BRANCH}")) {
+            if (needsJsfAddon()){
               env.JSF_ENABLED = 'nuxeo-jsf-ui'
             }
             gitHubBuildStatus('helm/chart/build')
