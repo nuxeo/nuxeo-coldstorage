@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<component name="org.nuxeo.coldstorage.rendition.contrib">
+
+  <extension target="org.nuxeo.coldstorage.service.ColdStorageService"  point="coldStorageRendition" >
+    <coldStorageRendition name="defaultRendition" renditionName="thumbnail" />
+    <coldStorageRendition name="pictureRendition" docType="Picture" facet="Picture" renditionName="Small" />
+    <coldStorageRendition name="videoRendition" docType="Video" facet="Video" renditionName="MP4 480p" />
+  </extension>
+
+</component>

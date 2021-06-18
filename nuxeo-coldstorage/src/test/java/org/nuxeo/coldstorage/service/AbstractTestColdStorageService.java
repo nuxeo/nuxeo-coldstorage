@@ -272,9 +272,6 @@ public abstract class AbstractTestColdStorageService {
 
     @Test
     @Deploy("org.nuxeo.coldstorage.test:OSGI-INF/test-thumbnail-recomputation-contrib.xml")
-    @Deploy("org.nuxeo.ecm.platform.thumbnail:OSGI-INF/thumbnail-listener-contrib.xml")
-    @Deploy("org.nuxeo.ecm.platform.thumbnail:OSGI-INF/thumbnail-core-types-contrib.xml")
-    @Deploy("org.nuxeo.ecm.platform.types")
     public void shouldNotRecomputeThumbnail() throws IOException {
         DocumentModel documentModel = session.createDocumentModel("/", DEFAULT_DOC_NAME, "MyCustomFile");
         documentModel.setPropertyValue("file:content", (Serializable) Blobs.createBlob(FILE_CONTENT));

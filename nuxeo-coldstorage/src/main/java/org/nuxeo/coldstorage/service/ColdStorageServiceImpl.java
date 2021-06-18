@@ -45,13 +45,16 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.coldstorage.ColdStorageConstants.ColdStorageContentStatus;
+import org.nuxeo.coldstorage.ColdStorageRenditionDescriptor;
 import org.nuxeo.coldstorage.action.DeduplicationColdStorageContentActions;
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.CoreSession;
@@ -61,7 +64,6 @@ import org.nuxeo.ecm.core.api.DocumentRef;
 import org.nuxeo.ecm.core.api.NuxeoException;
 import org.nuxeo.ecm.core.api.NuxeoPrincipal;
 import org.nuxeo.ecm.core.api.security.SecurityConstants;
-import org.nuxeo.ecm.core.api.thumbnail.ThumbnailService;
 import org.nuxeo.ecm.core.blob.BlobManager;
 import org.nuxeo.ecm.core.blob.BlobStatus;
 import org.nuxeo.ecm.core.blob.BlobUpdateContext;
@@ -75,10 +77,13 @@ import org.nuxeo.ecm.core.io.download.DownloadService;
 import org.nuxeo.ecm.platform.ec.notification.NotificationConstants;
 import org.nuxeo.ecm.platform.notification.api.NotificationManager;
 import org.nuxeo.ecm.platform.picture.listener.PictureViewsGenerationListener;
+import org.nuxeo.ecm.platform.rendition.Rendition;
+import org.nuxeo.ecm.platform.rendition.service.RenditionService;
 import org.nuxeo.ecm.platform.thumbnail.ThumbnailConstants;
 import org.nuxeo.ecm.platform.thumbnail.listener.UpdateThumbnailListener;
 import org.nuxeo.ecm.platform.video.listener.VideoChangedListener;
 import org.nuxeo.runtime.api.Framework;
+import org.nuxeo.runtime.model.ComponentContext;
 import org.nuxeo.runtime.model.DefaultComponent;
 
 /**
@@ -95,20 +100,93 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
             VideoChangedListener.DISABLE_VIDEO_CONVERSIONS_GENERATION_LISTENER,
             PictureViewsGenerationListener.DISABLE_PICTURE_VIEWS_GENERATION_LISTENER);
 
+    public static final String COLDSTORAGE_RENDITION_EP = "coldStorageRendition";
+
+    protected String defaultRendition;
+
+    protected Map<String, String> renditionByDocType;
+
+    protected Map<String, String> renditionByFacets;
+
     public ColdStorageServiceImpl() {
         // no instance allowed
     }
 
     @Override
+    public void start(ComponentContext context) {
+        renditionByDocType = new HashMap<>();
+        renditionByFacets = new HashMap<>();
+        this.<ColdStorageRenditionDescriptor> getRegistryContributions(COLDSTORAGE_RENDITION_EP).forEach(desc -> {
+            String renditionName = desc.getRenditionName();
+            String docType = desc.getDocType();
+            if (docType != null) {
+                renditionByDocType.put(docType, renditionName);
+            }
+            String facet = desc.getFacet();
+            if (facet != null) {
+                renditionByFacets.put(facet, renditionName);
+            }
+            if (docType == null && facet == null) {
+                defaultRendition = renditionName;
+                if (defaultRendition == null) {
+                    throw new NuxeoException(
+                            String.format("Please contribute a default rendition name: %s", desc.getName()));
+                }
+            }
+        });
+    }
+
+    @Override
+    public void stop(ComponentContext context) throws InterruptedException {
+        defaultRendition = null;
+        renditionByDocType = null;
+        renditionByFacets = null;
+    }
+
+    public String getRenditionName(DocumentModel doc) {
+        String docType = doc.getType();
+        if (renditionByDocType.containsKey(docType)) {
+            return renditionByDocType.get(docType);
+        }
+        for (Map.Entry<String, String> entry : renditionByFacets.entrySet()) {
+            if (doc.hasFacet(entry.getKey())) {
+                return entry.getValue();
+            }
+        }
+
+        if (defaultRendition == null) {
+            throw new NuxeoException(
+                    String.format("Please contribute a default rendition name for document docType %s and facets %s",
+                            docType, doc.getFacets()));
+        }
+        return defaultRendition;
+    }
+
+    @Override
+    public Blob getRendition(DocumentModel doc, CoreSession session) {
+        String renditionName = getRenditionName(doc);
+
+        try {
+            RenditionService renditionService = Framework.getService(RenditionService.class);
+            Rendition rendition = renditionService.getRendition(doc, renditionName);
+            return rendition.getBlob();
+        } catch (NuxeoException e) {
+            throw new NuxeoException(String.format("Cannot retrieve the rendition for document %s.", doc), e,
+                    SC_NOT_FOUND);
+        }
+
+    }
+
+    @Override
     public DocumentModel moveToColdStorage(CoreSession session, DocumentRef documentRef) {
         DocumentModel documentModel = session.getDocument(documentRef);
-        // retrieve the thumbnail which will be used to replace the content, once the move done
-        Blob thumbnail = Framework.getService(ThumbnailService.class).getThumbnail(documentModel, session);
+        // retrieve the rendition which will be used to replace the content, once the move done
+        Blob renditionBlob = getRendition(documentModel, session);
         // make the move
         documentModel = moveContentToColdStorage(session, documentModel.getRef());
 
         // replace the file content document by the rendition
-        documentModel.setPropertyValue(FILE_CONTENT_PROPERTY, (Serializable) thumbnail);
+        documentModel.setPropertyValue(FILE_CONTENT_PROPERTY, (Serializable) renditionBlob);
 
         // FIXME
         if (documentModel.hasFacet("Picture")) {
