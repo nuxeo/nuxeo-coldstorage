@@ -29,13 +29,12 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.nuxeo.coldstorage.helpers.ColdStorageHelper;
-import org.nuxeo.ecm.core.api.Blob;
+import org.nuxeo.coldstorage.ColdStorageConstants;
+import org.nuxeo.coldstorage.service.ColdStorageService;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentModelList;
 import org.nuxeo.ecm.core.api.IdRef;
-import org.nuxeo.ecm.core.api.thumbnail.ThumbnailService;
 import org.nuxeo.ecm.core.bulk.action.computation.AbstractBulkComputation;
 import org.nuxeo.lib.stream.computation.Topology;
 import org.nuxeo.runtime.api.Framework;
@@ -70,15 +69,13 @@ public class DeduplicationColdStorageContentActions implements StreamProcessorTo
             IdRef[] docRefs = ids.stream().map(IdRef::new).toArray(IdRef[]::new);
             DocumentModelList documents = session.getDocuments(docRefs);
 
-            ThumbnailService thumbnailService = Framework.getService(ThumbnailService.class);
+            ColdStorageService service = Framework.getService(ColdStorageService.class);
+
             for (DocumentModel document : documents) {
                 // Normally it shouldn't be the case
-                if (!document.hasFacet(ColdStorageHelper.COLD_STORAGE_FACET_NAME)) {
-                    Blob thumbnail = thumbnailService.getThumbnail(document, session);
-                    DocumentModel documentModel = ColdStorageHelper.moveContentToColdStorage(session,
+                if (!document.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME)) {
+                    DocumentModel documentModel = service.moveToColdStorage(session,
                             document.getRef());
-                    // replace the file content document by the thumbnail
-                    documentModel.setPropertyValue(ColdStorageHelper.FILE_CONTENT_PROPERTY, (Serializable) thumbnail);
                     if (documentModel.isVersion()) {
                         documentModel.putContextData(CoreSession.ALLOW_VERSION_WRITE, true);
                     }

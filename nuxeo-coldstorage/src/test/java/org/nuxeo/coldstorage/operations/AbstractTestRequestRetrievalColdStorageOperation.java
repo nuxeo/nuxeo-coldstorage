@@ -33,7 +33,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import org.junit.Test;
-import org.nuxeo.coldstorage.helpers.ColdStorageHelper;
+import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.ecm.automation.OperationContext;
 import org.nuxeo.ecm.automation.OperationException;
 import org.nuxeo.ecm.core.api.CoreSession;
@@ -117,11 +117,11 @@ public abstract class AbstractTestRequestRetrievalColdStorageOperation extends A
                     RequestRetrievalFromColdStorage.ID, params);
             assertEquals(documentModel.getRef(), updatedDocument.getRef());
             assertEquals(Boolean.TRUE,
-                    updatedDocument.getPropertyValue(ColdStorageHelper.COLD_STORAGE_BEING_RETRIEVED_PROPERTY));
+                    updatedDocument.getPropertyValue(ColdStorageConstants.COLD_STORAGE_BEING_RETRIEVED_PROPERTY));
             String username = NotificationConstants.USER_PREFIX + session.getPrincipal().getName();
             List<String> subscriptions = notificationManager.getSubscriptionsForUserOnDocument(username,
                     updatedDocument);
-            assertTrue(subscriptions.contains(ColdStorageHelper.COLD_STORAGE_CONTENT_AVAILABLE_NOTIFICATION_NAME));
+            assertTrue(subscriptions.contains(ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_NOTIFICATION_NAME));
         }
     }
 }
