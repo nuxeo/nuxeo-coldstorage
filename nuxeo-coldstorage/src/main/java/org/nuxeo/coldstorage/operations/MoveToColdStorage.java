@@ -19,26 +19,19 @@
 
 package org.nuxeo.coldstorage.operations;
 
-import java.io.Serializable;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.nuxeo.coldstorage.helpers.ColdStorageHelper;
+import org.nuxeo.coldstorage.service.ColdStorageService;
 import org.nuxeo.ecm.automation.core.Constants;
 import org.nuxeo.ecm.automation.core.annotations.Context;
 import org.nuxeo.ecm.automation.core.annotations.Operation;
 import org.nuxeo.ecm.automation.core.annotations.OperationMethod;
 import org.nuxeo.ecm.automation.core.annotations.Param;
-import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentModelList;
 import org.nuxeo.ecm.core.api.NuxeoException;
 import org.nuxeo.ecm.core.api.impl.DocumentModelListImpl;
-import org.nuxeo.ecm.core.api.thumbnail.ThumbnailService;
-import org.nuxeo.ecm.platform.thumbnail.ThumbnailConstants;
-import org.nuxeo.runtime.api.Framework;
-
 /**
  * Moves the main content associated with the input {@link DocumentModel} or {@link DocumentModelList} to the cold
  * storage.
@@ -55,20 +48,17 @@ public class MoveToColdStorage {
     @Context
     protected CoreSession session;
 
+    @Context
+    protected ColdStorageService service;
+
     @Param(name = "save", required = false, values = "true")
     protected boolean save = true;
 
     @OperationMethod
     public DocumentModel run(DocumentModel document) {
-        // retrieve the thumbnail which will be used to replace the content, once the move done
-        Blob thumbnail = Framework.getService(ThumbnailService.class).getThumbnail(document, session);
-
         // make the move
-        DocumentModel documentModel = ColdStorageHelper.moveContentToColdStorage(session, document.getRef());
+        DocumentModel documentModel = service.moveToColdStorage(session,document.getRef());
 
-        documentModel.putContextData(ThumbnailConstants.DISABLE_THUMBNAIL_COMPUTATION, true);
-        // replace the file content document by the thumbnail
-        documentModel.setPropertyValue(ColdStorageHelper.FILE_CONTENT_PROPERTY, (Serializable) thumbnail);
         if (save) {
             documentModel = session.saveDocument(documentModel);
         }
