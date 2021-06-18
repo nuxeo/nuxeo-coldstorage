@@ -26,7 +26,7 @@ When('I click the {word} button in the {string} confirmation dialog', function (
     dialog = this.ui.browser.el.element('nuxeo-dialog#contentToRestoreDialog');
   } else dialog = this.ui.browser.el.element('nuxeo-dialog#contentFromRetrieveDialog');
   dialog.click(`paper-button[name="${btn}"]`);
-  driver.pause(1000);
+  driver.pause(2000);
 });
 
 When('I move the files to cold storage', function () {
@@ -35,7 +35,7 @@ When('I move the files to cold storage', function () {
   const dialog = this.ui.browser.el.element('nuxeo-dialog#contentsToMoveDialog');
   dialog.waitForVisible();
   dialog.click('paper-button[name="confirm"]');
-  driver.pause(1000);
+  driver.pause(2000);
 });
 
 When('I click the Retrieve file from cold storage button', function () {
@@ -56,17 +56,15 @@ Then('I cannot see the Send file to cold storage button', function () {
 });
 
 Then('I can see the file is stored in cold storage', function () {
-  driver.waitUntil(() => {
-    driver.refresh();
-    const page = this.ui.browser.documentPage(this.doc.type);
-    page.infoBar.waitForVisible('#coldStorageInfoBar .storedInColdStorage');
-    return true;
-  });
+  const page = this.ui.browser.documentPage(this.doc.type);
+  page.waitForVisible();
+  page.infoBar.waitForVisible('#coldStorageInfoBar .storedInColdStorage');
 });
 
 Then('I can see the file is not stored in cold storage', function () {
   driver.refresh();
   const page = this.ui.browser.documentPage(this.doc.type);
+  page.waitForVisible();
   page.infoBar.isVisible('#coldStorageInfoBar .storedInColdStorage').should.be.equals(false);
 });
 
