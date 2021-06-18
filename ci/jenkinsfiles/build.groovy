@@ -94,6 +94,7 @@ def runFrontEndUnitTests() {
                 retry(2) {
                   sh """
                     cd ${FRONTEND_FOLDER}
+                    npm install playwright
                     npm install
                     npm run test
                   """
@@ -134,7 +135,7 @@ pipeline {
     JENKINS_HOME = '/root'
     MAVEN_DEBUG = '-e'
     MAVEN_OPTS = "${MAVEN_OPTS} -Xms512m -Xmx3072m"
-    NUXEO_BASE_IMAGE = 'docker-private.packages.nuxeo.com/nuxeo/nuxeo:11.x'
+    NUXEO_BASE_IMAGE = 'docker-private.packages.nuxeo.com/nuxeo/nuxeo:11.5.128'
     ORG = 'nuxeo'
     PREVIEW_NAMESPACE = "coldstorage-${BRANCH_LC}"
     REFERENCE_BRANCH = 'master'
