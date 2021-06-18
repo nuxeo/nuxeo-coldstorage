@@ -17,7 +17,7 @@
  *     Abdoul BA<aba@nuxeo.com>
  */
 
-package org.nuxeo.coldstorage.helpers;
+package org.nuxeo.coldstorage.service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
+import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.coldstorage.DummyColdStorageFeature;
 import org.nuxeo.coldstorage.blob.providers.DummyBlobProvider;
 import org.nuxeo.ecm.core.api.IdRef;
@@ -34,7 +35,7 @@ import org.nuxeo.ecm.core.blob.ManagedBlob;
 import org.nuxeo.runtime.test.runner.Features;
 
 @Features(DummyColdStorageFeature.class)
-public class DummyTestColdStorage extends AbstractTestColdStorageHelper {
+public class DummyTestColdStorage extends AbstractTestColdStorageService {
 
     @Override
     protected String getBlobProviderName() {
@@ -76,7 +77,7 @@ public class DummyTestColdStorage extends AbstractTestColdStorageHelper {
     protected void addColdStorageContentBlobStatus(String docId, BlobStatus blobStatus) {
         ManagedBlob coldContent = (ManagedBlob) session.getDocument(new IdRef(docId))
                                                        .getPropertyValue(
-                                                               ColdStorageHelper.COLD_STORAGE_CONTENT_PROPERTY);
+                                                               ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY);
 
         DummyBlobProvider blobProvider = (DummyBlobProvider) blobManager.getBlobProvider(coldContent.getProviderId());
         blobProvider.addStatus(coldContent, blobStatus);

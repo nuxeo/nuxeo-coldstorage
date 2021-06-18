@@ -19,11 +19,9 @@
 
 package org.nuxeo.coldstorage.operations;
 
-import static org.nuxeo.coldstorage.helpers.ColdStorageHelper.COLD_STORAGE_NUMBER_OF_DAYS_OF_AVAILABILITY_PROPERTY_NAME;
-
 import java.time.Duration;
 
-import org.nuxeo.coldstorage.helpers.ColdStorageHelper;
+import org.nuxeo.coldstorage.service.ColdStorageService;
 import org.nuxeo.ecm.automation.core.Constants;
 import org.nuxeo.ecm.automation.core.annotations.Context;
 import org.nuxeo.ecm.automation.core.annotations.Operation;
@@ -33,10 +31,6 @@ import org.nuxeo.ecm.automation.core.collectors.DocumentModelCollector;
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
-import org.nuxeo.ecm.core.api.NuxeoPrincipal;
-import org.nuxeo.ecm.platform.ec.notification.NotificationConstants;
-import org.nuxeo.ecm.platform.notification.api.NotificationManager;
-import org.nuxeo.runtime.api.Framework;
 
 /**
  * Requests a retrieval from cold storage of the content associated with the input {@link DocumentModel}. This operation
@@ -56,26 +50,22 @@ public class RequestRetrievalFromColdStorage {
     @Context
     protected CoreSession session;
 
+    @Context
+    protected ColdStorageService service;
+
     @Param(name = "save", required = false, values = "true")
     protected boolean save = true;
 
     @OperationMethod(collector = DocumentModelCollector.class)
     public DocumentModel run(DocumentModel doc) {
+        Duration duration;
         if (numberOfDaysOfAvailability == 0) {
-            String value = Framework.getProperties()
-                                    .getProperty(COLD_STORAGE_NUMBER_OF_DAYS_OF_AVAILABILITY_PROPERTY_NAME, "1");
-            numberOfDaysOfAvailability = Integer.valueOf(value);
+            duration = service.getDurationAvailability();
+        } else {
+            duration = Duration.ofDays(numberOfDaysOfAvailability);
         }
-        DocumentModel documentModel = ColdStorageHelper.requestRetrievalFromColdStorage(session, doc.getRef(),
-                Duration.ofDays(numberOfDaysOfAvailability));
 
-        // auto-subscribe the user, this way they will receive the mail notification when the content is available
-        NuxeoPrincipal principal = session.getPrincipal();
-        String username = NotificationConstants.USER_PREFIX + principal.getName();
-        NotificationManager notificationManager = Framework.getService(NotificationManager.class);
-        notificationManager.addSubscription(username,
-                ColdStorageHelper.COLD_STORAGE_CONTENT_AVAILABLE_NOTIFICATION_NAME, documentModel, false, principal,
-                ColdStorageHelper.COLD_STORAGE_CONTENT_AVAILABLE_NOTIFICATION_NAME);
+        DocumentModel documentModel = service.retrieveFromColdStorage(session, doc, duration);
 
         if (save) {
             documentModel = session.saveDocument(documentModel);

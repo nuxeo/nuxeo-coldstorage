@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.nuxeo.coldstorage.helpers.ColdStorageHelper;
 import org.nuxeo.ecm.blob.s3.S3BlobProvider;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.blob.BlobManager;
@@ -166,7 +165,7 @@ public class S3TestHelper {
      */
     public void moveBlobContentToGlacier(DocumentModel document) {
         AmazonS3 amazonS3 = getAmazonS3("glacier");
-        String blobKey = getBlobKey(document, ColdStorageHelper.COLD_STORAGE_CONTENT_PROPERTY);
+        String blobKey = getBlobKey(document, ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY);
         log.info("ColdStorage Blob key {}", blobKey);
         CopyObjectRequest copyObjectRequest = new CopyObjectRequest(glacierBucket, blobKey, getGlacierBucket(),
                 blobKey).withStorageClass(StorageClass.Glacier);
@@ -188,7 +187,7 @@ public class S3TestHelper {
     public boolean isBlobContentBeingRetrieved(DocumentModel document) {
         boolean restoreFlag = false;
         AmazonS3 amazonS3 = getAmazonS3("glacier");
-        String blobKey = getBlobKey(document, ColdStorageHelper.COLD_STORAGE_CONTENT_PROPERTY);
+        String blobKey = getBlobKey(document, ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY);
         log.info("ColdStorage Blob key {}", blobKey);
         if (amazonS3.doesObjectExist(glacierBucket, blobKey)) {
             ObjectMetadata response = amazonS3.getObjectMetadata(glacierBucket, blobKey);

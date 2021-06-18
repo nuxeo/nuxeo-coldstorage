@@ -23,7 +23,7 @@ import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.nuxeo.coldstorage.helpers.ColdStorageHelper;
+import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.NuxeoException;
 import org.nuxeo.ecm.core.api.event.CoreEventConstants;
@@ -62,10 +62,10 @@ public class CheckUpdateMainContentInColdStorageListener implements EventListene
 
         DocumentModel previousDocument = (DocumentModel) eventContext.getProperty(
                 CoreEventConstants.PREVIOUS_DOCUMENT_MODEL);
-        if (previousDocument.hasFacet(ColdStorageHelper.COLD_STORAGE_FACET_NAME)
-                && previousDocument.getPropertyValue(ColdStorageHelper.COLD_STORAGE_CONTENT_PROPERTY) != null) {
+        if (previousDocument.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME)
+                && previousDocument.getPropertyValue(ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY) != null) {
             DocumentModel document = ((DocumentEventContext) eventContext).getSourceDocument();
-            Property mainContent = document.getProperty(ColdStorageHelper.FILE_CONTENT_PROPERTY);
+            Property mainContent = document.getProperty(ColdStorageConstants.FILE_CONTENT_PROPERTY);
             if (mainContent.isDirty()) {
                 // mark the event to bubble the exception, which results on a TX rollback
                 event.markBubbleException();
