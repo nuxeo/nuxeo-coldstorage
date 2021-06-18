@@ -21,20 +21,22 @@ package org.nuxeo.coldstorage.events;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.nuxeo.coldstorage.helpers.ColdStorageHelper;
+import org.nuxeo.coldstorage.ColdStorageConstants;
+import org.nuxeo.coldstorage.service.ColdStorageService;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.event.Event;
 import org.nuxeo.ecm.core.event.EventContext;
 import org.nuxeo.ecm.core.event.EventListener;
 import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
+import org.nuxeo.runtime.api.Framework;
 
 /**
  * A synchronous listener that is in charge of moving the main content to Cold Storage for all versions and duplicated
  * documents.
  *
  * @apiNote: This listener is designed to be called after
- *           {@value org.nuxeo.coldstorage.helpers.ColdStorageHelper#COLD_STORAGE_CONTENT_MOVED_EVENT_NAME} event was
+ *           {@value org.nuxeo.coldstorage.ColdStorageConstants#COLD_STORAGE_CONTENT_MOVED_EVENT_NAME} event was
  *           raised.
  * @Since 10.10
  */
@@ -52,10 +54,11 @@ public class CheckColdStorageContentMovedListener implements EventListener {
         DocumentEventContext docCtx = (DocumentEventContext) event.getContext();
         DocumentModel documentModel = docCtx.getSourceDocument();
         CoreSession coreSession = documentModel.getCoreSession();
-        if (documentModel.hasFacet(ColdStorageHelper.COLD_STORAGE_FACET_NAME)) {
+        ColdStorageService service = Framework.getService(ColdStorageService.class);
+        if (documentModel.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME)) {
             log.debug("Start moving to ColdStorage all versions and duplicated blobs for document {}",
                     documentModel::getId);
-            ColdStorageHelper.moveDuplicatedBlobToColdStorage(coreSession, documentModel);
+            service.moveDuplicatedBlobToColdStorage(coreSession, documentModel);
             log.debug("End moving to ColdStorage all versions and duplicated blobs for document {}",
                     documentModel::getId);
         }

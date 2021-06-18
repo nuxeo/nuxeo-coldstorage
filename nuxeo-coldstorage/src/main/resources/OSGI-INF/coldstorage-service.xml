@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<component name="org.nuxeo.coldstorage.service.ColdStorageService">
+
+    <implementation class="org.nuxeo.coldstorage.service.ColdStorageServiceImpl"/>
+
+    <service>
+        <provide interface="org.nuxeo.coldstorage.service.ColdStorageService"/>
+    </service>
+
+</component>
