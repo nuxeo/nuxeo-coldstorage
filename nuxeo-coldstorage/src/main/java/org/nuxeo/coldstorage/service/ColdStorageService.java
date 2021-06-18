@@ -120,4 +120,15 @@ public interface ColdStorageService {
      */
     Duration getDurationAvailability();
 
+    /**
+     * Return the ColStorage rendition blob for the given {@link DocumentModel}.
+     * <p>
+     * A rendition blob is returned if found.
+     *
+     * @param documentModel the document to render
+     * @return the {@link Blob} object
+     * @throws NuxeoException if the rendition doesn't exist.
+     * @since 10.10
+     */
+    Blob getRendition(DocumentModel documentModel, CoreSession session);
 }
