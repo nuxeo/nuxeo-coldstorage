@@ -19,9 +19,10 @@
 
 package org.nuxeo.coldstorage.events;
 
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.nuxeo.coldstorage.helpers.ColdStorageHelper;
+import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentSecurityException;
 import org.nuxeo.ecm.core.api.event.CoreEventConstants;
@@ -30,7 +31,6 @@ import org.nuxeo.ecm.core.event.Event;
 import org.nuxeo.ecm.core.event.EventContext;
 import org.nuxeo.ecm.core.event.EventListener;
 import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
-
 /**
  * @since 10.10
  */
@@ -56,11 +56,11 @@ public class CheckUpdateColdStorageContentListener implements EventListener {
 
         DocumentModel previousDocument = (DocumentModel) eventContext.getProperty(
                 CoreEventConstants.PREVIOUS_DOCUMENT_MODEL);
-        if (previousDocument.hasFacet(ColdStorageHelper.COLD_STORAGE_FACET_NAME)) {
+        if (previousDocument.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME)) {
             // Prevent replacing the cold storage content of a document who is stored in S3 Glacier
-            if (doc.hasFacet(ColdStorageHelper.COLD_STORAGE_FACET_NAME)
-                    && previousDocument.getPropertyValue(ColdStorageHelper.COLD_STORAGE_CONTENT_PROPERTY) != null) {
-                Property coldContent = doc.getProperty(ColdStorageHelper.COLD_STORAGE_CONTENT_PROPERTY);
+            if (doc.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME)
+                    && previousDocument.getPropertyValue(ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY) != null) {
+                Property coldContent = doc.getProperty(ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY);
                 if (coldContent != null && coldContent.isDirty()) {
                     // mark the event to bubble the exception, which results on a TX rollback
                     event.markBubbleException();
@@ -69,7 +69,7 @@ public class CheckUpdateColdStorageContentListener implements EventListener {
                 }
             }
             // Prevent replacing the cold storage facet of a document whose is stored in S3 Glacier
-            if (Boolean.FALSE.equals(doc.hasFacet(ColdStorageHelper.COLD_STORAGE_FACET_NAME))) {
+            if (Boolean.FALSE.equals(doc.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME))) {
                 // mark the event to bubble the exception, which results on a TX rollback
                 event.markBubbleException();
                 throw new DocumentSecurityException(String.format("The Document %s facet cannot be updated.", doc));
