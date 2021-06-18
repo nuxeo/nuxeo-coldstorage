@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.junit.runner.RunWith;
-import org.nuxeo.coldstorage.helpers.ColdStorageHelper;
+import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.coldstorage.thumbnail.DummyThumbnailFactory;
 import org.nuxeo.ecm.automation.AutomationService;
 import org.nuxeo.ecm.automation.OperationContext;
@@ -97,13 +97,13 @@ public abstract class AbstractTestColdStorageOperation {
         assertEquals(expectedDocs.size(), actualDocs.size());
         List<String> expectedDocIds = expectedDocs.stream().map(DocumentModel::getId).collect(Collectors.toList());
         for (DocumentModel updatedDoc : actualDocs) {
-            Blob fileContent = (Blob) updatedDoc.getPropertyValue(ColdStorageHelper.FILE_CONTENT_PROPERTY);
+            Blob fileContent = (Blob) updatedDoc.getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY);
             Blob coldStorageContent = (Blob) updatedDoc.getPropertyValue(
-                    ColdStorageHelper.COLD_STORAGE_CONTENT_PROPERTY);
+                    ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY);
 
             // check document
             assertTrue(expectedDocIds.contains(updatedDoc.getId()));
-            assertTrue(updatedDoc.hasFacet(ColdStorageHelper.COLD_STORAGE_FACET_NAME));
+            assertTrue(updatedDoc.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME));
 
             // check blobs
             assertEquals(DummyThumbnailFactory.DUMMY_THUMBNAIL_CONTENT, fileContent.getString());
@@ -115,7 +115,7 @@ public abstract class AbstractTestColdStorageOperation {
     protected DocumentModel createFileDocument(CoreSession session, boolean withBlobContent, ACE... aces) {
         DocumentModel documentModel = session.createDocumentModel("/", "MyFile", "File");
         if (withBlobContent) {
-            documentModel.setPropertyValue(ColdStorageHelper.FILE_CONTENT_PROPERTY,
+            documentModel.setPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY,
                     (Serializable) Blobs.createBlob(FILE_CONTENT));
         }
         DocumentModel document = session.createDocument(documentModel);

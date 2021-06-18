@@ -17,11 +17,12 @@
  *     Abdoul BA<aba@nuxeo.com>
  */
 
-package org.nuxeo.coldstorage.helpers;
+package org.nuxeo.coldstorage.service;
 
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
+import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.coldstorage.S3ColdStorageFeature;
 import org.nuxeo.coldstorage.S3TestHelper;
 import org.nuxeo.ecm.core.api.CoreSession;
@@ -30,7 +31,7 @@ import org.nuxeo.ecm.core.api.DocumentRef;
 import org.nuxeo.runtime.test.runner.Features;
 
 @Features(S3ColdStorageFeature.class)
-public class S3TestColdStorage extends AbstractTestColdStorageHelper {
+public class S3TestColdStorage extends AbstractTestColdStorageService {
 
     protected S3TestHelper s3TestHelper = S3TestHelper.getInstance();
 
@@ -47,14 +48,14 @@ public class S3TestColdStorage extends AbstractTestColdStorageHelper {
         documentModel = moveContentToColdStorage(session, documentModel.getRef());
         session.saveDocument(documentModel);
         // request a retrieval from the cold storage
-        documentModel = ColdStorageHelper.requestRetrievalFromColdStorage(session, documentModel.getRef(),
+        documentModel = service.requestRetrievalFromColdStorage(session, documentModel.getRef(),
                 RESTORE_DURATION);
         session.saveDocument(documentModel);
         transactionalFeature.nextTransaction();
         documentModel.refresh();
 
         assertEquals(Boolean.TRUE,
-                documentModel.getPropertyValue(ColdStorageHelper.COLD_STORAGE_BEING_RETRIEVED_PROPERTY));
+                documentModel.getPropertyValue(ColdStorageConstants.COLD_STORAGE_BEING_RETRIEVED_PROPERTY));
 
         assertEquals(Boolean.TRUE, s3TestHelper.isBlobContentBeingRetrieved(documentModel));
     }
@@ -64,7 +65,7 @@ public class S3TestColdStorage extends AbstractTestColdStorageHelper {
         // move the blob to cold storage
         moveContentToColdStorage(session, documentModel.getRef(), false);
         // undo move from the cold storage
-        return ColdStorageHelper.restoreContentFromColdStorage(session, documentModel.getRef());
+        return service.restoreContentFromColdStorage(session, documentModel.getRef());
     }
 
     @Override

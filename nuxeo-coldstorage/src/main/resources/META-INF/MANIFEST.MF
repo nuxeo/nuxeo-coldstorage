@@ -9,4 +9,6 @@ Nuxeo-Component: OSGI-INF/coldstorage-core-types-contrib.xml,
  OSGI-INF/coldstorage-operations-contrib.xml,
  OSGI-INF/coldstorage-events-contrib.xml,
  OSGI-INF/coldstorage-security.xml,
- OSGI-INF/coldstorage-deduplication-contrib.xml
+ OSGI-INF/coldstorage-deduplication-contrib.xml,
+ OSGI-INF/coldstorage-service.xml
+

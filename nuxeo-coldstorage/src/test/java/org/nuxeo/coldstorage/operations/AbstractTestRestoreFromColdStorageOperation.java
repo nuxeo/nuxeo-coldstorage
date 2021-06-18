@@ -31,7 +31,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.junit.Test;
-import org.nuxeo.coldstorage.helpers.ColdStorageHelper;
+import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.ecm.automation.OperationContext;
 import org.nuxeo.ecm.automation.OperationException;
 import org.nuxeo.ecm.core.api.Blob;
@@ -100,20 +100,20 @@ public abstract class AbstractTestRestoreFromColdStorageOperation extends Abstra
         // check the common restore notification
         String username = NotificationConstants.USER_PREFIX + session.getPrincipal().getName();
         List<String> subscriptions = notificationManager.getSubscriptionsForUserOnDocument(username, documentModel);
-        assertTrue(subscriptions.contains(ColdStorageHelper.COLD_STORAGE_CONTENT_RESTORED_NOTIFICATION_NAME));
-        assertFalse(subscriptions.contains(ColdStorageHelper.COLD_STORAGE_CONTENT_AVAILABLE_NOTIFICATION_NAME));
+        assertTrue(subscriptions.contains(ColdStorageConstants.COLD_STORAGE_CONTENT_RESTORED_NOTIFICATION_NAME));
+        assertFalse(subscriptions.contains(ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_NOTIFICATION_NAME));
     }
 
     protected void checkRestoreContent(DocumentModel documentModel) throws IOException {
         // check the document content
-        assertFalse(documentModel.hasFacet(ColdStorageHelper.COLD_STORAGE_FACET_NAME));
+        assertFalse(documentModel.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME));
 
         // check main blobs
-        Blob fileContent = (Blob) documentModel.getPropertyValue(ColdStorageHelper.FILE_CONTENT_PROPERTY);
+        Blob fileContent = (Blob) documentModel.getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY);
         assertEquals(FILE_CONTENT, fileContent.getString());
 
         // we shouldn't have any ColdStorage content
-        assertFalse(documentModel.hasFacet(ColdStorageHelper.COLD_STORAGE_FACET_NAME));
+        assertFalse(documentModel.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME));
     }
 
 }

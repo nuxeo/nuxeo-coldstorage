@@ -37,7 +37,7 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.junit.Test;
-import org.nuxeo.coldstorage.helpers.ColdStorageHelper;
+import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.ecm.automation.OperationException;
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.Blobs;
@@ -82,7 +82,7 @@ public abstract class AbstractTestMoveColdStorageOperation extends AbstractTestC
         // with regular user with "WriteColdStorage" permission
         ACE[] aces = { new ACE("john", SecurityConstants.READ, true), //
                 new ACE("john", SecurityConstants.WRITE, true), //
-                new ACE("john", ColdStorageHelper.WRITE_COLD_STORAGE, true) };
+                new ACE("john", ColdStorageConstants.WRITE_COLD_STORAGE, true) };
         DocumentModel documentModel = createFileDocument(session, true, aces);
         try (CloseableCoreSession userSession = CoreInstance.openCoreSessionSystem(documentModel.getRepositoryName(),
                 "john")) {
@@ -98,7 +98,7 @@ public abstract class AbstractTestMoveColdStorageOperation extends AbstractTestC
         // with regular user with "WriteColdStorage" permission
         ACE[] aces = { new ACE("linda", SecurityConstants.READ, true), //
                 new ACE("linda", SecurityConstants.WRITE, true), //
-                new ACE("linda", ColdStorageHelper.WRITE_COLD_STORAGE, true) };
+                new ACE("linda", ColdStorageConstants.WRITE_COLD_STORAGE, true) };
 
         List<DocumentModel> documents = Arrays.asList(createFileDocument(session, true, aces), //
                 createFileDocument(session, true, aces), //
@@ -173,7 +173,7 @@ public abstract class AbstractTestMoveColdStorageOperation extends AbstractTestC
 
         try {
             Blob BloThumbnail = thumbnailService.getThumbnail(documentModel, session);
-            documentModel.setPropertyValue(ColdStorageHelper.COLD_STORAGE_CONTENT_PROPERTY,
+            documentModel.setPropertyValue(ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY,
                     (Serializable) BloThumbnail);
             session.saveDocument(documentModel);
             fail("Should fail because the document content can't be updated");
@@ -191,7 +191,7 @@ public abstract class AbstractTestMoveColdStorageOperation extends AbstractTestC
         documentModel.refresh();
 
         try {
-            documentModel.removeFacet(ColdStorageHelper.COLD_STORAGE_FACET_NAME);
+            documentModel.removeFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME);
             session.saveDocument(documentModel);
             fail("Should fail because the document content can't be updated");
         } catch (NuxeoException e) {
@@ -209,7 +209,7 @@ public abstract class AbstractTestMoveColdStorageOperation extends AbstractTestC
         Blob blob = Blobs.createBlob(FILE_CONTENT);
         blob.setDigest(UUID.randomUUID().toString());
         for (DocumentModel documentModel : documents) {
-            documentModel.setPropertyValue(ColdStorageHelper.FILE_CONTENT_PROPERTY, (Serializable) blob);
+            documentModel.setPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY, (Serializable) blob);
             session.createDocument(documentModel);
             session.saveDocument(documentModel);
         }
@@ -243,7 +243,7 @@ public abstract class AbstractTestMoveColdStorageOperation extends AbstractTestC
         List<String> docTitles = Arrays.asList("AAA", "BBB", "CCC", "DDD");
         DocumentModel documentModel = createFileDocument(session, true);
         String blobDigest = ((Blob) documentModel.getPropertyValue(
-                ColdStorageHelper.FILE_CONTENT_PROPERTY)).getDigest();
+                ColdStorageConstants.FILE_CONTENT_PROPERTY)).getDigest();
 
         // Create 4 versions
         for (String docTitle : docTitles) {
@@ -287,7 +287,7 @@ public abstract class AbstractTestMoveColdStorageOperation extends AbstractTestC
     @Test
     public void shouldMoveVersionsWithSameColdStorageContent() throws IOException, OperationException {
         DocumentModel documentModel = session.createDocumentModel("/", "MyFile1", "File");
-        documentModel.setPropertyValue(ColdStorageHelper.FILE_CONTENT_PROPERTY,
+        documentModel.setPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY,
                 (Serializable) Blobs.createBlob("Initial Blob"));
         session.createDocument(documentModel);
         documentModel.putContextData(VersioningService.VERSIONING_OPTION, VersioningOption.valueOf("MINOR"));
@@ -296,7 +296,7 @@ public abstract class AbstractTestMoveColdStorageOperation extends AbstractTestC
         transactionalFeature.nextTransaction();
 
         // Update the blob content
-        documentModel.setPropertyValue(ColdStorageHelper.FILE_CONTENT_PROPERTY,
+        documentModel.setPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY,
                 (Serializable) Blobs.createBlob(FILE_CONTENT));
         documentModel.putContextData(VersioningService.VERSIONING_OPTION, VersioningOption.valueOf("MINOR"));
         documentModel = session.saveDocument(documentModel);
@@ -311,7 +311,7 @@ public abstract class AbstractTestMoveColdStorageOperation extends AbstractTestC
         transactionalFeature.nextTransaction();
 
         String blobDigest = ((Blob) documentModel.getPropertyValue(
-                ColdStorageHelper.FILE_CONTENT_PROPERTY)).getDigest();
+                ColdStorageConstants.FILE_CONTENT_PROPERTY)).getDigest();
 
         // Check if we have the expected number of versions
         String query = String.format(
@@ -347,14 +347,14 @@ public abstract class AbstractTestMoveColdStorageOperation extends AbstractTestC
     }
 
     public void checkMoveContents(DocumentModel documentModel, List<DocumentModel> documents) throws IOException {
-        Blob blob = (Blob) documentModel.getPropertyValue(ColdStorageHelper.COLD_STORAGE_CONTENT_PROPERTY);
+        Blob blob = (Blob) documentModel.getPropertyValue(ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY);
         Blob originalThumbnail = thumbnailService.getThumbnail(documentModel, session);
         for (DocumentModel docModel : documents) {
             DocumentModel document = session.getDocument(docModel.getRef());
-            Blob coldContent = (Blob) document.getPropertyValue(ColdStorageHelper.COLD_STORAGE_CONTENT_PROPERTY);
+            Blob coldContent = (Blob) document.getPropertyValue(ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY);
             Blob thumbnailUpdateOne = thumbnailService.getThumbnail(document, session);
             assertEquals(blob.getDigest(), coldContent.getDigest());
-            assertTrue(document.hasFacet(ColdStorageHelper.COLD_STORAGE_FACET_NAME));
+            assertTrue(document.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME));
 
             // Check the Thumbnail value
             assertEquals(originalThumbnail.getString(), thumbnailUpdateOne.getString());

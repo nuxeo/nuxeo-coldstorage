@@ -25,9 +25,9 @@ import static org.nuxeo.coldstorage.thumbnail.DummyThumbnailFactory.DUMMY_THUMBN
 
 import java.io.IOException;
 
+import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.coldstorage.S3ColdStorageFeature;
 import org.nuxeo.coldstorage.S3TestHelper;
-import org.nuxeo.coldstorage.helpers.ColdStorageHelper;
 import org.nuxeo.ecm.automation.OperationException;
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.CoreSession;
@@ -51,16 +51,16 @@ public class S3RestoreFromColdStorageTest extends AbstractTestRestoreFromColdSto
     protected void checkRestoreContent(DocumentModel documentModel) throws IOException {
         // The storage class for the main blob is Glacier, the restore should be done by retrieve
         // re-check document
-        assertTrue(documentModel.hasFacet(ColdStorageHelper.COLD_STORAGE_FACET_NAME));
+        assertTrue(documentModel.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME));
 
         // should being restored by retrieve
         assertEquals(Boolean.TRUE,
-                documentModel.getPropertyValue(ColdStorageHelper.COLD_STORAGE_BEING_RETRIEVED_PROPERTY));
+                documentModel.getPropertyValue(ColdStorageConstants.COLD_STORAGE_BEING_RETRIEVED_PROPERTY));
         assertEquals(Boolean.TRUE,
-                documentModel.getPropertyValue(ColdStorageHelper.COLD_STORAGE_TO_BE_RESTORED_PROPERTY));
+                documentModel.getPropertyValue(ColdStorageConstants.COLD_STORAGE_TO_BE_RESTORED_PROPERTY));
 
         // check main blobs
-        Blob fileContent = (Blob) documentModel.getPropertyValue(ColdStorageHelper.FILE_CONTENT_PROPERTY);
+        Blob fileContent = (Blob) documentModel.getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY);
         assertEquals(DUMMY_THUMBNAIL_CONTENT, fileContent.getString());
     }
 }

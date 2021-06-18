@@ -21,11 +21,11 @@ package org.nuxeo.coldstorage.events;
 
 import static org.nuxeo.coldstorage.events.CheckUpdateColdStorageContentListener.DISABLE_COLD_STORAGE_CHECK_UPDATE_COLDSTORAGE_CONTENT_LISTENER;
 import static org.nuxeo.coldstorage.events.CheckUpdateMainContentInColdStorageListener.DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER;
-import static org.nuxeo.coldstorage.helpers.ColdStorageHelper.COLD_STORAGE_CONTENT_PROPERTY;
-import static org.nuxeo.coldstorage.helpers.ColdStorageHelper.COLD_STORAGE_CONTENT_RESTORED_EVENT_NAME;
-import static org.nuxeo.coldstorage.helpers.ColdStorageHelper.COLD_STORAGE_FACET_NAME;
-import static org.nuxeo.coldstorage.helpers.ColdStorageHelper.COLD_STORAGE_TO_BE_RESTORED_PROPERTY;
-import static org.nuxeo.coldstorage.helpers.ColdStorageHelper.FILE_CONTENT_PROPERTY;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_RESTORED_EVENT_NAME;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_FACET_NAME;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_TO_BE_RESTORED_PROPERTY;
+import static org.nuxeo.coldstorage.ColdStorageConstants.FILE_CONTENT_PROPERTY;
 
 import java.io.Serializable;
 
