@@ -43,7 +43,7 @@ nuxeo:
       pullPolicy: Always
     persistence:
       enabled: disable
-    packages: nuxeo-web-ui amazon-s3-online-storage ${JSF_ENABLED} /packages/nuxeo-coldstorage-package.zip
+    packages: nuxeo-dam nuxeo-web-ui amazon-s3-online-storage ${JSF_ENABLED} /packages/nuxeo-coldstorage-package.zip
     custom_params: |-
       nuxeo.templates=default
       # AWS
