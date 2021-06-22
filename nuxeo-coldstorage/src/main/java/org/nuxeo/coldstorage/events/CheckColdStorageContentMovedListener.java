@@ -24,9 +24,8 @@ import org.apache.logging.log4j.Logger;
 import org.nuxeo.coldstorage.helpers.ColdStorageHelper;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
-import org.nuxeo.ecm.core.event.Event;
-import org.nuxeo.ecm.core.event.EventContext;
-import org.nuxeo.ecm.core.event.EventListener;
+import org.nuxeo.ecm.core.event.EventBundle;
+import org.nuxeo.ecm.core.event.PostCommitEventListener;
 import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
 
 /**
@@ -38,26 +37,29 @@ import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
  *           raised.
  * @Since 10.10
  */
-public class CheckColdStorageContentMovedListener implements EventListener {
+public class CheckColdStorageContentMovedListener implements PostCommitEventListener {
 
     private static final Logger log = LogManager.getLogger(CheckColdStorageContentMovedListener.class);
 
+
     @Override
-    public void handleEvent(Event event) {
-        EventContext eventContext = event.getContext();
-        if (!(eventContext instanceof DocumentEventContext)) {
+    public void handleEvent(EventBundle events) {
+        if (events.isEmpty()) {
             return;
         }
 
-        DocumentEventContext docCtx = (DocumentEventContext) event.getContext();
-        DocumentModel documentModel = docCtx.getSourceDocument();
-        CoreSession coreSession = documentModel.getCoreSession();
-        if (documentModel.hasFacet(ColdStorageHelper.COLD_STORAGE_FACET_NAME)) {
-            log.debug("Start moving to ColdStorage all versions and duplicated blobs for document {}",
-                    documentModel::getId);
-            ColdStorageHelper.moveDuplicatedBlobToColdStorage(coreSession, documentModel);
-            log.debug("End moving to ColdStorage all versions and duplicated blobs for document {}",
-                    documentModel::getId);
-        }
+        events.forEach(event -> {
+            DocumentEventContext docCtx = (DocumentEventContext) event.getContext();
+            DocumentModel documentModel = docCtx.getSourceDocument();
+            CoreSession coreSession = documentModel.getCoreSession();
+            if (documentModel.hasFacet(ColdStorageHelper.COLD_STORAGE_FACET_NAME)) {
+                log.debug("Start moving to ColdStorage all versions and duplicated blobs for document {}",
+                        documentModel::getId);
+                ColdStorageHelper.moveDuplicatedBlobToColdStorage(coreSession, documentModel);
+                log.debug("End moving to ColdStorage all versions and duplicated blobs for document {}",
+                        documentModel::getId);
+            }
+        });
     }
+
 }
