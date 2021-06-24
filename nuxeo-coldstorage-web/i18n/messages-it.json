@@ -1,4 +1,7 @@
 {
+  "documentContentView.infobar.storedInColdStorage": "This is a low resolution preview. The original file can be requested by clicking on retrieve file action.",
+  "documentContentView.infobar.beingRetrieved": "This is a low resolution preview. The original file has been requested. An email notification will be sent when it is available.",
+  "documentContentView.infobar.retrieved": "This is a low resolution preview. The original file will be available until {0}",
   "documentContentView.moveToColdStorage.ask.confirmation": "Inviare il contenuto del documento al cold storage?",
   "documentContentView.moveToColdStorage.cancel": "Annulla",
   "documentContentView.moveToColdStorage.confirm": "Conferma",
@@ -24,8 +27,6 @@
   "documentContentView.retrieveFromColdStorage.tooltip": "Recuperare da cold storage",
   "documentContentView.retrieveFromColdStorage.success": "Iniziare a recuperare il contenuto dei documenti dal cold storage",
   "documentContentView.retrieveFromColdStorage.error": "Errore nel recupero del contenuto del documento da cold storage.",
-  "documentPage.content.lowResolutionPreview": "Questa è un'anteprima a bassa risoluzione.",
-  "documentPage.content.storedInColdStorage": "Il file principale viene immagazzinato al cold storage.",
   "label.security.permission.writeColdStorage": "WriteColdStorage",
   "moveDocumentsContentsToColdStorage.ask.confirmation": "Inviare il contenuto dei documenti al cold storage?",
   "moveDocumentsContentsToColdStorage.description": "Questo risulterà in tempi di recupero dei file aumentati e un'anteprima a bassa risoluzione.",

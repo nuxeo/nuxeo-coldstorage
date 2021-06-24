@@ -1,4 +1,7 @@
 {
+  "documentContentView.infobar.storedInColdStorage": "This is a low resolution preview. The original file can be requested by clicking on retrieve file action.",
+  "documentContentView.infobar.beingRetrieved": "This is a low resolution preview. The original file has been requested. An email notification will be sent when it is available.",
+  "documentContentView.infobar.retrieved": "This is a low resolution preview. The original file will be available until {0}",
   "documentContentView.moveToColdStorage.ask.confirmation": "文書のコンテンツをコールドストレージに送信しますか？",
   "documentContentView.moveToColdStorage.cancel": "キャンセル",
   "documentContentView.moveToColdStorage.confirm": "確定する",
@@ -24,8 +27,6 @@
   "documentContentView.retrieveFromColdStorage.tooltip": "コールドストレージから取得",
   "documentContentView.retrieveFromColdStorage.success": "コールドストレージからのドキュメントコンテンツの取得を開始します",
   "documentContentView.retrieveFromColdStorage.error": "コールドストレージからのドキュメントコンテンツの取得中にエラーが発生しました。",
-  "documentPage.content.lowResolutionPreview": "これは低解像度のプレビューです。",
-  "documentPage.content.storedInColdStorage": "マスターファイルはコールドストレージに保存されます。",
   "label.security.permission.writeColdStorage": "WriteColdStorage",
   "moveDocumentsContentsToColdStorage.ask.confirmation": "文書のコンテンツをコールドストレージに送信しますか？",
   "moveDocumentsContentsToColdStorage.description": "これにより、ファイルの検索時間が長くなり、プレビューの解像度が低くなります。",

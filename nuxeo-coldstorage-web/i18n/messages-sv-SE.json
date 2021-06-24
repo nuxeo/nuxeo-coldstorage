@@ -1,4 +1,7 @@
 {
+  "documentContentView.infobar.storedInColdStorage": "This is a low resolution preview. The original file can be requested by clicking on retrieve file action.",
+  "documentContentView.infobar.beingRetrieved": "This is a low resolution preview. The original file has been requested. An email notification will be sent when it is available.",
+  "documentContentView.infobar.retrieved": "This is a low resolution preview. The original file will be available until {0}",
   "documentContentView.moveToColdStorage.ask.confirmation": "Skicka dokumentinnehållet till kallagring?",
   "documentContentView.moveToColdStorage.cancel": "Avbryt",
   "documentContentView.moveToColdStorage.confirm": "Bekräfta",
@@ -24,8 +27,6 @@
   "documentContentView.retrieveFromColdStorage.tooltip": "Hämta från kall kallagring",
   "documentContentView.retrieveFromColdStorage.success": "Börja hämta dokumentinnehåll från kallagring",
   "documentContentView.retrieveFromColdStorage.error": "Fel vid hämtning av dokumentinnehållet från kallagring",
-  "documentPage.content.lowResolutionPreview": "Detta är en förhandsgranskning med låg upplösning.",
-  "documentPage.content.storedInColdStorage": "Masterfilen förvaras i kallagring.",
   "label.security.permission.writeColdStorage": "WriteColdStorage",
   "moveDocumentsContentsToColdStorage.ask.confirmation": "Skicka dokumentinnehåll till kallagring?",
   "moveDocumentsContentsToColdStorage.description": "Detta leder till längre filhämtningstider och förhandsvisning med lägre upplösning.",

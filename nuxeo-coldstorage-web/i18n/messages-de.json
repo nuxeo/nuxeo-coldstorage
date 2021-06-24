@@ -1,4 +1,7 @@
 {
+  "documentContentView.infobar.storedInColdStorage": "This is a low resolution preview. The original file can be requested by clicking on retrieve file action.",
+  "documentContentView.infobar.beingRetrieved": "This is a low resolution preview. The original file has been requested. An email notification will be sent when it is available.",
+  "documentContentView.infobar.retrieved": "This is a low resolution preview. The original file will be available until {0}",
   "documentContentView.moveToColdStorage.ask.confirmation": "Den Dokumentinhalt an kalten Speicher senden?",
   "documentContentView.moveToColdStorage.cancel": "Abbrechen",
   "documentContentView.moveToColdStorage.confirm": "Bestätigen",
@@ -24,8 +27,6 @@
   "documentContentView.retrieveFromColdStorage.tooltip": "Vom cold storage abrufen",
   "documentContentView.retrieveFromColdStorage.success": "Dokumenteninhalt vom cold storage abrufen",
   "documentContentView.retrieveFromColdStorage.error": "Fehler beim Abrufen des Dokumenteninhalts vom cold storage.",
-  "documentPage.content.lowResolutionPreview": "Dies ist eine Vorschau mit niedriger Auflösung.",
-  "documentPage.content.storedInColdStorage": "Die Master-Datei wurde im kalten Speicher abgelegt.",
   "label.security.permission.writeColdStorage": "WriteColdStorage",
   "moveDocumentsContentsToColdStorage.ask.confirmation": "Die Dokumentinhalte an kalten Speicher senden?",
   "moveDocumentsContentsToColdStorage.description": "Dadurch werden die Abfragezeiten für die Datei erhöht und eine Vorschau mit niedriger Auflösung erhalten.",
