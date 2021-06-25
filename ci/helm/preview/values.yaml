@@ -45,7 +45,6 @@ nuxeo:
       enabled: disable
     packages: nuxeo-web-ui amazon-s3-online-storage ${JSF_ENABLED} /packages/nuxeo-coldstorage-package.zip
     custom_params: |-
-      nuxeo.templates=default
       # AWS
       nuxeo.aws.accessKeyId=${env:AWS_ACCESS_KEY}
       nuxeo.aws.secretKey=${env:AWS_ACCESS_SECRET}
@@ -96,15 +95,9 @@ nuxeo:
         effect: NoSchedule
     nodeSelector:
       team: napps
-  postgresql:
+  mongodb:
     deploy: true
-    useStatefulSet: true
-    image:
-      tag: "11.7.0"
-    initdbScripts:
-      db-init.sql: |
-        CREATE ROLE nuxeo WITH PASSWORD 'nuxeo' LOGIN;
-        CREATE DATABASE nuxeo ENCODING 'UTF8' OWNER nuxeo;
+    useStatefulSet: false
     persistence:
       enabled: false
     labels:
@@ -112,13 +105,11 @@ nuxeo:
       resource: deployment
       team: napps
       usage: preview
-    resources:
-      requests:
-        cpu: 500m
-        memory: 1Gi
-      limits:
-        cpu: 1
-        memory: 2Gi
+    podLabels:
+      branch: "BRANCH_LC"
+      resource: pod
+      team: napps
+      usage: preview
     tolerations:
       - key: team
         operator: Equal
@@ -127,4 +118,4 @@ nuxeo:
     nodeSelector:
       team: napps
 tags:
-  postgresql: true
+  mongodb: true
