@@ -97,7 +97,11 @@ class RetrieveFromColdStorage extends mixinBehaviors([FiltersBehavior, FormatBeh
       this.hasFacet(document, 'ColdStorage') &&
       !document.properties['coldstorage:beingRetrieved'] &&
       (this.hasAdministrationPermissions(currentUser) || this.hasPermission(document, 'WriteColdStorage')) &&
-      this.hasContent(document)
+      this.hasContent(document) &&
+      // Don't show the retrieve btn if the file is retrieved and the rendition
+      // still available to download
+      (document.properties['coldstorage:downloadableUntil'] === null ||
+        new Date(document.properties['coldstorage:downloadableUntil']) < new Date())
     );
   }
 
