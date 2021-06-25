@@ -93,7 +93,7 @@ class ColdStorageInfobar extends mixinBehaviors([FiltersBehavior, FormatBehavior
     }
     if (
       document.properties['coldstorage:downloadableUntil'] &&
-      new Date(document.properties['coldstorage:downloadableUntil']).toString() >= Date()
+      new Date(document.properties['coldstorage:downloadableUntil']) >= new Date()
     ) {
       return 'retrieved';
     }
