@@ -1,0 +1,23 @@
+lint:
+  enable: true
+  allowFailure: true
+preview:
+  enable: true
+publish:
+  connect: true
+  github: true
+runFtest:
+  enable: true
+runUtest:
+  enable: true
+  backend: true
+  frontend: true
+  # multipleEnv: true
+mcontainers:
+  dev: 'maven-default'
+  mongodb: 'maven-mongodb'
+  pgsql: 'maven'
+targetTestEnvs:
+  - dev
+  - mongodb
+  - pgsql

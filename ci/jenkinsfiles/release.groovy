@@ -18,176 +18,95 @@
 */
 
 /* Using a version specifier, such as branch, tag, etc */
-library identifier: "nuxeo-napps-tools@0.0.6"
+library "nuxeo-napps-tools@0.0.7"
 
 def appName = 'nuxeo-coldstorage'
-def repositoryUrl = 'https://github.com/nuxeo/nuxeo-coldstorage/'
-
-String currentVersion() {
-  return readMavenPom().getVersion()
-}
-
-String getReleaseVersion(String version) {
-  return version.replace('-SNAPSHOT', '')
-}
-
-def runBackEndUnitTests() {
-  return {
-    stage('backend') {
-      container('maven-default') {
-        script {
-          try {
-            echo '''
-              ----------------------------------------
-              Run BackEnd Unit tests
-              ----------------------------------------
-            '''
-            sh """
-              cd ${BACKEND_FOLDER}
-              mvn ${MAVEN_ARGS} -V -T0.8C test
-            """
-          } catch (err) {
-            throw err
-          } finally {
-            junit allowEmptyResults: true, testResults: "**/target/surefire-reports/*.xml"
-          }
-        }
-      }
-    }
-  }
-}
-
-def runFrontEndUnitTests() {
-  return {
-    stage('frontend') {
-      container('maven-mongodb') {
-        script {
-          echo '''
-            ----------------------------------------
-            Run FrontEnd Unit tests
-            ----------------------------------------
-          '''
-          try {
-            String sauceAccessKey = ''
-            String sauceUsername = ''
-            if (nxNapps.needsSaucelabs()) {
-              String saucelabesSecretName = 'saucelabs-coldstorage'
-              sauceAccessKey =
-                sh(script: "jx step credential -s ${saucelabesSecretName} -k key", returnStdout: true).trim()
-              sauceUsername =
-                sh(script: "jx step credential -s ${saucelabesSecretName} -k username", returnStdout: true).trim()
-            }
-            withEnv(["SAUCE_USERNAME=${sauceUsername}", "SAUCE_ACCESS_KEY=${sauceAccessKey}"]) {
-              container('playwright') {
-                sh """
-                  cd ${FRONTEND_FOLDER}
-                  npm install
-                  npm run test
-                """
-              }
-            }
-          } catch (err) {
-            throw err
-          }
-        }
-      }
-    }
-  }
-}
+def containerLabel = 'maven'
+def stageOpt
 
 pipeline {
   agent {
-    label 'builder-maven-nuxeo-11'
+    label 'builder-maven-nuxeo'
+  }
+  options {
+    disableConcurrentBuilds()
+    buildDiscarder(logRotator(daysToKeepStr: '15', numToKeepStr: '10', artifactNumToKeepStr: '5'))
   }
   parameters {
-    string(name: 'BUILD_VERSION', description: 'Version to be promoted')
+    string(name: 'rcVersion', description: 'Version to be promoted')
     string(name: 'reference', description: 'Reference branch to be bumped after releasing')
     booleanParam(
       name: 'dryRun', defaultValue: true,
       description: 'if true all steps will be run without publishing the artifact'
     )
   }
-  options {
-    disableConcurrentBuilds()
-    buildDiscarder(logRotator(daysToKeepStr: '15', numToKeepStr: '10', artifactNumToKeepStr: '5'))
-  }
   environment {
     APP_NAME = "${appName}"
-    BACKEND_FOLDER = "${WORKSPACE}/nuxeo-coldstorage"
+    AWS_CREDENTIAL_SECRET_NAME = 'aws-iam-user-credentials'
+    AWS_BUCKET_SECRET_NAME = 'aws-config-napps'
+    AWS_SECRET_NAMESPACE = 'napps'
+    BACKEND_FOLDER = "${WORKSPACE}/${APP_NAME}"
     BRANCH_NAME = GIT_BRANCH.replace('origin/', '')
     BRANCH_LC = "${BRANCH_NAME.toLowerCase().replace('.', '-')}"
+    BOOLEAN_TRUE = 'true'
+    BOOLEAN_FALSE = 'false'
+    BUCKET_PREFIX = "${APP_NAME}-${BRANCH_LC}-${BUILD_NUMBER}"
+    CONFIG_FILE = 'workflow.yaml'
     CONNECT_PROD_URL = 'https://connect.nuxeo.com/nuxeo'
     CHART_DIR = 'ci/helm/preview'
-    CURRENT_VERSION = currentVersion()
-    ENABLE_GITHUB_STATUS = 'false'
-    FRONTEND_FOLDER = "${WORKSPACE}/nuxeo-coldstorage-web"
+    FRONTEND_FOLDER = "${WORKSPACE}/${APP_NAME}-web"
     JENKINS_HOME = '/root'
     MAVEN_DEBUG = '-e'
     MAVEN_OPTS = "${MAVEN_OPTS} -Xms512m -Xmx3072m"
+    NUXEO_BASE_IMAGE = 'docker-private.packages.nuxeo.com/nuxeo/nuxeo:10.10-HF48'
     ORG = 'nuxeo'
-    VERSION = getReleaseVersion(CURRENT_VERSION)
+    PREVIEW_NAMESPACE = "${APP_NAME}-${BRANCH_LC}-release"
+    PREVIEW_URL = "https://preview-${PREVIEW_NAMESPACE}.napps.dev.nuxeo.com"
+    SKAFFOLD_VERSION = 'v1.26.1'
+    UNIT_TEST_NAMESPACE_SUFFIX = "${APP_NAME}-${BRANCH_LC}".toLowerCase()
   }
   stages {
     stage('Check parameters') {
       steps {
         script {
-          if (!params.BUILD_VERSION || params.BUILD_VERSION == '') {
-            currentBuild.result = 'ABORTED'
-            currentBuild.description = 'Missing required version parameter, aborting the build.'
-            error(currentBuild.description)
+          params.each { entry, value ->
+            if (!value || value == '') {
+              currentBuild.result = 'ABORTED'
+              currentBuild.description = "Missing required ${entry} parameter, aborting the build."
+              error(currentBuild.description)
+            }
           }
 
-          if (!params.reference || params.reference == '') {
-            currentBuild.result = 'ABORTED'
-            currentBuild.description = 'Missing required reference parameter, aborting the build.'
-            error(currentBuild.description)
-          } else {
-            echo '''
-              ----------------------------------------
-              Update Reference Branch
-              ----------------------------------------
-            '''
-            env.REFERENCE_BRANCH = params.reference
-          }
+          env.RC_VERSION = params.rcVersion
+          env.REFERENCE_BRANCH = params.reference
 
           if (params.dryRun && params.dryRun != '') {
             env.DRY_RUN_RELEASE = params.dryRun
-            if (env.DRY_RUN_RELEASE == 'true') {
+            if (env.DRY_RUN_RELEASE == BOOLEAN_TRUE) {
               env.SLACK_CHANNEL = 'infra-napps'
             }
           } else {
             env.SLACK_CHANNEL = 'napps-notifs'
-            env.DRY_RUN_RELEASE = 'false'
+            env.DRY_RUN_RELEASE = BOOLEAN_FALSE
           }
-
-          env.PACKAGE_BASE_NAME = "nuxeo-coldstorage-package-${VERSION}"
-          env.PACKAGE_FILENAME = "nuxeo-coldstorage-package/target/${PACKAGE_BASE_NAME}.zip"
-          echo """
-            -----------------------------------------------------------
-            Release nuxeo coldstorage connector
-            -----------------------------------------------------------
-            ----------------------------------------
-            Coldstorage package:   ${PACKAGE_BASE_NAME}
-            Build version:    ${params.BUILD_VERSION}
-            Current version:  ${CURRENT_VERSION}
-            Release version:  ${VERSION}
-            Reference branch: ${REFERENCE_BRANCH}
-            ----------------------------------------
-          """
         }
       }
     }
-    stage('Notify promotion start on slack') {
+    stage('Init') {
       steps {
         script {
-          String message = "Starting release ${VERSION} from build ${params.BUILD_VERSION}: ${BUILD_URL}"
-          slackBuildStatus.set("${SLACK_CHANNEL}", "${message}", 'gray')
+          if (fileExists(CONFIG_FILE)) {
+            stageOpt = readYaml file: CONFIG_FILE
+          } else {
+            stageOpt =
+              readYaml text: nxNapps.getDefaultWorkflowConfig()
+          }
         }
       }
     }
     stage('Set Labels') {
       steps {
-        container('maven') {
+        container(containerLabel) {
           echo '''
             ----------------------------------------
             Set Kubernetes resource labels
@@ -203,33 +122,56 @@ pipeline {
     }
     stage('Setup') {
       steps {
-        container('maven') {
+        container(containerLabel) {
           script {
             nxNapps.setup()
-            sh 'env'
+            env.CURRENT_VERSION = nxNapps.currentVersion()
+            env.VERSION = nxNapps.getReleaseVersion(CURRENT_VERSION)
+            env.PACKAGE_BASE_NAME = "${APP_NAME}-package-${VERSION}"
+            env.PACKAGE_FILENAME = "${APP_NAME}-package/target/${PACKAGE_BASE_NAME}.zip"
+            echo """
+              -----------------------------------------------------------
+              Release ${APP_NAME}
+              -----------------------------------------------------------
+              ----------------------------------------
+              Package name:     ${PACKAGE_BASE_NAME}
+              Build version:    ${RC_VERSION}
+              Current version:  ${CURRENT_VERSION}
+              Release version:  ${VERSION}
+              Reference branch: ${REFERENCE_BRANCH}
+              ----------------------------------------
+            """
           }
         }
       }
     }
     stage('Fetch Release Candidate') {
       steps {
-        container('maven') {
-          sh "git fetch origin 'refs/tags/v${params.BUILD_VERSION}*:refs/tags/v${params.BUILD_VERSION}*'"
+        container(containerLabel) {
+          sh "git fetch origin 'refs/tags/v${RC_VERSION}*:refs/tags/v${RC_VERSION}*'"
         }
       }
     }
     stage('Checkout') {
       steps {
-        container('maven') {
+        container(containerLabel) {
           script {
             nxNapps.gitCheckout("v${RC_VERSION}")
           }
         }
       }
     }
+    stage('Notify promotion start on slack') {
+      steps {
+        script {
+          String message = "Starting release ${VERSION} from build ${env.RC_VERSION}: ${BUILD_URL}"
+          slackBuildStatus("${SLACK_CHANNEL}", "${message}", 'gray')
+        }
+      }
+    }
     stage('Update Version') {
       steps {
-        container('maven') {
+        container(containerLabel) {
           script {
             nxNapps.updateVersion("${VERSION}")
           }
@@ -238,7 +180,7 @@ pipeline {
     }
     stage('Compile') {
       steps {
-        container('maven') {
+        container(containerLabel) {
           script {
             nxNapps.mavenCompile()
           }
@@ -246,41 +188,179 @@ pipeline {
       }
     }
     stage('Linting') {
+      when {
+        expression { stageOpt.lint.enable }
+      }
       steps {
         container('maven') {
           script {
-            nxNapps.lint("${FRONTEND_FOLDER}")
+            try {
+              nxNapps.lint("${FRONTEND_FOLDER}")
+            } catch (err) {
+              //Allow lint to fail
+              if (stageOpt.lint.allowFailure) {
+                echo hudson.Functions.printThrowable(err)
+              } else {
+                throw err
+              }
+            }
           }
         }
       }
     }
-    stage('Run Unit Tests') {
+    stage('Run Frontend UTests') {
+      when {
+        expression { stageOpt.runUtest.frontend }
+      }
+      steps {
+        container(containerLabel) {
+          script {
+            def stages = [:]
+            boolean allowFailure = REFERENCE_BRANCH == '10.10' //FIXME
+            stages['frontend'] = nxNapps.runFrontendUnitTests(allowFailure)
+            parallel stages
+          }
+        }
+      }
+    }
+    stage('Run Runtime UTests') {
+      when {
+        expression { stageOpt.runUtest.backend }
+      }
+      steps {
+        container(containerLabel) {
+          script {
+            def stages = [:]
+            def envVars = nxNapps.getEnvironmentVariables("${APP_NAME}",
+              "${AWS_BUCKET_SECRET_NAME}", "${AWS_CREDENTIAL_SECRET_NAME}",
+              "${AWS_SECRET_NAMESPACE}",  "${BUCKET_PREFIX}-utests"
+            )
+            stages['backend'] = nxNapps.runBackendUnitTests(envVars)
+            parallel stages
+          }
+        }
+      }
+    }
+    stage('Deploy Env') {
+      when {
+        expression { stageOpt.runUtest.multipleEnv }
+      }
       steps {
         script {
           def stages = [:]
-          stages['backend'] = runBackEndUnitTests()
-          stages['frontend'] = runFrontEndUnitTests()
+          stageOpt.targetTestEnvs.each { env ->
+            String containerName = stageOpt.mcontainers["${env}"]
+            stages["Deploy - ${env}"] =
+              nxKube.helmDeployUnitTestEnvStage(
+                "${containerName}", "${env}", "${UNIT_TEST_NAMESPACE_SUFFIX}-${env}", 'ci/helm/utests'
+              )
+          }
           parallel stages
         }
       }
     }
-    stage('Deploy Preview') {
+    stage('Unit Tests') {
+      when {
+        expression { stageOpt.runUtest.multipleEnv }
+      }
       steps {
-        container('maven') {
+        container(containerLabel) {
           script {
-            nxKube.helmDeployPreview(
-              "${PREVIEW_NAMESPACE}", "${CHART_DIR}", "${repositoryUrl}", "${IS_REFERENCE_BRANCH}"
+            def stages = [:]
+            def parameters = [:]
+            stageOpt.targetTestEnvs.each { env ->
+              String containerName = stageOpt.mcontainers["${env}"]
+              String namespace  = "${UNIT_TEST_NAMESPACE_SUFFIX}-${env}"
+              parameters["${env}"] = nxNapps.getEnvironmentVariables("${namespace}")
+              stages["JUnit - ${env}"] =
+                nxNapps.runUnitTestStageLegacy(
+                  "${containerName}", "${env}", "${WORKSPACE}",
+                  "${namespace}", parameters["${env}"]
+                )
+            }
+            parallel stages
+          }
+        }
+      }
+      post {
+        always {
+          script {
+            try {
+              targetTestEnvs.each { env ->
+                container('maven') {
+                  nxKube.helmDestroyUnitTestsEnv(
+                    "${UNIT_TEST_NAMESPACE_SUFFIX}-${env}"
+                  )
+                }
+              }
+            } catch(err) {
+              throw err
+            }
+          }
+        }
+      }
+    }
+    stage('Package') {
+      steps {
+        container(containerLabel) {
+          script {
+            nxNapps.mavenPackage()
+          }
+        }
+      }
+    }
+    stage('Build Docker Image') {
+      when {
+        expression { stageOpt.preview.enable }
+      }
+      steps {
+        container(containerLabel) {
+          script {
+            nxNapps.setupKaniko("${SKAFFOLD_VERSION}")
+            nxNapps.dockerBuild(
+              "${WORKSPACE}/${APP_NAME}-package/target/${APP_NAME}-package-*.zip",
+              "${WORKSPACE}/ci/docker", "${WORKSPACE}/ci/docker/skaffold.yaml"
             )
           }
         }
       }
     }
-    stage('Run Functional Tests') {
+    stage('Buid Helm Chart') {
+      when {
+        expression { stageOpt.preview.enable }
+      }
       steps {
-        container('maven') {
+        container(containerLabel) {
+          script {
+            nxKube.helmBuildChart("${CHART_DIR}", 'values.yaml')
+            nxNapps.gitCheckout("${CHART_DIR}/requirements.yaml")
+          }
+        }
+      }
+    }
+    stage('Deploy Preview') {
+      when {
+        expression { stageOpt.preview.enable }
+      }
+      steps {
+        container(containerLabel) {
+          script {
+            nxKube.helmDeployPreview(
+              "${PREVIEW_NAMESPACE}", "${CHART_DIR}", "${GIT_URL}", "${BOOLEAN_FALSE}"
+            )
+          }
+        }
+      }
+    }
+    stage('Run FTests') {
+      when {
+        expression { stageOpt.runFtest.enable }
+      }
+      steps {
+        container(containerLabel) {
           script {
             try {
-              retry(3) {
+              retry(2) {
                 nxNapps.runFunctionalTests(
                   "${FRONTEND_FOLDER}", "--nuxeoUrl=http://preview.${PREVIEW_NAMESPACE}.svc.cluster.local/nuxeo"
                 )
@@ -297,7 +377,8 @@ pipeline {
               )
               archiveArtifacts (
                 allowEmptyArchive: true,
-                artifacts: 'nuxeo-coldstorage-web/target/**, logs/*.log' //we can't use full path when archiving artifacts
+                //we can't use full path when archiving artifacts
+                artifacts: "${FRONTEND_FOLDER}/**/target/**, logs/*.log"
               )
             }
           }
@@ -305,29 +386,23 @@ pipeline {
       }
       post {
         always {
-          container('maven') {
+          container(containerLabel) {
             script {
               //cleanup the preview
-              try {
-                if (nxNapps.needsPreviewCleanup() == 'true') {
-                  nxKube.helmDeleteNamespace("${PREVIEW_NAMESPACE}")
-                }
-              } catch (err) {
-                echo hudson.Functions.printThrowable(err)
-              }
+              nxKube.helmDeleteNamespace("${PREVIEW_NAMESPACE}")
             }
           }
         }
       }
     }
-    stage('Publish Package') {
+    stage('Publish') {
       when {
         allOf {
           not {
             branch 'PR-*'
           }
           not {
-            environment name: 'DRY_RUN', value: 'true'
+            environment name: 'DRY_RUN', value: BOOLEAN_TRUE
           }
         }
       }
@@ -338,7 +413,7 @@ pipeline {
       stages {
         stage('Git Commit and Tag') {
           steps {
-            container('maven') {
+            container(containerLabel) {
               script {
                 nxNapps.gitCommit("${MESSAGE}", '-a')
                 nxNapps.gitTag("${TAG}", "${MESSAGE}")
@@ -346,18 +421,21 @@ pipeline {
             }
           }
         }
-        stage('Publish') {
+        stage('Publish Package') {
+          when {
+            expression { stageOpt.publish.connect }
+          }
           steps {
-            container('maven') {
+            container(containerLabel) {
               script {
                 echo """
-                  ------------------------------------------------------------
-                  Upload Coldstorage Package ${VERSION} to ${CONNECT_PROD_URL}
-                  ------------------------------------------------------------
+                  -------------------------------------------------------------
+                  Upload ${APP_NAME} Package ${VERSION} to ${CONNECT_PROD_URL}
+                  -------------------------------------------------------------
                 """
-                if (env.DRY_RUN_RELEASE == 'false') {
-                  String packageFile = "nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-${VERSION}.zip"
-                  connectUploadPackage("${packageFile}", 'connect-preprod', "${CONNECT_PROD_URL}")
+                if (DRY_RUN_RELEASE == BOOLEAN_FALSE) {
+                  String packageFile = "${APP_NAME}-package/target/${APP_NAME}-package-${VERSION}.zip"
+                  connectUploadPackage("${packageFile}", 'connect-prod', "${CONNECT_PREPROD_URL}")
                 }
               }
             }
@@ -366,21 +444,24 @@ pipeline {
             always {
               archiveArtifacts (
                 allowEmptyArchive: true,
-                artifacts: 'nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-*.zip'
+                artifacts: "${APP_NAME}-package/target/${APP_NAME}-package-*.zip"
               )
             }
           }
         }
         stage('Git Push') {
+          when {
+            expression { stageOpt.publish.github }
+          }
           steps {
-            container('maven') {
+            container(containerLabel) {
               echo """
                 --------------------------
                 Git push ${TAG}
                 --------------------------
               """
               script {
-                if (env.DRY_RUN_RELEASE == 'false') {
+                if (DRY_RUN_RELEASE == BOOLEAN_FALSE) {
                   nxNapps.gitPush("${TAG}")
                 }
               }
@@ -392,13 +473,14 @@ pipeline {
     stage('Release and Bump reference branch') {
       when {
         allOf {
+          expression { stageOpt.publish.github }
           not {
-            environment name: 'DRY_RUN', value: 'true'
+            environment name: 'DRY_RUN', value: BOOLEAN_TRUE
           }
         }
       }
       steps {
-        container('maven') {
+        container(containerLabel) {
           script {
             //cleanup files updated by other stages
             sh 'git reset --hard'
@@ -413,7 +495,7 @@ pipeline {
             nxNapps.gitCheckout("${REFERENCE_BRANCH}")
             nxNapps.updateVersion("${nextVersion}")
             nxNapps.gitCommit("Release ${VERSION}, update ${CURRENT_VERSION} to ${nextVersion}", '-a')
-            if (env.DRY_RUN_RELEASE == 'false') {
+            if (DRY_RUN_RELEASE == BOOLEAN_FALSE) {
               nxNapps.gitPush("${REFERENCE_BRANCH}")
             }
           }
@@ -424,21 +506,21 @@ pipeline {
   post {
     always {
       script {
-        currentBuild.description = "Release ${VERSION} from build ${params.BUILD_VERSION}"
+        currentBuild.description = "Release ${VERSION} from build ${RC_VERSION}"
       }
     }
     success {
       script {
         // update Slack Channel
-        String message = "Successfully released ${VERSION} from build ${params.BUILD_VERSION}: ${BUILD_URL} :tada:"
-        slackBuildStatus.set("${SLACK_CHANNEL}", "${message}", 'good')
+        String message = "Successfully released ${VERSION} from build ${env.RC_VERSION}: ${BUILD_URL} :tada:"
+        slackBuildStatus("${SLACK_CHANNEL}", "${message}", 'good')
       }
     }
-    unsuccessful {
+    failure {
       script {
         // update Slack Channel
-        String message = "Failed to release ${VERSION} from build ${params.BUILD_VERSION}: ${BUILD_URL}"
-        slackBuildStatus.set("${SLACK_CHANNEL}", "${message}", 'danger')
+        String message = "Failed to release ${VERSION} from build ${env.RC_VERSION}: ${BUILD_URL}"
+        slackBuildStatus("${SLACK_CHANNEL}", "${message}", 'danger')
       }
     }
   }
