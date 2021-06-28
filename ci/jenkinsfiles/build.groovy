@@ -18,106 +18,10 @@
 */
 
 /* Using a version specifier, such as branch, tag, etc */
-library identifier: "nuxeo-napps-tools@0.0.6"
+library identifier: "nuxeo-napps-tools@0.0.7"
 
 def appName = 'nuxeo-coldstorage'
-def repositoryUrl = 'https://github.com/nuxeo/nuxeo-coldstorage/'
-
-def getAwsEnvironnmentVariables(String bucketSecretName, String credentialSecret, String namespace, String bucketPrefix) {
-  def envVars = [
-    "AWS_ACCESS_KEY=${getEnvironmentVariable('access_key_id', credentialSecret, namespace)}",
-    "AWS_SECRET_ACCESS_KEY=${getEnvironmentVariable('secret_access_key', credentialSecret, namespace)}",
-    "COLDSTORAGE_AWS_MAIN_BUCKET_NAME=${getEnvironmentVariable('coldstorage.bucket', bucketSecretName, namespace)}",
-    "COLDSTORAGE_AWS_GLACIER_BUCKET_NAME=${getEnvironmentVariable('coldstorage.bucket.glacier', bucketSecretName, namespace)}",
-    "COLDSTORAGE_AWS_REGION=${getEnvironmentVariable('region', bucketSecretName, namespace)}",
-    "COLDSTORAGE_AWS_BUCKET_PREFIX=${bucketPrefix}"
-  ]
-  return envVars
-}
-
-String getEnvironmentVariable(String secretKey, String secretName, String namespace) {
-  return sh(script: "jx step credential -s ${secretName} -n ${namespace} -k ${secretKey}", returnStdout: true)
-}
-
-boolean needsJsfAddon() {
-  boolean enableJsf = false
-  if ( "${IS_REFERENCE_BRANCH}" == 'true' || (nxNapps.isPullRequest() && pullRequest.labels.contains('jsf'))) {
-     enableJsf = true
-  }
-  return enableJsf
-}
-
-def runBackEndUnitTests() {
-  return {
-    stage('BackEnd') {
-      container('maven') {
-        script {
-          try {
-            echo '''
-              ----------------------------------------
-              Run BackEnd Unit tests
-              ----------------------------------------
-            '''
-            String awsBucketPrefix = "${BRANCH_LC}-${BUILD_NUMBER}-${env}"
-            def envVars = getAwsEnvironnmentVariables(
-              "${AWS_BUCKET_SECRET_NAME}", "${AWS_CREDENTIAL_SECRET_NAME}",
-              "${AWS_SECRET_NAMESPACE}",  "${awsBucketPrefix}"
-            )
-            withEnv(envVars) {
-              sh """
-                cd ${BACKEND_FOLDER}
-                mvn ${MAVEN_ARGS} -V -T0.8C test
-              """
-            }
-          } catch (err) {
-            throw err
-          } finally {
-            junit allowEmptyResults: true, testResults: "**/target/surefire-reports/*.xml"
-          }
-        }
-      }
-    }
-  }
-}
-
-def runFrontEndUnitTests() {
-  return {
-    stage('FrontEnd') {
-      container('maven') {
-        script {
-          echo '''
-            ----------------------------------------
-            Run FrontEnd Unit tests
-            ----------------------------------------
-          '''
-          try {
-            withEnv(["SAUCE_USERNAME=", "SAUCE_ACCESS_KEY="]) {
-              sh """
-                cd ${FRONTEND_FOLDER}
-                npm run test
-              """
-            }
-          } catch (err) {
-            //Allow Fronted test to fail
-            echo hudson.Functions.printThrowable(err)
-          }
-        }
-      }
-    }
-  }
-}
-
-void setupKaniko(String skaffoldVersion) {
-  echo "Install recent version of skaffold: ${skaffoldVersion}"
-  sh """
-    skaffold version
-    curl -Lo skaffold \
-    https://github.com/GoogleContainerTools/skaffold/releases/download/${skaffoldVersion}/skaffold-linux-amd64 && \
-    install skaffold /usr/bin/
-    skaffold version
-  """
-}
-
+def containerLabel = 'maven'
 
 pipeline {
   agent {
@@ -145,7 +49,7 @@ pipeline {
     MAVEN_DEBUG = '-e'
     MAVEN_OPTS = "${MAVEN_OPTS} -Xms512m -Xmx3072m"
     // To reduce the startup time, we are using a specific docker tag but Nuxeo will install all available HFs)
-    NUXEO_BASE_IMAGE = 'docker-private.packages.nuxeo.com/nuxeo/nuxeo:10.10-HF48'
+    NUXEO_BASE_IMAGE = 'docker-private.packages.nuxeo.com/nuxeo/nuxeo:10.10-HF49'
     ORG = 'nuxeo'
     PREVIEW_NAMESPACE = "coldstorage-${BRANCH_LC}"
     REFERENCE_BRANCH = '10.10'
@@ -156,7 +60,7 @@ pipeline {
   stages {
     stage('Set Labels') {
       steps {
-        container('maven') {
+        container(containerLabel) {
           script {
             nxNapps.setLabels()
           }
@@ -165,7 +69,7 @@ pipeline {
     }
     stage('Setup') {
       steps {
-        container('maven') {
+        container(containerLabel) {
           script {
             nxNapps.setup()
             env.VERSION = nxNapps.getRCVersion()
@@ -175,7 +79,7 @@ pipeline {
     }
     stage('Update Version') {
       steps {
-        container('maven') {
+        container(containerLabel) {
           script {
             nxNapps.updateVersion("${VERSION}")
           }
@@ -184,7 +88,7 @@ pipeline {
     }
     stage('Compile') {
       steps {
-        container('maven') {
+        container(containerLabel) {
           script {
             gitHubBuildStatus('compile')
             nxNapps.mavenCompile()
@@ -193,83 +97,100 @@ pipeline {
       }
       post {
         always {
-          script {
-            gitHubBuildStatus('compile')
-          }
+          gitHubBuildStatus('compile')
         }
       }
     }
-    stage('Linting') {
+    stage('Install') {
       steps {
-        container('maven') {
+        container(containerLabel) {
+          gitHubBuildStatus('npm/install')
           script {
-            gitHubBuildStatus('lint')
-            try {
-              sh """
-                cd ${FRONTEND_FOLDER}
-                npm install
-                npm run lint
-              """
-            } catch (err) {
-              //Allow lint to fail
-              echo hudson.Functions.printThrowable(err)
-            } finally {
-              gitHubBuildStatus('lint')
+            dir(FRONTEND_FOLDER) {
+              sh 'npm install'
             }
           }
         }
       }
       post {
         always {
+          gitHubBuildStatus('npm/install')
+        }
+      }
+    }
+    stage('Linting') {
+      steps {
+        container(containerLabel) {
+          gitHubBuildStatus('npm/lint')
           script {
-            gitHubBuildStatus('lint')
+            boolean allowFailure = REFERENCE_BRANCH == '10.10' //FIXME
+            try {
+              dir(FRONTEND_FOLDER) {
+                sh 'npm run lint'
+              }
+            } catch (err) {
+              //Allow lint to fail
+              if (allowFailure) {
+                echo hudson.Functions.printThrowable(err)
+              } else {
+                throw err
+              }
+            }
           }
+        }
+      }
+      post {
+        always {
+          gitHubBuildStatus('npm/lint')
         }
       }
     }
     stage('Run Unit Tests') {
       steps {
-        script {
-          def stages = [:]
-          stages['backend'] = runBackEndUnitTests()
-          stages['frontend'] = runFrontEndUnitTests()
-          gitHubBuildStatus('utests/backend')
-          gitHubBuildStatus('utests/frontend')
-          parallel stages
+        container(containerLabel) {
+          script {
+            def stages = [:]
+            boolean allowFailure = REFERENCE_BRANCH == '10.10' //FIXME
+            def envVars = nxNapps.getEnvironmentVariables(
+              "${APP_NAME}", "${AWS_BUCKET_SECRET_NAME}", "${AWS_CREDENTIAL_SECRET_NAME}",
+              "${AWS_SECRET_NAMESPACE}",  "${BUCKET_PREFIX}-utests"
+            )
+            stages['backend'] = nxNapps.runBackendUnitTests(envVars)
+            stages['frontend'] = nxNapps.runFrontendUnitTests(allowFailure)
+            gitHubBuildStatus('utests/backend')
+            gitHubBuildStatus('utests/frontend')
+            parallel stages
+          }
         }
       }
       post {
         always {
-          script {
-            gitHubBuildStatus('utests/backend')
-            gitHubBuildStatus('utests/frontend')
-          }
+          gitHubBuildStatus('utests/backend')
+          gitHubBuildStatus('utests/frontend')
         }
       }
     }
     stage('Package') {
       steps {
-        container('maven') {
+        container(containerLabel) {
+          gitHubBuildStatus('package')
           script {
-            gitHubBuildStatus('package')
             nxNapps.mavenPackage()
           }
         }
       }
       post {
         always {
-          script {
-            gitHubBuildStatus('package')
-          }
+          gitHubBuildStatus('package')
         }
       }
     }
     stage('Build Docker Image') {
       steps {
-        container('maven') {
+        container(containerLabel) {
+          gitHubBuildStatus('docker/build')
           script {
-            gitHubBuildStatus('docker/build')
-            setupKaniko("${SKAFFOLD_VERSION}")
+            nxNapps.setupKaniko("${SKAFFOLD_VERSION}")
             nxNapps.dockerBuild(
                     "${WORKSPACE}/nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-*.zip",
                     "${WORKSPACE}/ci/docker","${WORKSPACE}/ci/docker/skaffold.yaml"
@@ -279,20 +200,16 @@ pipeline {
       }
       post {
         always {
-          script {
-            gitHubBuildStatus('docker/build')
-          }
+          gitHubBuildStatus('docker/build')
         }
       }
     }
     stage('Buid Helm Chart') {
       steps {
-        container('maven') {
+        container(containerLabel) {
+          gitHubBuildStatus('helm/chart/build')
           script {
-            if (needsJsfAddon()){
-              env.JSF_ENABLED = 'nuxeo-jsf-ui'
-            }
-            gitHubBuildStatus('helm/chart/build')
+            env.JSF_ENABLED = 'nuxeo-jsf-ui'
             nxKube.helmBuildChart("${CHART_DIR}", 'values.yaml')
             nxNapps.gitCheckout("${CHART_DIR}/requirements.yaml")
           }
@@ -300,36 +217,32 @@ pipeline {
       }
       post {
         always {
-          script {
-            gitHubBuildStatus('helm/chart/build')
-          }
+          gitHubBuildStatus('helm/chart/build')
         }
       }
     }
     stage('Deploy Preview') {
       steps {
-        container('maven') {
+        container(containerLabel) {
+          gitHubBuildStatus('helm/chart/deploy')
           script {
-            gitHubBuildStatus('helm/chart/deploy')
             nxKube.helmDeployPreview(
-                    "${PREVIEW_NAMESPACE}", "${CHART_DIR}", "${repositoryUrl}", "${IS_REFERENCE_BRANCH}"
+                    "${PREVIEW_NAMESPACE}", "${CHART_DIR}", "${GIT_URL}", "${IS_REFERENCE_BRANCH}"
             )
           }
         }
       }
       post {
         always {
-          script {
-            gitHubBuildStatus('helm/chart/deploy')
-          }
+          gitHubBuildStatus('helm/chart/deploy')
         }
       }
     }
     stage('Run Functional Tests') {
       steps {
-        container('maven') {
+        container(containerLabel) {
+          gitHubBuildStatus('ftests')
           script {
-            gitHubBuildStatus('ftests')
             try {
               retry(3) {
                 nxNapps.runFunctionalTests(
@@ -356,7 +269,7 @@ pipeline {
       }
       post {
         always {
-          container('maven') {
+          container(containerLabel) {
             script {
               //cleanup the preview
               try {
@@ -389,7 +302,7 @@ pipeline {
       stages {
         stage('Git Commit and Tag') {
           steps {
-            container('maven') {
+            container(containerLabel) {
               script {
                 nxNapps.gitCommit("${MESSAGE}", '-a')
                 nxNapps.gitTag("${TAG}", "${MESSAGE}")
@@ -399,9 +312,9 @@ pipeline {
         }
         stage('Publish Package') {
           steps {
-            container('maven') {
+            container(containerLabel) {
+              gitHubBuildStatus('publish/package')
               script {
-                gitHubBuildStatus('publish/package')
                 echo """
                   -------------------------------------------------------------
                   Upload Coldstorage Package ${VERSION} to ${CONNECT_PREPROD_URL}
@@ -418,15 +331,13 @@ pipeline {
                 allowEmptyArchive: true,
                 artifacts: 'nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-*.zip'
               )
-              script {
-                gitHubBuildStatus('publish/package')
-              }
+              gitHubBuildStatus('publish/package')
             }
           }
         }
         stage('Git Push') {
           steps {
-            container('maven') {
+            container(containerLabel) {
               echo """
                 --------------------------
                 Git push ${TAG}
