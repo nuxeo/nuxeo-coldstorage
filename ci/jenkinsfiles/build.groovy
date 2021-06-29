@@ -319,7 +319,8 @@ pipeline {
               )
               archiveArtifacts (
                 allowEmptyArchive: true,
-                artifacts: 'nuxeo-coldstorage-web/target/**, logs/*.log' //we can't use full path when archiving artifacts
+                //we can't use full path when archiving artifacts
+                artifacts: 'nuxeo-coldstorage-web/target/**, nuxeo-coldstorage-web/ftest/target/**, logs/*.log'
               )
             }
           }
