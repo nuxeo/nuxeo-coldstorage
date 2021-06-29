@@ -32,7 +32,7 @@ Feature: Cold Storage
     And I click the Send file to cold storage action button
     Then I can see the "Send" confirmation dialog
     When I click the cancel button in the "Send" confirmation dialog
-    # Then I can see the file is not stored in cold storage
+    Then I can see the file is not stored in cold storage
 
   Scenario: User with ReadWrite permission can't send file to cold storage
     Given I login as "Jack"
@@ -101,7 +101,7 @@ Feature: Cold Storage
     When I click the Restore file from cold storage action button
     Then I can see the "Restore" confirmation dialog
     When I click the confirm button in the "Restore" confirmation dialog
-    # Then I can see the file is not stored in cold storage
+    Then I can see the file is not stored in cold storage
 
   Scenario: User with WriteColdStorage permission can Retrieve file from cold storage
     Given I login as "Jack"
