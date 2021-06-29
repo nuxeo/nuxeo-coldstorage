@@ -261,6 +261,7 @@ pipeline {
           script {
             gitHubBuildStatus('helm/chart/build')
             nxKube.helmBuildChart("${CHART_DIR}", 'values.yaml')
+            nxNapps.gitCheckout("${CHART_DIR}/requirements.yaml")
           }
         }
       }
