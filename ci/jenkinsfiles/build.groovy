@@ -314,7 +314,7 @@ pipeline {
               nxKube.helmGetPreviewLogs("${PREVIEW_NAMESPACE}")
               cucumber (
                 fileIncludePattern: '**/*.json',
-                jsonReportDirectory: "${FRONTEND_FOLDER}/ftest/target/cucumber-reports/",
+                jsonReportDirectory: "${FRONTEND_FOLDER}/target/cucumber-reports/",
                 sortingMethod: 'NATURAL'
               )
               archiveArtifacts (
