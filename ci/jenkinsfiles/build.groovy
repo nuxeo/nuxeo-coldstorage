@@ -147,9 +147,10 @@ pipeline {
     JENKINS_HOME = '/root'
     MAVEN_DEBUG = '-e'
     MAVEN_OPTS = "${MAVEN_OPTS} -Xms512m -Xmx3072m"
-    NUXEO_BASE_IMAGE = 'docker-private.packages.nuxeo.com/nuxeo/nuxeo:11.5.128'
+    NUXEO_BASE_IMAGE = 'docker-private.packages.nuxeo.com/nuxeo/nuxeo:11.5.138'
     ORG = 'nuxeo'
     PREVIEW_NAMESPACE = "coldstorage-${BRANCH_LC}"
+    PREVIEW_URL = "https://preview-${PREVIEW_NAMESPACE}.napps.dev.nuxeo.com"
     REFERENCE_BRANCH = 'master'
     IS_REFERENCE_BRANCH = "${BRANCH_NAME == REFERENCE_BRANCH}"
     SLACK_CHANNEL = "${env.DRY_RUN == 'true' ? 'infra-napps' : 'napps-notifs'}"

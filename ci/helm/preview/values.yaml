@@ -55,6 +55,8 @@ nuxeo:
       # COLDSTORAGE
       nuxeo.aws.glacier.bucket=${env:AWS_S3_GLACIER_BUCKET}
       nuxeo.aws.glacier.bucket_prefix=${env:AWS_S3_BUCKET_PREFIX}
+      nuxeo.url=${PREVIEW_URL}/nuxeo
+      nuxeo.cors.urls=${PREVIEW_URL}
     customEnvs:
       - name: NUXEO_CLID
         valueFrom:
