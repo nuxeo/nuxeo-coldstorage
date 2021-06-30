@@ -43,7 +43,7 @@ nuxeo:
       pullPolicy: Always
     persistence:
       enabled: disable
-    packages: nuxeo-web-ui amazon-s3-online-storage /packages/nuxeo-coldstorage-package-*.zip
+    packages: nuxeo-web-ui-3.1.0-rc.059 amazon-s3-online-storage /packages/nuxeo-coldstorage-package-*.zip
     customParams: |-
       org.nuxeo.connect.url=https://nos-preprod-connect.nuxeocloud.com/nuxeo/site/
       # AWS
@@ -59,7 +59,7 @@ nuxeo:
       - name: NUXEO_CLID
         valueFrom:
           secretKeyRef:
-            name: instance-clid
+            name: instance-clid-preprod
             key: CLID
       - name: AWS_ACCESS_KEY
         valueFrom:
