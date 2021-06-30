@@ -22,7 +22,7 @@ nuxeo:
   fullnameOverride: preview
   nuxeo:
     podLabels:
-      branch: "BRANCH_LC"
+      branch: "$BRANCH_LC"
       team: napps
       resource: pod
       usage: preview
@@ -33,7 +33,7 @@ nuxeo:
           nginx.ingress.kubernetes.io/proxy-body-size: 0
           nginx.ingress.kubernetes.io/server-snippet: ignore_invalid_headers off;
       labels:
-        branch: "BRANCH_LC"
+        branch: "$BRANCH_LC"
         team: napps
         resource: service
         usage: preview
@@ -86,8 +86,6 @@ nuxeo:
             key: coldstorage.bucket.glacier
       - name: AWS_S3_BUCKET_PREFIX
         value: $BUCKET_PREFIX
-      - name: NUXEO_MPINSTALL_OPTIONS
-        value: "--force --nodeps"
     tolerations:
       - key: team
         operator: Equal
@@ -101,12 +99,12 @@ nuxeo:
     persistence:
       enabled: false
     labels:
-      branch: "BRANCH_LC"
+      branch: "$BRANCH_LC"
       resource: deployment
       team: napps
       usage: preview
     podLabels:
-      branch: "BRANCH_LC"
+      branch: "$BRANCH_LC"
       resource: pod
       team: napps
       usage: preview
