@@ -87,7 +87,12 @@ class ColdStorageInfobar extends mixinBehaviors([FiltersBehavior, FormatBehavior
   }
 
   _contentStoredInColdStorage(doc) {
-    return this.hasFacet(doc, 'ColdStorage') && doc.properties && doc.properties['coldstorage:coldContent'];
+    return (
+      this.hasFacet(doc, 'ColdStorage') &&
+      doc.properties &&
+      doc.properties['coldstorage:coldContent'] &&
+      !doc.properties['coldstorage:toBeRestored']
+    );
   }
 
   _getDocumentStatus(document) {
