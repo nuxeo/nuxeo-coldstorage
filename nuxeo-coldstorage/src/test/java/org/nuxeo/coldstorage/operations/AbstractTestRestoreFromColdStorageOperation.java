@@ -22,10 +22,12 @@ package org.nuxeo.coldstorage.operations;
 import static javax.servlet.http.HttpServletResponse.SC_CONFLICT;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -85,6 +87,47 @@ public abstract class AbstractTestRestoreFromColdStorageOperation extends Abstra
         }
     }
 
+    @Test
+    public void shouldMakeRestoreImmediatelyTwice() throws IOException, OperationException {
+        DocumentModel documentModel = createFileDocument(session, true);
+        transactionalFeature.nextTransaction();
+
+        Blob blobContent;
+        for (int i = 0; i < 10; i++) {
+            documentModel = session.getDocument(documentModel.getRef());
+            // first make the move to cold storage
+            try (OperationContext context = new OperationContext(session)) {
+                context.setInput(documentModel);
+                DocumentModel updatedDocModel = (DocumentModel) automationService.run(context, MoveToColdStorage.ID);
+                checkMoveContent(Arrays.asList(documentModel), Arrays.asList(updatedDocModel));
+            }
+
+            transactionalFeature.nextTransaction();
+            documentModel = session.getDocument(documentModel.getRef());
+            // the ColdStorage facet should exist
+            assertTrue(documentModel.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME));
+
+            blobContent = (Blob) documentModel.getPropertyValue(ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY);
+            assertNotNull(blobContent);
+
+            // Restore the document content
+            try (OperationContext context = new OperationContext(session)) {
+                context.setInput(documentModel);
+                documentModel = (DocumentModel) automationService.run(context, RestoreFromColdStorage.ID);
+            }
+
+            transactionalFeature.nextTransaction();
+            documentModel = session.getDocument(documentModel.getRef());
+
+            // we shouldn't have any ColdStorage content
+            assertFalse(documentModel.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME));
+
+            // check main blobs
+            blobContent = (Blob) documentModel.getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY);
+            assertNotNull(blobContent);
+            assertEquals(FILE_CONTENT, blobContent.getString());
+        }
+    }
 
     protected void restoreContentFromColdStorage(DocumentModel documentModel) throws OperationException, IOException {
         try (OperationContext context = new OperationContext(session)) {

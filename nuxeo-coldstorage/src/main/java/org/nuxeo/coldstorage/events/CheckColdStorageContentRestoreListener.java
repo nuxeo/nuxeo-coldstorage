@@ -19,16 +19,17 @@
 
 package org.nuxeo.coldstorage.events;
 
-import static org.nuxeo.coldstorage.events.CheckUpdateColdStorageContentListener.DISABLE_COLD_STORAGE_CHECK_UPDATE_COLDSTORAGE_CONTENT_LISTENER;
-import static org.nuxeo.coldstorage.events.CheckUpdateMainContentInColdStorageListener.DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_RESTORED_EVENT_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_FACET_NAME;
-import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_TO_BE_RESTORED_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.FILE_CONTENT_PROPERTY;
+import static org.nuxeo.coldstorage.events.CheckUpdateColdStorageContentListener.DISABLE_COLD_STORAGE_CHECK_UPDATE_COLDSTORAGE_CONTENT_LISTENER;
+import static org.nuxeo.coldstorage.events.CheckUpdateMainContentInColdStorageListener.DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER;
 
 import java.io.Serializable;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.event.EventBundle;
@@ -45,6 +46,8 @@ import org.nuxeo.runtime.api.Framework;
  */
 public class CheckColdStorageContentRestoreListener implements PostCommitEventListener {
 
+    private static final Logger log = LogManager.getLogger(CheckColdStorageContentRestoreListener.class);
+
     @Override
     public void handleEvent(EventBundle events) {
         if (events.isEmpty()) {
@@ -55,7 +58,7 @@ public class CheckColdStorageContentRestoreListener implements PostCommitEventLi
             if (e.getContext() instanceof DocumentEventContext) {
                 DocumentEventContext docCtx = (DocumentEventContext) e.getContext();
                 DocumentModel documentModel = docCtx.getSourceDocument();
-
+                log.debug("Start completing ColdStorage restore content for document {}", documentModel::getId);
                 // Disable main and ColdStorage storage contents check otherwise, the restore action won't be allowed
                 documentModel.putContextData(DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER, true);
                 documentModel.putContextData(DISABLE_COLD_STORAGE_CHECK_UPDATE_COLDSTORAGE_CONTENT_LISTENER, true);
@@ -63,18 +66,17 @@ public class CheckColdStorageContentRestoreListener implements PostCommitEventLi
                 // Restore the main content
                 CoreSession session = e.getContext().getCoreSession();
                 Serializable coldContent = documentModel.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
-                documentModel.setPropertyValue(COLD_STORAGE_TO_BE_RESTORED_PROPERTY, false);
                 documentModel.setPropertyValue(COLD_STORAGE_CONTENT_PROPERTY, null);
                 documentModel.removeFacet(COLD_STORAGE_FACET_NAME);
                 documentModel.setPropertyValue(FILE_CONTENT_PROPERTY, coldContent);
+                session.saveDocument(documentModel);
 
                 // Send notification
                 DocumentEventContext ctx = new DocumentEventContext(session, session.getPrincipal(), documentModel);
                 EventService eventService = Framework.getService(EventService.class);
                 ctx.setProperty(COLD_STORAGE_CONTENT_RESTORED_EVENT_NAME, "true");
                 eventService.fireEvent(ctx.newEvent(COLD_STORAGE_CONTENT_RESTORED_EVENT_NAME));
-
-                session.saveDocument(documentModel);
+                log.debug("End completing ColdStorage restore content for document {}", documentModel::getId);
             }
 
         });
