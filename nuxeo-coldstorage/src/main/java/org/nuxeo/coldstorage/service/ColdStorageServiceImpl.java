@@ -30,7 +30,6 @@ import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AV
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_NOTIFICATION_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_UNTIL_MAIL_TEMPLATE_KEY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL;
-import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_MOVED_EVENT_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_RESTORED_NOTIFICATION_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_TO_RESTORE_EVENT_NAME;
@@ -230,10 +229,6 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         // `null` See CheckBlobUpdateListener#handleEvent
         COLD_STORAGE_DISABLED_RECOMPUTATION_LISTENERS.forEach(name -> documentModel.putContextData(name, true));
 
-        DocumentEventContext ctx = new DocumentEventContext(session, session.getPrincipal(), documentModel);
-        EventService eventService = Framework.getService(EventService.class);
-        eventService.fireEvent(ctx.newEvent(COLD_STORAGE_CONTENT_MOVED_EVENT_NAME));
-
         return documentModel;
     }
 
@@ -328,14 +323,16 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
                             documentModel),
                     SC_CONFLICT);
         }
-
         documentModel.setPropertyValue(COLD_STORAGE_TO_BE_RESTORED_PROPERTY, true);
-        session.saveDocument(documentModel);
+        documentModel = session.saveDocument(documentModel);
+
         BlobStatus blobStatus = getBlobStatus(documentModel);
         // FIXME waiting for NXP-30419 to be done
         boolean downloadable = blobStatus.getStorageClass() == null ? blobStatus.isDownloadable()
                 : (blobStatus.isDownloadable() && blobStatus.getDownloadableUntil() != null);
         if (downloadable) {
+            documentModel.setPropertyValue(COLD_STORAGE_TO_BE_RESTORED_PROPERTY, false);
+            documentModel = session.saveDocument(documentModel);
             restoreMainContent(documentModel);
         } else {
             documentModel = requestRetrievalFromColdStorage(session, documentModel.getRef(),
@@ -357,10 +354,9 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         String blobDigest = ((Blob) documentModel.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY)).getDigest();
         String documentId = documentModel.getId();
         String query = String.format(
-                "SELECT * FROM Document WHERE (ecm:isVersion = 0 AND file:content/digest = '%s') "
-                        + "OR (ecm:isVersion = 1 AND ecm:versionVersionableId = '%s' AND file:content/digest = '%s')",
-                blobDigest, documentModel.getId(), blobDigest);
-
+                "SELECT * FROM Document WHERE ecm:uuid != '%s' AND (ecm:isVersion = 0 AND file:content/digest = '%s' "
+                        + "OR ecm:isVersion = 1 AND ecm:versionVersionableId = '%s' AND file:content/digest = '%s')",
+                documentModel.getId(), blobDigest, documentModel.getId(), blobDigest);
 
         BulkService bulkService = Framework.getService(BulkService.class);
         String username = SecurityConstants.SYSTEM_USERNAME;
@@ -402,6 +398,8 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
                 Serializable undoMove = doc.getPropertyValue(COLD_STORAGE_TO_BE_RESTORED_PROPERTY);
                 if (Boolean.TRUE.equals(undoMove)) {
                     restoreMainContent(doc);
+                    doc.setPropertyValue(COLD_STORAGE_TO_BE_RESTORED_PROPERTY, false);
+                    session.saveDocument(doc);
                 } else {
                     doc.setPropertyValue(COLD_STORAGE_BEING_RETRIEVED_PROPERTY, false);
                     session.saveDocument(doc);
