@@ -56,16 +56,13 @@ Then('I cannot see the Send file to cold storage button', function () {
 });
 
 Then('I can see the file is stored in cold storage', function () {
-  driver.waitUntil(() => {
-    driver.refresh();
-    const page = this.ui.browser.documentPage(this.doc.type);
-    page.infoBar.waitForVisible('#coldStorageInfoBar .storedInColdStorage');
-    return true;
-  });
+  this.ui.reload();
+  const page = this.ui.browser.documentPage(this.doc.type);
+  page.infoBar.waitForVisible('#coldStorageInfoBar .storedInColdStorage');
 });
 
 Then('I can see the file is not stored in cold storage', function () {
-  driver.refresh();
+  this.ui.reload();
   const page = this.ui.browser.documentPage(this.doc.type);
   page.infoBar.isVisible('#coldStorageInfoBar .storedInColdStorage').should.be.equals(false);
 });
