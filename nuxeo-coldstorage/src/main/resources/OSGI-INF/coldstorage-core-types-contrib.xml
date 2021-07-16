@@ -3,6 +3,8 @@
 
   <extension target="org.nuxeo.ecm.core.schema.TypeService" point="schema">
     <schema name="coldstorage" prefix="coldstorage" src="schemas/coldstorage.xsd" />
+
+    <property schema="coldstorage" name="beingRetrieved" index="ascending" />
   </extension>
 
   <extension target="org.nuxeo.ecm.core.schema.TypeService"
