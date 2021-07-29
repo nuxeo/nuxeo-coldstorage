@@ -27,15 +27,18 @@ import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_BEING_RETRIEVED_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_ARCHIVE_LOCATION_MAIL_TEMPLATE_KEY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_IN_COLDSTORAGE;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_NOTIFICATION_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_UNTIL_MAIL_TEMPLATE_KEY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_RESTORED_NOTIFICATION_NAME;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_TO_RESTORE_EVENT_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_FACET_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_TO_BE_RESTORED_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.FILE_CONTENT_PROPERTY;
+import static org.nuxeo.coldstorage.ColdStorageConstants.GET_COLDSTORAGE_DOCUMENTS_TO_CHECK_QUERY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.GET_DOCUMENTS_TO_CHECK_QUERY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.WRITE_COLD_STORAGE;
 
@@ -93,15 +96,13 @@ import org.nuxeo.runtime.model.DefaultComponent;
  */
 public class ColdStorageServiceImpl extends DefaultComponent implements ColdStorageService {
 
-    private static final Logger log = LogManager.getLogger(ColdStorageServiceImpl.class);
-
+    public static final String COLDSTORAGE_RENDITION_EP = "coldStorageRendition";
     protected static final List<String> COLD_STORAGE_DISABLED_RECOMPUTATION_LISTENERS = Arrays.asList(
             UpdateThumbnailListener.THUMBNAIL_UPDATED, ThumbnailConstants.DISABLE_THUMBNAIL_COMPUTATION,
             VideoChangedListener.DISABLE_VIDEO_CONVERSIONS_GENERATION_LISTENER,
             PictureViewsGenerationListener.DISABLE_PICTURE_VIEWS_GENERATION_LISTENER);
 
-    public static final String COLDSTORAGE_RENDITION_EP = "coldStorageRendition";
-
+    private static final Logger log = LogManager.getLogger(ColdStorageServiceImpl.class);
     protected static String defaultRendition;
 
     protected static Map<String, String> renditionByDocType = new HashMap<>();
@@ -110,6 +111,27 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
 
     public ColdStorageServiceImpl() {
         // no instance allowed
+    }
+
+    public static String getContentBlobKey(Blob coldContent) {
+        String key = ((ManagedBlob) coldContent).getKey();
+        int colon = key.indexOf(':');
+        if (colon >= 0) {
+            key = key.substring(colon + 1);
+        }
+        return key;
+    }
+
+    public static BlobStatus getBlobStatus(DocumentModel doc) {
+        try {
+            Blob coldContent = (Blob) doc.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
+            return Framework.getService(BlobManager.class)
+                            .getBlobProvider(coldContent)
+                            .getStatus((ManagedBlob) coldContent);
+        } catch (IOException e) {
+            log.error("Unable to get the cold storage blob status for document: {}", doc, e);
+            return null;
+        }
     }
 
     @Override
@@ -217,6 +239,7 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         documentModel.addFacet(COLD_STORAGE_FACET_NAME);
         documentModel.setPropertyValue(COLD_STORAGE_CONTENT_PROPERTY, mainContent);
         documentModel.setPropertyValue(FILE_CONTENT_PROPERTY, null);
+        documentModel.setPropertyValue(COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED, true);
         // THUMBNAIL_UPDATED: disabling is needed otherwise as the content is now `null` the thumbnail will be also
         // `null` See CheckBlobUpdateListener#handleEvent
         COLD_STORAGE_DISABLED_RECOMPUTATION_LISTENERS.forEach(name -> documentModel.putContextData(name, true));
@@ -422,25 +445,38 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         return new ColdStorageContentStatus(beingRetrieved, available);
     }
 
-    public static String getContentBlobKey(Blob coldContent) {
-        String key = ((ManagedBlob) coldContent).getKey();
-        int colon = key.indexOf(':');
-        if (colon >= 0) {
-            key = key.substring(colon + 1);
-        }
-        return key;
-    }
+    @Override
+    public void checkColdStorageClass(CoreSession session) {
 
-    public static BlobStatus getBlobStatus(DocumentModel doc) {
-        try {
-            Blob coldContent = (Blob) doc.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
-            return Framework.getService(BlobManager.class)
-                            .getBlobProvider(coldContent)
-                            .getStatus((ManagedBlob) coldContent);
-        } catch (IOException e) {
-            log.error("Unable to get the cold storage blob status for document: {}", doc, e);
-            return null;
-        }
+        log.debug("Start checking the class storage for repository: {}", session::getRepositoryName);
+
+        int limit = 100;
+        long offset = 0;
+        long total = 0;
+        do {
+            DocumentModelList documents = session.query(GET_COLDSTORAGE_DOCUMENTS_TO_CHECK_QUERY, null, limit, offset,
+                    true);
+            for (DocumentModel documentModel : documents) {
+                BlobStatus blobStatus = getBlobStatus(documentModel);
+                if (blobStatus == null) {
+                    continue;
+                }
+
+                if (!blobStatus.isDownloadable()) {
+                    documentModel.setPropertyValue(COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED, false);
+                    documentModel.setPropertyValue(COLD_STORAGE_CONTENT_AVAILABLE_IN_COLDSTORAGE, true);
+                    session.saveDocument(documentModel);
+                }
+            }
+            offset += limit;
+            if (total == 0) {
+                total = documents.totalSize();
+            }
+            session.save();
+        } while (offset < total);
+
+        log.debug("End checking the class storage for repository: {}", session::getRepositoryName);
+
     }
 
     @Override

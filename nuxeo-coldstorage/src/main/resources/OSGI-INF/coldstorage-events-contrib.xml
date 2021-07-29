@@ -6,6 +6,10 @@
       <cronExpression>${nuxeo.coldstorage.check.retrieve.state.cronExpression}</cronExpression>
       <event>checkColdStorageContentAvailability</event>
     </schedule>
+    <schedule id="checkContentStorageClass">
+      <cronExpression>${nuxeo.coldstorage.check.storage.state.cronExpression}</cronExpression>
+      <event>checkColdStorageClassUpdated</event>
+    </schedule>
   </extension>
 
   <extension target="org.nuxeo.ecm.core.event.EventServiceComponent" point="listener">
@@ -28,6 +32,10 @@
     <listener name="checkColdStorageDocumentCheckedIn" async="true"
               class="org.nuxeo.coldstorage.events.CheckColdStorageContentMovedListener">
       <event>coldStorageContentMoved</event>
+    </listener>
+    <listener name="checkColdStorageClassUpdated" async="true"
+              class="org.nuxeo.coldstorage.events.CheckColdStorageClassUpdatedListener">
+      <event>checkColdStorageClassUpdated</event>
     </listener>
   </extension>
 
