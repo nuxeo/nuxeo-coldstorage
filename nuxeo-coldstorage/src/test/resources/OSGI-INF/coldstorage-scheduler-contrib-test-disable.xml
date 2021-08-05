@@ -3,5 +3,7 @@
     <extension target="org.nuxeo.ecm.core.scheduler.SchedulerService" point="schedule">
         <schedule id="checkAvailabilityOfBlobsBeingRetrieved" enabled="false">
         </schedule>
+        <schedule id="checkContentStorageClass" enabled="false">
+        </schedule>
     </extension>
 </component>
