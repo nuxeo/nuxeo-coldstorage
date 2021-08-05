@@ -57,6 +57,13 @@ public class ColdStorageConstants {
 
     public static final String COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL = "coldstorage:downloadableUntil";
 
+    public static final String COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED = "coldstorage:classStorageToUpdate";
+
+    public static final String GET_COLDSTORAGE_DOCUMENTS_TO_CHECK_QUERY = String.format(
+            "SELECT * FROM Document, Relation WHERE %s = 1", COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED);
+
+    public static final String COLD_STORAGE_CONTENT_AVAILABLE_IN_COLDSTORAGE = "coldstorage:availableOnColdstorage";
+
     /**
      * Status about the cold storage content being retrieved or available.
      */

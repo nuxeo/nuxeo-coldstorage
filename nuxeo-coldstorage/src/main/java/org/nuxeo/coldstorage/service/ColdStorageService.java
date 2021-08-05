@@ -112,6 +112,15 @@ public interface ColdStorageService {
     ColdStorageContentStatus checkColdStorageContentAvailability(CoreSession session);
 
     /**
+     * Checks if the class storage of document moved to ColdStorage has been updated.
+     *
+     * @implSpec: Queries all documents with a cold storage class to be updated, meaning
+     *            {@value org.nuxeo.coldstorage.ColdStorageConstants#COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED} is
+     *            {@code true}, and it checks if it isn't available for download.
+     */
+    void checkColdStorageClass(CoreSession session);
+
+    /**
      * Gets the number of days where the document's blob is available, once it's retrieved from cold storage.
      *
      * @return the number of days of availability if property

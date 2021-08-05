@@ -95,6 +95,7 @@ class RetrieveFromColdStorage extends mixinBehaviors([FiltersBehavior, FormatBeh
   _isAvailable(document, currentUser) {
     return (
       this.hasFacet(document, 'ColdStorage') &&
+      document.properties['coldstorage:availableOnColdstorage'] &&
       !document.properties['coldstorage:beingRetrieved'] &&
       (this.hasAdministrationPermissions(currentUser) || this.hasPermission(document, 'WriteColdStorage')) &&
       this.hasContent(document) &&
