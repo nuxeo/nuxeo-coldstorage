@@ -22,6 +22,7 @@ package org.nuxeo.coldstorage.service;
 import java.time.Duration;
 
 import org.nuxeo.coldstorage.ColdStorageConstants.ColdStorageContentStatus;
+import org.nuxeo.coldstorage.ColdStorageConstants.ColdStorageClassStatus;
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
@@ -110,6 +111,15 @@ public interface ColdStorageService {
      * @see #requestRetrievalFromColdStorage(CoreSession, DocumentRef, Duration)
      */
     ColdStorageContentStatus checkColdStorageContentAvailability(CoreSession session);
+
+    /**
+     * Checks if the class storage of document moved to ColdStorage has been updated.
+     *
+     * @implSpec: Queries all documents with a cold storage class to be updated, meaning
+     *            {@value org.nuxeo.coldstorage.ColdStorageConstants#COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED} is
+     *            {@code true}, and it checks if it isn't available for download.
+     */
+    ColdStorageClassStatus checkColdStorageClass(CoreSession session);
 
     /**
      * Gets the number of days where the document's blob is available, once it's retrieved from cold storage.

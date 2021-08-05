@@ -27,15 +27,18 @@ import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_BEING_RETRIEVED_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_ARCHIVE_LOCATION_MAIL_TEMPLATE_KEY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_IN_COLDSTORAGE;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_NOTIFICATION_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_UNTIL_MAIL_TEMPLATE_KEY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_RESTORED_NOTIFICATION_NAME;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_TO_RESTORE_EVENT_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_FACET_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_TO_BE_RESTORED_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.FILE_CONTENT_PROPERTY;
+import static org.nuxeo.coldstorage.ColdStorageConstants.GET_COLDSTORAGE_DOCUMENTS_TO_CHECK_QUERY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.GET_DOCUMENTS_TO_CHECK_QUERY;
 
 import java.io.IOException;
@@ -52,6 +55,7 @@ import java.util.Objects;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.nuxeo.coldstorage.ColdStorageConstants;
+import org.nuxeo.coldstorage.ColdStorageConstants.ColdStorageClassStatus;
 import org.nuxeo.coldstorage.ColdStorageConstants.ColdStorageContentStatus;
 import org.nuxeo.coldstorage.ColdStorageRenditionDescriptor;
 import org.nuxeo.coldstorage.action.DeduplicationColdStorageContentActions;
@@ -224,6 +228,7 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         documentModel.addFacet(COLD_STORAGE_FACET_NAME);
         documentModel.setPropertyValue(COLD_STORAGE_CONTENT_PROPERTY, mainContent);
         documentModel.setPropertyValue(FILE_CONTENT_PROPERTY, null);
+        documentModel.setPropertyValue(COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED, true);
         // THUMBNAIL_UPDATED: disabling is needed otherwise as the content is now `null` the thumbnail will be also
         // `null` See CheckBlobUpdateListener#handleEvent
         COLD_STORAGE_DISABLED_RECOMPUTATION_LISTENERS.forEach(name -> documentModel.putContextData(name, true));
@@ -423,6 +428,34 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
                 session.getRepositoryName(), beingRetrieved, available);
 
         return new ColdStorageContentStatus(beingRetrieved, available);
+    }
+
+    @Override
+    public ColdStorageClassStatus checkColdStorageClass(CoreSession session) {
+
+        log.debug("Start checking the class storage for repository: {}", session::getRepositoryName);
+
+        DocumentModelList documents = session.query(GET_COLDSTORAGE_DOCUMENTS_TO_CHECK_QUERY);
+        int totalToUpdate = documents.size();
+        int nbDocumentsUpdated = 0;
+        for (DocumentModel documentModel : documents) {
+            BlobStatus blobStatus = getBlobStatus(documentModel);
+            if (blobStatus == null) {
+                continue;
+            }
+
+            if (!blobStatus.isDownloadable()) {
+                totalToUpdate--;
+                nbDocumentsUpdated++;
+                documentModel.setPropertyValue(COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED, false);
+                documentModel.setPropertyValue(COLD_STORAGE_CONTENT_AVAILABLE_IN_COLDSTORAGE, true);
+                session.saveDocument(documentModel);
+            }
+        }
+
+        log.debug("End checking the class storage for repository: {}", session::getRepositoryName);
+
+        return new ColdStorageClassStatus(totalToUpdate, nbDocumentsUpdated);
     }
 
     public static String getContentBlobKey(Blob coldContent) {
