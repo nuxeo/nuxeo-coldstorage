@@ -4,7 +4,7 @@
   "author": "Nuxeo",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@nuxeo/nuxeo-web-ui-ftest": "^3.1.0-rc.0",
+    "@nuxeo/nuxeo-web-ui-ftest": "3.0.4",
     "@open-wc/eslint-config": "^0.3.0",
     "cucumber": "^4.1.0",
     "@esm-bundle/chai": "^4.1.5",
