@@ -2,6 +2,7 @@
   "documentContentView.infobar.storedInColdStorage": "This is a low resolution preview. The original file can be requested by clicking on retrieve file action.",
   "documentContentView.infobar.beingRetrieved": "This is a low resolution preview. The original file has been requested. An email notification will be sent when it is available.",
   "documentContentView.infobar.retrieved": "This is a low resolution preview. The original file will be available until {0}",
+  "documentContentView.infobar.dowload": "Dowload",
   "documentContentView.moveToColdStorage.ask.confirmation": "Send the document content to cold storage?",
   "documentContentView.moveToColdStorage.cancel": "Cancel",
   "documentContentView.moveToColdStorage.confirm": "Confirm",
