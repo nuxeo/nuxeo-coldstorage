@@ -24,6 +24,7 @@ package org.nuxeo.coldstorage.service;
 import static javax.servlet.http.HttpServletResponse.SC_CONFLICT;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
+import static javax.servlet.http.HttpServletResponse.SC_PRECONDITION_FAILED;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_BEING_RETRIEVED_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_ARCHIVE_LOCATION_MAIL_TEMPLATE_KEY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME;
@@ -161,6 +162,10 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         try {
             RenditionService renditionService = Framework.getService(RenditionService.class);
             Rendition rendition = renditionService.getRendition(doc, renditionName);
+            if (!rendition.isCompleted()) {
+                log.warn("Selected rendition computation isn't completed: {}", doc);
+                return null;
+            }
             return rendition.getBlob();
         } catch (NuxeoException e) {
             throw new NuxeoException(String.format("Cannot retrieve the rendition for document %s.", doc), e,
@@ -174,6 +179,11 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         DocumentModel documentModel = session.getDocument(documentRef);
         // retrieve the rendition which will be used to replace the content, once the move done
         Blob renditionBlob = getRendition(documentModel, session);
+        if (renditionBlob == null) {
+            throw new NuxeoException(String.format(
+                    "Cannot move document to ColdStorage: Rendition computation not completed for document %s.",
+                    documentModel), SC_PRECONDITION_FAILED);
+        }
         // make the move
         documentModel = moveContentToColdStorage(session, documentModel.getRef());
 
