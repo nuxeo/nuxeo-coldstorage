@@ -18,6 +18,7 @@ import { mixinBehaviors } from '@polymer/polymer/lib/legacy/class.js';
 import '@polymer/iron-icon/iron-icon.js';
 import '@polymer/iron-icons/iron-icons.js';
 import '@nuxeo/nuxeo-elements/nuxeo-element.js';
+import '@nuxeo/nuxeo-ui-elements/actions/nuxeo-download-button.js';
 import '@polymer/polymer/lib/elements/dom-if.js';
 import { FiltersBehavior } from '@nuxeo/nuxeo-ui-elements/nuxeo-filters-behavior.js';
 import { FormatBehavior } from '@nuxeo/nuxeo-ui-elements/nuxeo-format-behavior.js';
@@ -52,6 +53,11 @@ class ColdStorageInfobar extends mixinBehaviors([FiltersBehavior, FormatBehavior
             <div class="layout horizontal center flex">
               <iron-icon noink icon="coldstorage:default"></iron-icon>
               <span class="storedInColdStorage"> [[_title]] </span>
+              <dom-if if="[[_isDocRetrieved()]]">
+                <template>
+                  <nuxeo-download-button document="[[document]]" show-label="true"></nuxeo-download-button>
+                </template>
+              </dom-if>
             </div>
           </div>
         </template>
@@ -85,6 +91,10 @@ class ColdStorageInfobar extends mixinBehaviors([FiltersBehavior, FormatBehavior
 
   _contentStoredInColdStorage(doc) {
     return this.hasFacet(doc, 'ColdStorage') && doc.properties && doc.properties['coldstorage:coldContent'];
+  }
+
+  _isDocRetrieved() {
+    return this._documentStatus === 'retrieved';
   }
 
   _getDocumentStatus(document) {
