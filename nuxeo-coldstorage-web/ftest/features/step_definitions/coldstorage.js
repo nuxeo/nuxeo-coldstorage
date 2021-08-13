@@ -1,4 +1,4 @@
-import { When, Then } from 'cucumber';
+import { When, Then } from '@cucumber/cucumber';
 
 When('I click the Send file to cold storage action button', function () {
   this.ui.browser.clickDocumentActionMenu('nuxeo-move-content-to-coldstorage-button');
