@@ -1,5 +1,5 @@
 /*
-* (C) Copyright 2020 Nuxeo (http://nuxeo.com/) and others.
+* (C) Copyright 2021 Nuxeo (http://nuxeo.com/) and others.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -18,10 +18,10 @@
 */
 
 /* Using a version specifier, such as branch, tag, etc */
-@Library('nuxeo-napps-tools@0.0.4') _
+library identifier: 'nuxeo-napps-tools@0.0.8'
 
 def appName = 'nuxeo-coldstorage'
-def repositoryUrl = 'https://github.com/nuxeo/nuxeo-coldstorage/'
+def containerLabel = 'maven'
 
 String currentVersion() {
   return readMavenPom().getVersion()
@@ -31,36 +31,10 @@ String getReleaseVersion(String version) {
   return version.replace('-SNAPSHOT', '')
 }
 
-def runBackEndUnitTests() {
-  return {
-    stage('backend') {
-      container('maven-default') {
-        script {
-          try {
-            echo '''
-              ----------------------------------------
-              Run BackEnd Unit tests
-              ----------------------------------------
-            '''
-            sh """
-              cd ${BACKEND_FOLDER}
-              mvn ${MAVEN_ARGS} -V -T0.8C test
-            """
-          } catch (err) {
-            throw err
-          } finally {
-            junit allowEmptyResults: true, testResults: "**/target/surefire-reports/*.xml"
-          }
-        }
-      }
-    }
-  }
-}
-
 def runFrontEndUnitTests() {
   return {
     stage('frontend') {
-      container('maven-mongodb') {
+      container('maven') {
         script {
           echo '''
             ----------------------------------------
@@ -79,11 +53,14 @@ def runFrontEndUnitTests() {
             }
             withEnv(["SAUCE_USERNAME=${sauceUsername}", "SAUCE_ACCESS_KEY=${sauceAccessKey}"]) {
               container('playwright') {
-                sh """
-                  cd ${FRONTEND_FOLDER}
-                  npm install
-                  npm run test
-                """
+                retry(2) {
+                  sh """
+                    cd ${FRONTEND_FOLDER}
+                    npm install playwright
+                    npm install
+                    npm run test
+                  """
+                }
               }
             }
           } catch (err) {
@@ -94,6 +71,7 @@ def runFrontEndUnitTests() {
     }
   }
 }
+
 
 pipeline {
   agent {
@@ -113,25 +91,32 @@ pipeline {
   }
   environment {
     APP_NAME = "${appName}"
+    AWS_CREDENTIAL_SECRET_NAME = 'aws-iam-user-credentials'
+    AWS_BUCKET_SECRET_NAME = 'aws-config-napps'
+    AWS_SECRET_NAMESPACE = 'napps'
     BACKEND_FOLDER = "${WORKSPACE}/nuxeo-coldstorage"
-    BRANCH_NAME = GIT_BRANCH.replace('origin/', '')
-    BRANCH_LC = "${BRANCH_NAME.toLowerCase().replace('.', '-')}"
-    CONNECT_PROD_URL = 'https://connect.nuxeo.com/nuxeo'
+    BRANCH_LC = "${BRANCH_NAME.toLowerCase()}"
+    BUCKET_PREFIX = "${appName}-${BRANCH_LC}-${BUILD_NUMBER}"
+    CHANGE_BRANCH = "${env.CHANGE_BRANCH != null ? env.CHANGE_BRANCH : BRANCH_NAME}"
+    CHANGE_TARGET = "${env.CHANGE_TARGET != null ? env.CHANGE_TARGET : BRANCH_NAME}"
     CHART_DIR = 'ci/helm/preview'
+    CONNECT_PROD_URL = 'https://connect.nuxeo.com/nuxeo'
     CURRENT_VERSION = currentVersion()
-    ENABLE_GITHUB_STATUS = 'false'
     FRONTEND_FOLDER = "${WORKSPACE}/nuxeo-coldstorage-web"
     JENKINS_HOME = '/root'
     MAVEN_DEBUG = '-e'
     MAVEN_OPTS = "${MAVEN_OPTS} -Xms512m -Xmx3072m"
+    NUXEO_BASE_IMAGE = 'docker-private.packages.nuxeo.com/nuxeo/nuxeo:2021.4.16'
     ORG = 'nuxeo'
+    PREVIEW_NAMESPACE = "coldstorage-${BRANCH_LC}"
+    REPOSITORY_URL = 'https://github.com/nuxeo/nuxeo-coldstorage/'
     VERSION = getReleaseVersion(CURRENT_VERSION)
   }
   stages {
     stage('Check parameters') {
       steps {
         script {
-          if (!params.BUILD_VERSION || params.BUILD_VERSION == '') {
+          if (!params.rcVersion || params.rcVersion == '') {
             currentBuild.result = 'ABORTED'
             currentBuild.description = 'Missing required version parameter, aborting the build.'
             error(currentBuild.description)
@@ -160,6 +145,7 @@ pipeline {
             env.DRY_RUN_RELEASE = 'false'
           }
 
+          env.RC_VERSION = params.rcVersion
           env.PACKAGE_BASE_NAME = "nuxeo-coldstorage-package-${VERSION}"
           env.PACKAGE_FILENAME = "nuxeo-coldstorage-package/target/${PACKAGE_BASE_NAME}.zip"
           echo """
@@ -168,7 +154,7 @@ pipeline {
             -----------------------------------------------------------
             ----------------------------------------
             Coldstorage package:   ${PACKAGE_BASE_NAME}
-            Build version:    ${params.BUILD_VERSION}
+            Build version:    ${RC_VERSION}
             Current version:  ${CURRENT_VERSION}
             Release version:  ${VERSION}
             Reference branch: ${REFERENCE_BRANCH}
@@ -180,14 +166,14 @@ pipeline {
     stage('Notify promotion start on slack') {
       steps {
         script {
-          String message = "Starting release ${VERSION} from build ${params.BUILD_VERSION}: ${BUILD_URL}"
-          slackBuildStatus.set("${SLACK_CHANNEL}", "${message}", 'gray')
+          String message = "Starting release ${VERSION} from build ${RC_VERSION}: ${BUILD_URL}"
+          slackBuildStatus("${SLACK_CHANNEL}", "${message}", 'gray')
         }
       }
     }
     stage('Set Labels') {
       steps {
-        container('maven') {
+        container(containerLabel) {
           echo '''
             ----------------------------------------
             Set Kubernetes resource labels
@@ -203,7 +189,7 @@ pipeline {
     }
     stage('Setup') {
       steps {
-        container('maven') {
+        container(containerLabel) {
           script {
             nxNapps.setup()
             sh 'env'
@@ -213,14 +199,14 @@ pipeline {
     }
     stage('Fetch Release Candidate') {
       steps {
-        container('maven') {
-          sh "git fetch origin 'refs/tags/v${params.BUILD_VERSION}*:refs/tags/v${params.BUILD_VERSION}*'"
+        container(containerLabel) {
+          sh "git fetch origin 'refs/tags/v${RC_VERSION}*:refs/tags/v${RC_VERSION}*'"
         }
       }
     }
     stage('Checkout') {
       steps {
-        container('maven') {
+        container(containerLabel) {
           script {
             nxNapps.gitCheckout("v${RC_VERSION}")
           }
@@ -229,7 +215,7 @@ pipeline {
     }
     stage('Update Version') {
       steps {
-        container('maven') {
+        container(containerLabel) {
           script {
             nxNapps.updateVersion("${VERSION}")
           }
@@ -238,7 +224,7 @@ pipeline {
     }
     stage('Compile') {
       steps {
-        container('maven') {
+        container(containerLabel) {
           script {
             nxNapps.mavenCompile()
           }
@@ -247,29 +233,57 @@ pipeline {
     }
     stage('Linting') {
       steps {
-        container('maven') {
+        container(containerLabel) {
           script {
             nxNapps.lint("${FRONTEND_FOLDER}")
           }
         }
       }
     }
-    stage('Run Unit Tests') {
+    stage('Run runtime unit tests') {
       steps {
-        script {
-          def stages = [:]
-          stages['backend'] = runBackEndUnitTests()
-          stages['frontend'] = runFrontEndUnitTests()
-          parallel stages
+        container(containerLabel) {
+          script {
+            def stages = [:]
+            def envVars = nxNapps.getEnvironmentVariables(
+              "${APP_NAME}", "${AWS_BUCKET_SECRET_NAME}", "${AWS_CREDENTIAL_SECRET_NAME}",
+              "${AWS_SECRET_NAMESPACE}",  "${BUCKET_PREFIX}-utests"
+            )
+            stages['backend'] = nxNapps.runBackendUnitTests(envVars)
+            stages['frontend'] = runFrontEndUnitTests()
+            parallel stages
+          }
         }
       }
     }
-    stage('Deploy ColdStorage Preview') {
+    stage('Build Docker Image') {
       steps {
-        container('maven') {
+        container(containerLabel) {
+          script {
+            nxNapps.dockerBuild(
+              "${WORKSPACE}/nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-*.zip",
+              "${WORKSPACE}/ci/docker","${WORKSPACE}/ci/docker/skaffold.yaml"
+            )
+          }
+        }
+      }
+    }
+    stage('Buid Helm Chart') {
+      steps {
+        container(containerLabel) {
+          script {
+            nxKube.helmBuildChart("${CHART_DIR}", 'values.yaml')
+            nxNapps.gitCheckout("${CHART_DIR}/requirements.yaml")
+          }
+        }
+      }
+    }
+    stage('Deploy Preview') {
+      steps {
+        container(containerLabel) {
           script {
             nxKube.helmDeployPreview(
-              "${PREVIEW_NAMESPACE}", "${CHART_DIR}", "${repositoryUrl}", "${IS_REFERENCE_BRANCH}"
+              "${PREVIEW_NAMESPACE}", "${CHART_DIR}", "${GIT_URL}", 'false'
             )
           }
         }
@@ -277,7 +291,7 @@ pipeline {
     }
     stage('Run Functional Tests') {
       steps {
-        container('maven') {
+        container(containerLabel) {
           script {
             try {
               retry(3) {
@@ -292,12 +306,13 @@ pipeline {
               nxKube.helmGetPreviewLogs("${PREVIEW_NAMESPACE}")
               cucumber (
                 fileIncludePattern: '**/*.json',
-                jsonReportDirectory: "${FRONTEND_FOLDER}/target/cucumber-reports/",
+                jsonReportDirectory: "${FRONTEND_FOLDER}/ftest/target/cucumber-reports/",
                 sortingMethod: 'NATURAL'
               )
               archiveArtifacts (
                 allowEmptyArchive: true,
-                artifacts: 'nuxeo-coldstorage-web/target/**, logs/*.log' //we can't use full path when archiving artifacts
+                //we can't use full path when archiving artifacts
+                artifacts: 'nuxeo-coldstorage-web/target/**, logs/*.log'
               )
             }
           }
@@ -305,20 +320,20 @@ pipeline {
       }
       post {
         always {
-          container('maven') {
+          container(containerLabel) {
             script {
               //cleanup the preview
               try {
-                if (nxNapps.needsPreviewCleanup() == 'true') {
-                  nxKube.helmDeleteNamespace("${PREVIEW_NAMESPACE}")
-                }
+                nxKube.helmDeleteNamespace("${PREVIEW_NAMESPACE}")
+              } catch (err) {
+                echo hudson.Functions.printThrowable(err)
               }
             }
           }
         }
       }
     }
-    stage('Publish') {
+    stage('Publish Package') {
       when {
         allOf {
           not {
@@ -336,7 +351,7 @@ pipeline {
       stages {
         stage('Git Commit and Tag') {
           steps {
-            container('maven') {
+            container(containerLabel) {
               script {
                 nxNapps.gitCommit("${MESSAGE}", '-a')
                 nxNapps.gitTag("${TAG}", "${MESSAGE}")
@@ -346,7 +361,7 @@ pipeline {
         }
         stage('Publish') {
           steps {
-            container('maven') {
+            container(containerLabel) {
               script {
                 echo """
                   ------------------------------------------------------------
@@ -355,7 +370,7 @@ pipeline {
                 """
                 if (env.DRY_RUN_RELEASE == 'false') {
                   String packageFile = "nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-${VERSION}.zip"
-                  connectUploadPackage.set("${packageFile}", 'connect-preprod', "${CONNECT_PREPROD_URL}")
+                  connectUploadPackage("${packageFile}", 'connect-prod', "${CONNECT_PROD_URL}")
                 }
               }
             }
@@ -371,7 +386,7 @@ pipeline {
         }
         stage('Git Push') {
           steps {
-            container('maven') {
+            container(containerLabel) {
               echo """
                 --------------------------
                 Git push ${TAG}
@@ -396,7 +411,7 @@ pipeline {
         }
       }
       steps {
-        container('maven') {
+        container(containerLabel) {
           script {
             //cleanup files updated by other stages
             sh 'git reset --hard'
@@ -422,21 +437,21 @@ pipeline {
   post {
     always {
       script {
-        currentBuild.description = "Release ${VERSION} from build ${params.BUILD_VERSION}"
+        currentBuild.description = "Release ${VERSION} from build ${RC_VERSION}"
       }
     }
     success {
       script {
         // update Slack Channel
-        String message = "Successfully released ${VERSION} from build ${params.BUILD_VERSION}: ${BUILD_URL} :tada:"
-        slackBuildStatus.set("${SLACK_CHANNEL}", "${message}", 'good')
+        String message = "Successfully released ${VERSION} from build ${RC_VERSION}: ${BUILD_URL} :tada:"
+        slackBuildStatus("${SLACK_CHANNEL}", "${message}", 'good')
       }
     }
     unsuccessful {
       script {
         // update Slack Channel
-        String message = "Failed to release ${VERSION} from build ${params.BUILD_VERSION}: ${BUILD_URL}"
-        slackBuildStatus.set("${SLACK_CHANNEL}", "${message}", 'danger')
+        String message = "Failed to release ${VERSION} from build ${RC_VERSION}: ${BUILD_URL}"
+        slackBuildStatus("${SLACK_CHANNEL}", "${message}", 'danger')
       }
     }
   }
