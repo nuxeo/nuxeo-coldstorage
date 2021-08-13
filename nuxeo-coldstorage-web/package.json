@@ -4,9 +4,9 @@
   "author": "Nuxeo",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@nuxeo/nuxeo-web-ui-ftest": "^3.0.4",
+    "@cucumber/cucumber": "^7.0.0",
+    "@nuxeo/nuxeo-web-ui-ftest": "~3.0.6-rc.0",
     "@open-wc/eslint-config": "^0.3.0",
-    "cucumber": "^4.1.0",
     "@esm-bundle/chai": "^4.1.5",
     "@nuxeo/testing-helpers": "~3.0.2-rc.0",
     "@rollup/plugin-node-resolve": "^7.1.3",
