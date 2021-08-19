@@ -62,7 +62,6 @@ pipeline {
     ORG = 'nuxeo'
     PREVIEW_NAMESPACE = "${APP_NAME}-${BRANCH_LC}-release"
     PREVIEW_URL = "https://preview-${PREVIEW_NAMESPACE}.napps.dev.nuxeo.com"
-    SKAFFOLD_VERSION = 'v1.26.1'
     UNIT_TEST_NAMESPACE_SUFFIX = "${APP_NAME}-${BRANCH_LC}".toLowerCase()
   }
   stages {
@@ -316,7 +315,6 @@ pipeline {
       steps {
         container(containerLabel) {
           script {
-            nxNapps.setupKaniko("${SKAFFOLD_VERSION}")
             nxNapps.dockerBuild(
               "${WORKSPACE}/${APP_NAME}-package/target/${APP_NAME}-package-*.zip",
               "${WORKSPACE}/ci/docker", "${WORKSPACE}/ci/docker/skaffold.yaml"
