@@ -95,8 +95,19 @@ class MoveToColdStorage extends mixinBehaviors([FiltersBehavior, FormatBehavior]
     return (
       !this.hasFacet(document, 'ColdStorage') &&
       (this.hasAdministrationPermissions(currentUser) || this.hasPermission(document, 'WriteColdStorage')) &&
-      this.hasContent(document)
+      this.hasContent(document) &&
+      this._isRenditionAvailable(document)
     );
+  }
+
+  _isRenditionAvailable(document) {
+    let result = true;
+    if (this.hasFacet(document, 'Picture')) {
+      result = document.properties['picture:views'][0].filename !== 'empty_picture.png';
+    } else if (this.hasFacet(document, 'Video')) {
+      result = document.properties['vid:info'].duration > 0;
+    }
+    return result;
   }
 
   _toggle() {
