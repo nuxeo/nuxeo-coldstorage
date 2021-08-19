@@ -55,7 +55,6 @@ pipeline {
     REFERENCE_BRANCH = '10.10'
     IS_REFERENCE_BRANCH = "${BRANCH_NAME == REFERENCE_BRANCH}"
     SLACK_CHANNEL = "${env.DRY_RUN == 'true' ? 'infra-napps' : 'napps-notifs'}"
-    SKAFFOLD_VERSION = 'v1.26.1'
   }
   stages {
     stage('Set Labels') {
@@ -190,7 +189,6 @@ pipeline {
         container(containerLabel) {
           gitHubBuildStatus('docker/build')
           script {
-            nxNapps.setupKaniko("${SKAFFOLD_VERSION}")
             nxNapps.dockerBuild(
                     "${WORKSPACE}/nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-*.zip",
                     "${WORKSPACE}/ci/docker","${WORKSPACE}/ci/docker/skaffold.yaml"
