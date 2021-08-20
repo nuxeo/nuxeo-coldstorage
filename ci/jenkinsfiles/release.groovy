@@ -18,10 +18,16 @@
 */
 
 /* Using a version specifier, such as branch, tag, etc */
-@Library('nuxeo-napps-tools@0.0.4') _
+@Library('nuxeo-napps-tools@0.0.8') _
 
 def appName = 'nuxeo-coldstorage'
-def repositoryUrl = 'https://github.com/nuxeo/nuxeo-coldstorage/'
+def containerLabel = 'maven'
+def mcontainers = [
+  'dev': 'maven',
+  'mongodb': 'maven-mongodb',
+  'pgsql': 'maven-pgsql',
+]
+def targetTestEnvs = ['dev', 'mongodb', 'pgsql',]
 
 String currentVersion() {
   return readMavenPom().getVersion()
@@ -29,32 +35,6 @@ String currentVersion() {
 
 String getReleaseVersion(String version) {
   return version.replace('-SNAPSHOT', '')
-}
-
-def runBackEndUnitTests() {
-  return {
-    stage('backend') {
-      container('maven-default') {
-        script {
-          try {
-            echo '''
-              ----------------------------------------
-              Run BackEnd Unit tests
-              ----------------------------------------
-            '''
-            sh """
-              cd ${BACKEND_FOLDER}
-              mvn ${MAVEN_ARGS} -V -T0.8C test
-            """
-          } catch (err) {
-            throw err
-          } finally {
-            junit allowEmptyResults: true, testResults: "**/target/surefire-reports/*.xml"
-          }
-        }
-      }
-    }
-  }
 }
 
 def runFrontEndUnitTests() {
@@ -126,6 +106,7 @@ pipeline {
     MAVEN_OPTS = "${MAVEN_OPTS} -Xms512m -Xmx3072m"
     NUXEO_BASE_IMAGE = 'docker-private.packages.nuxeo.com/nuxeo/nuxeo:2021.6'
     ORG = 'nuxeo'
+    UNIT_TEST_NAMESPACE_SUFFIX = "${APP_NAME}-${BRANCH_LC}".toLowerCase()
     VERSION = getReleaseVersion(CURRENT_VERSION)
   }
   stages {
@@ -182,7 +163,7 @@ pipeline {
       steps {
         script {
           String message = "Starting release ${VERSION} from build ${params.BUILD_VERSION}: ${BUILD_URL}"
-          slackBuildStatus.set("${SLACK_CHANNEL}", "${message}", 'gray')
+          slackBuildStatus("${SLACK_CHANNEL}", "${message}", 'gray')
         }
       }
     }
@@ -255,17 +236,102 @@ pipeline {
         }
       }
     }
-    stage('Run Unit Tests') {
+    stage('Run runtime unit tests') {
+      steps {
+        container(containerLabel) {
+          script {
+            def stages = [:]
+            def envVars = nxNapps.getEnvironmentVariables(
+                "${APP_NAME}", "${AWS_BUCKET_SECRET_NAME}", "${AWS_CREDENTIAL_SECRET_NAME}",
+                "${AWS_SECRET_NAMESPACE}", "${UNIT_TEST_NAMESPACE_SUFFIX}-${env}"
+              )
+            stages['backend'] = nxNapps.runBackendUnitTests(envVars)
+            stages['frontend'] = runFrontEndUnitTests()
+            parallel stages
+          }
+        }
+      }
+    }
+    stage('Deploy Env') {
       steps {
         script {
           def stages = [:]
-          stages['backend'] = runBackEndUnitTests()
-          stages['frontend'] = runFrontEndUnitTests()
+          targetTestEnvs.each { env ->
+            String containerName = mcontainers["${env}"]
+            stages["Deploy - ${env}"] =
+              nxKube.helmDeployUnitTestEnvStage(
+                "${containerName}", "${env}", "${UNIT_TEST_NAMESPACE_SUFFIX}-${env}", 'ci/helm/utests'
+              )
+          }
           parallel stages
         }
       }
     }
-    stage('Deploy ColdStorage Preview') {
+    stage('Unit Tests') {
+      steps {
+        container(containerLabel) {
+          script {
+            gitHubBuildStatus('utests')
+            def stages = [:]
+            def parameters = [:]
+            targetTestEnvs.each { env ->
+              String containerName = mcontainers["${env}"]
+              String namespace  = "${UNIT_TEST_NAMESPACE_SUFFIX}-${env}"
+              parameters["${env}"] = nxNapps.getEnvironmentVariables(
+                "${APP_NAME}", "${AWS_BUCKET_SECRET_NAME}", "${AWS_CREDENTIAL_SECRET_NAME}",
+                "${AWS_SECRET_NAMESPACE}",  "${namespace}"
+              )
+              stages["JUnit - ${env}"] = nxNapps.runUnitTestStage("${containerName}", "${env}", "${WORKSPACE}", "${namespace}", parameters["${env}"])
+            }
+            parallel stages
+          }
+        }
+      }
+      post {
+        always {
+          script {
+            targetTestEnvs.each { env ->
+              container(containerLabel) {
+                nxKube.helmDestroyUnitTestsEnv(
+                  "${UNIT_TEST_NAMESPACE_SUFFIX}-${env}"
+                )
+              }
+            }
+          }
+        }
+      }
+    }
+    stage('Package') {
+      steps {
+        container('maven') {
+          script {
+            nxNapps.mavenPackage()
+          }
+        }
+      }
+    }
+    stage('Build Docker Image') {
+      steps {
+        container('maven') {
+          script {
+            nxNapps.dockerBuild(
+              "${PACKAGE_FILENAME}", "${WORKSPACE}/ci/docker", "${WORKSPACE}/ci/docker/skaffold.yaml"
+            )
+          }
+        }
+      }
+    }
+    stage('Buid Helm Chart') {
+      steps {
+        container('maven') {
+          script {
+            nxKube.helmBuildChart("${CHART_DIR}", 'values.yaml')
+            nxNapps.gitCheckout("${CHART_DIR}/requirements.yaml")
+          }
+        }
+      }
+    }
+    stage('Deploy Preview') {
       steps {
         container('maven') {
           script {
@@ -309,11 +375,7 @@ pipeline {
           container('maven') {
             script {
               //cleanup the preview
-              try {
-                if (nxNapps.needsPreviewCleanup() == 'true') {
-                  nxKube.helmDeleteNamespace("${PREVIEW_NAMESPACE}")
-                }
-              }
+              nxKube.helmDeleteNamespace("${PREVIEW_NAMESPACE}")
             }
           }
         }
@@ -430,14 +492,14 @@ pipeline {
       script {
         // update Slack Channel
         String message = "Successfully released ${VERSION} from build ${params.BUILD_VERSION}: ${BUILD_URL} :tada:"
-        slackBuildStatus.set("${SLACK_CHANNEL}", "${message}", 'good')
+        slackBuildStatus("${SLACK_CHANNEL}", "${message}", 'good')
       }
     }
     unsuccessful {
       script {
         // update Slack Channel
         String message = "Failed to release ${VERSION} from build ${params.BUILD_VERSION}: ${BUILD_URL}"
-        slackBuildStatus.set("${SLACK_CHANNEL}", "${message}", 'danger')
+        slackBuildStatus("${SLACK_CHANNEL}", "${message}", 'danger')
       }
     }
   }
