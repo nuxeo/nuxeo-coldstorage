@@ -17,57 +17,16 @@
 *     Abdoul BA <aba@nuxeo.com>
 */
 /* Using a version specifier, such as branch, tag, etc */
-library identifier: "nuxeo-napps-tools@0.0.6"
+@Library('nuxeo-napps-tools@0.0.8') _
 
 def appName = 'nuxeo-coldstorage'
-def repositoryUrl = 'https://github.com/nuxeo/nuxeo-coldstorage/'
-
-def getAwsEnvironnmentVariables(String bucketSecretName, String credentialSecret, String namespace, String bucketPrefix) {
-  def envVars = [
-    "AWS_ACCESS_KEY=${getEnvironmentVariable('access_key_id', credentialSecret, namespace)}",
-    "AWS_SECRET_ACCESS_KEY=${getEnvironmentVariable('secret_access_key', credentialSecret, namespace)}",
-    "COLDSTORAGE_AWS_MAIN_BUCKET_NAME=${getEnvironmentVariable('coldstorage.bucket', bucketSecretName, namespace)}",
-    "COLDSTORAGE_AWS_GLACIER_BUCKET_NAME=${getEnvironmentVariable('coldstorage.bucket.glacier', bucketSecretName, namespace)}",
-    "COLDSTORAGE_AWS_REGION=${getEnvironmentVariable('region', bucketSecretName, namespace)}",
-    "COLDSTORAGE_AWS_BUCKET_PREFIX=${bucketPrefix}"
-  ]
-  return envVars
-}
-
-String getEnvironmentVariable(String secretKey, String secretName, String namespace) {
-  return sh(script: "jx step credential -s ${secretName} -n ${namespace} -k ${secretKey}", returnStdout: true)
-}
-
-def runBackEndUnitTests() {
-  return {
-    stage('backend') {
-      container('maven') {
-        script {
-          try {
-            echo '''
-              ----------------------------------------
-              Run BackEnd Unit tests
-              ----------------------------------------
-            '''
-            def envVars = getAwsEnvironnmentVariables(
-              "${AWS_BUCKET_SECRET_NAME}", "${AWS_CREDENTIAL_SECRET_NAME}",
-              "${AWS_SECRET_NAMESPACE}",  "${BUCKET_PREFIX}-unit-tests"
-            )
-            withEnv(envVars) {
-              sh """
-                mvn ${MAVEN_ARGS} -V -T0.8C test
-              """
-            }
-          } catch (err) {
-            throw err
-          } finally {
-            junit allowEmptyResults: true, testResults: "**/target/surefire-reports/*.xml"
-          }
-        }
-      }
-    }
-  }
-}
+def containerLabel = 'maven'
+def mcontainers = [
+  'dev': 'maven',
+  'mongodb': 'maven-mongodb',
+  'pgsql': 'maven-pgsql',
+]
+def targetTestEnvs = ['dev', 'mongodb', 'pgsql',]
 
 def runFrontEndUnitTests() {
   return {
@@ -110,18 +69,6 @@ def runFrontEndUnitTests() {
   }
 }
 
-void setupKaniko(String skaffoldVersion) {
-  echo "Install recent version of skaffold: ${skaffoldVersion}"
-  sh """
-    skaffold version
-    curl -Lo skaffold \
-    https://github.com/GoogleContainerTools/skaffold/releases/download/${skaffoldVersion}/skaffold-linux-amd64 && \
-    install skaffold /usr/bin/
-    skaffold version
-  """
-}
-
-
 pipeline {
   agent {
     label 'builder-maven-nuxeo-11'
@@ -153,7 +100,7 @@ pipeline {
     REFERENCE_BRANCH = 'lts-2021'
     IS_REFERENCE_BRANCH = "${BRANCH_NAME == REFERENCE_BRANCH}"
     SLACK_CHANNEL = "${env.DRY_RUN == 'true' ? 'infra-napps' : 'napps-notifs'}"
-    SKAFFOLD_VERSION = 'v1.26.1'
+    UNIT_TEST_NAMESPACE_SUFFIX = "${APP_NAME}-${BRANCH_LC}".toLowerCase()
   }
   stages {
     stage('Set Labels') {
@@ -171,6 +118,7 @@ pipeline {
           script {
             nxNapps.setup()
             env.VERSION = nxNapps.getRCVersion()
+            env.PACKAGE_FILENAME = "nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-${VERSION}.zip"
             sh 'env'
           }
         }
@@ -215,21 +163,80 @@ pipeline {
         }
       }
     }
-    stage('Run Unit Tests') {
+    stage('Run runtime unit tests') {
       steps {
-        script {
-          def stages = [:]
-          stages['backend'] = runBackEndUnitTests()
-          stages['frontend'] = runFrontEndUnitTests()
-          gitHubBuildStatus('utests/backend')
-          gitHubBuildStatus('utests/frontend')
-          parallel stages
+        container(containerLabel) {
+          script {
+            def stages = [:]
+            def envVars = nxNapps.getEnvironmentVariables(
+                "${APP_NAME}", "${AWS_BUCKET_SECRET_NAME}", "${AWS_CREDENTIAL_SECRET_NAME}",
+                "${AWS_SECRET_NAMESPACE}", "${UNIT_TEST_NAMESPACE_SUFFIX}-${env}"
+              )
+            stages['backend'] = nxNapps.runBackendUnitTests(envVars)
+            stages['frontend'] = runFrontEndUnitTests()
+            gitHubBuildStatus('utests/backend')
+            gitHubBuildStatus('utests/frontend')
+            parallel stages
+          }
         }
       }
       post {
         always {
           gitHubBuildStatus('utests/backend')
           gitHubBuildStatus('utests/frontend')
+        }
+      }
+    }
+    stage('Deploy Env') {
+      steps {
+        script {
+          def stages = [:]
+          targetTestEnvs.each { env ->
+            String containerName = mcontainers["${env}"]
+            stages["Deploy - ${env}"] =
+              nxKube.helmDeployUnitTestEnvStage(
+                "${containerName}", "${env}", "${UNIT_TEST_NAMESPACE_SUFFIX}-${env}", 'ci/helm/utests'
+              )
+          }
+          parallel stages
+        }
+      }
+    }
+    stage('Unit Tests') {
+      steps {
+        container(containerLabel) {
+          script {
+            gitHubBuildStatus('utests')
+            def stages = [:]
+            def parameters = [:]
+            targetTestEnvs.each { env ->
+              String containerName = mcontainers["${env}"]
+              String namespace  = "${UNIT_TEST_NAMESPACE_SUFFIX}-${env}"
+              parameters["${env}"] = nxNapps.getEnvironmentVariables(
+                "${APP_NAME}", "${AWS_BUCKET_SECRET_NAME}", "${AWS_CREDENTIAL_SECRET_NAME}",
+                "${AWS_SECRET_NAMESPACE}",  "${namespace}"
+              )
+              stages["JUnit - ${env}"] = nxNapps.runUnitTestStage("${containerName}", "${env}", "${WORKSPACE}", "${namespace}", parameters["${env}"])
+            }
+            parallel stages
+          }
+        }
+      }
+      post {
+        always {
+          script {
+            try {
+              targetTestEnvs.each { env ->
+                container(containerLabel) {
+                  nxKube.helmDestroyUnitTestsEnv(
+                    "${UNIT_TEST_NAMESPACE_SUFFIX}-${env}"
+                  )
+                }
+              }
+            } finally {
+              gitHubBuildStatus('utests')
+            }
+          }
         }
       }
     }
@@ -255,10 +262,8 @@ pipeline {
         container('maven') {
           script {
             gitHubBuildStatus('docker/build')
-            setupKaniko("${SKAFFOLD_VERSION}")
             nxNapps.dockerBuild(
-              "${WORKSPACE}/nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-*.zip",
-              "${WORKSPACE}/ci/docker","${WORKSPACE}/ci/docker/skaffold.yaml"
+              "${PACKAGE_FILENAME}", "${WORKSPACE}/ci/docker", "${WORKSPACE}/ci/docker/skaffold.yaml"
             )
           }
         }
@@ -285,12 +290,12 @@ pipeline {
         }
       }
     }
-    stage('Deploy ColdStorage Preview') {
+    stage('Deploy Preview') {
       steps {
         container('maven') {
           script {
             nxKube.helmDeployPreview(
-              "${PREVIEW_NAMESPACE}", "${CHART_DIR}", "${repositoryUrl}", "${IS_REFERENCE_BRANCH}"
+              "${PREVIEW_NAMESPACE}", "${CHART_DIR}", "${GIT_URL}", "${IS_REFERENCE_BRANCH}"
             )
           }
         }
@@ -378,8 +383,7 @@ pipeline {
                   Upload Coldstorage Package ${VERSION} to ${CONNECT_PREPROD_URL}
                   -------------------------------------------------------------
                 """
-                String packageFile = "nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-${VERSION}.zip"
-                connectUploadPackage("${packageFile}", 'connect-preprod', "${CONNECT_PREPROD_URL}")
+                connectUploadPackage("${PACKAGE_FILENAME}", 'connect-preprod', "${CONNECT_PREPROD_URL}")
               }
             }
           }
