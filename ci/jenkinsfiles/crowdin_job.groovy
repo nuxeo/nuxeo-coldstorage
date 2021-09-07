@@ -17,7 +17,7 @@
  *     Abdoul BA <aba@nuxeo.com>
  *     Nuno Cunha <ncunha@nuxeo.com>
  */
-library identifier: 'nuxeo-napps-tools@0.0.10', retriever: modernSCM(
+library identifier: 'nuxeo-napps-tools@0.0.13', retriever: modernSCM(
         [$class       : 'GitSCMSource',
          credentialsId: 'jx-pipeline-git-github',
          remote       : 'https://github.com/nuxeo/nuxeo-napps-tools.git'])
@@ -28,6 +28,13 @@ repositoryUrl = 'https://github.com/nuxeo/nuxeo-coldstorage/'
 pipeline {
   agent {
     label 'jenkins-python37'
+  }
+  triggers {
+    cron('H 6 * * *')
+    upstream(
+      threshold: hudson.model.Result.SUCCESS,
+      upstreamProjects: 'nuxeo/nuxeo-coldstorage/lts-2021',
+    )
   }
   options {
     disableConcurrentBuilds()
