@@ -1,0 +1,31 @@
+nuxeo:
+  enable: false
+redis:
+  master:
+    podLabels:
+      branch: $BRANCH_NAME
+      resource: pod
+      team: napps
+      usage: utests
+    service:
+      labels:
+        branch: $BRANCH_NAME
+        resource: service
+        team: napps
+        usage: utests
+  tolerations:
+    - key: team
+      operator: Equal
+      value: napps
+      effect: NoSchedule
+  nodeSelector:
+    team: napps
+  resources:
+    requests:
+      cpu: 500m
+      memory: 250Mi
+    limits:
+      cpu: 1
+      memory: 500Mi
+tags:
+  redis: true
