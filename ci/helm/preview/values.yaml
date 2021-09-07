@@ -43,7 +43,19 @@ nuxeo:
       pullPolicy: Always
     persistence:
       enabled: disable
-    packages: nuxeo-dam nuxeo-web-ui amazon-s3-online-storage ${JSF_ENABLED} /packages/nuxeo-coldstorage-package.zip
+    packages: nuxeo-dam nuxeo-web-ui amazon-s3-online-storage nuxeo-jsf-ui /packages/nuxeo-coldstorage-package.zip
+    livenessProbe:
+      initialDelaySeconds: 420
+      periodSeconds: 20
+      successThreshold: 1
+      failureThreshold: 5
+      timeoutSeconds: 10
+    readinessProbe:
+        periodSeconds: 20
+        initialDelaySeconds: 420
+        successThreshold: 1
+        timeoutSeconds: 10
+        failureThreshold: 5
     custom_params: |-
       # AWS
       nuxeo.aws.accessKeyId=${env:AWS_ACCESS_KEY}
