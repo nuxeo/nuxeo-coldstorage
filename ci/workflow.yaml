@@ -1,0 +1,61 @@
+aws:
+  enable: true
+  credential: 'aws-iam-user-credentials'
+  buckets: 'aws-config-napps'
+  namespace: 'napps'
+debug: true
+npm:
+  install:
+    enable: true
+    command: |
+      cd nuxeo-coldstorage-web
+      npm install
+  lint:
+    enable: true
+    allowFailure: true
+package: 'nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-*.zip'
+preview:
+  enable: true
+  docker:
+    context: 'ci/docker'
+    skaffold: 'ci/docker/skaffold.yaml'
+publish:
+  connect:
+    enable: true
+    release:
+      connect-prod: 'https://connect.nuxeo.com/nuxeo'
+      connect-preprod: 'https://nos-preprod-connect.nuxeocloud.com/nuxeo'
+    integration:
+     #connect-prod: 'https://connect.nuxeo.com/nuxeo'
+     connect-preprod: 'https://nos-preprod-connect.nuxeocloud.com/nuxeo'
+  github: true
+  maven: true
+runFtest:
+  enable: true
+runUtest:
+  backend:
+    enable: true
+  frontend:
+    enable: true
+    command: |
+      cd nuxeo-coldstorage-web
+      npm install playwright
+      npm install
+      npm run test
+    container: 'playwright'
+  multipleEnv: true
+mcontainers:
+  dev: 'maven'
+  mongodb: 'maven-mongodb'
+  pgsql: 'maven-pgsql'
+targetTestEnvs:
+  - dev
+  - mongodb
+  - pgsql
+slack:
+  enable: true
+  channel: 'napps-notifs'
+sonar:
+  enable: true
+  project: 'nuxeo_nuxeo-coldstorage'
+  secret: 'sonar-coldstorage'
