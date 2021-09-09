@@ -18,7 +18,11 @@
 */
 
 /* Using a version specifier, such as branch, tag, etc */
-library "nuxeo-napps-tools@0.0.7"
+library identifier: 'nuxeo-napps-tools@0.0.10', retriever: modernSCM(
+        [$class       : 'GitSCMSource',
+         credentialsId: 'jx-pipeline-git-github',
+         remote       : 'https://github.com/nuxeo/nuxeo-napps-tools.git'])
+
 
 def appName = 'nuxeo-coldstorage'
 def containerLabel = 'maven'
@@ -58,7 +62,7 @@ pipeline {
     JENKINS_HOME = '/root'
     MAVEN_DEBUG = '-e'
     MAVEN_OPTS = "${MAVEN_OPTS} -Xms512m -Xmx3072m"
-    NUXEO_BASE_IMAGE = 'docker-private.packages.nuxeo.com/nuxeo/nuxeo:10.10-HF51'
+    NUXEO_BASE_IMAGE = 'docker-private.packages.nuxeo.com/nuxeo/nuxeo:10.10-HF52'
     ORG = 'nuxeo'
     PREVIEW_NAMESPACE = "${APP_NAME}-${BRANCH_LC}-release"
     PREVIEW_URL = "https://preview-${PREVIEW_NAMESPACE}.napps.dev.nuxeo.com"

@@ -10,6 +10,7 @@ expose:
     tlsacme: true
     tlsSecretName: napps-tls
     urltemplate: '"{{.Service}}-{{.Namespace}}.{{.Domain}}"'
+  image: jenkinsxio/exposecontroller:latest
 
 cleanup:
   Args:
@@ -43,8 +44,8 @@ nuxeo:
       pullPolicy: Always
     persistence:
       enabled: disable
-    packages: nuxeo-dam nuxeo-web-ui amazon-s3-online-storage ${JSF_ENABLED} /packages/nuxeo-coldstorage-package.zip
-    custom_params: |-
+    packages: nuxeo-dam nuxeo-web-ui amazon-s3-online-storage nuxeo-jsf-ui /packages/nuxeo-coldstorage-package.zip
+    customParams: |-
       # AWS
       nuxeo.aws.accessKeyId=${env:AWS_ACCESS_KEY}
       nuxeo.aws.secretKey=${env:AWS_ACCESS_SECRET}
@@ -53,7 +54,7 @@ nuxeo:
       nuxeo.s3storage.bucket=${env:AWS_S3_BUCKET}
       nuxeo.aws.glacier.bucket=${env:AWS_S3_GLACIER_BUCKET}
       nuxeo.aws.glacier.bucket_prefix=${env:AWS_S3_BUCKET_PREFIX}
-    custom_envs:
+    customEnvs:
       - name: NUXEO_CLID
         valueFrom:
           secretKeyRef:
