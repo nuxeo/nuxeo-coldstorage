@@ -17,7 +17,10 @@
  *     Abdoul BA <aba@nuxeo.com>
  *     Nuno Cunha <ncunha@nuxeo.com>
  */
-library identifier: "nuxeo-napps-tools@0.0.6"
+library identifier: 'nuxeo-napps-tools@0.0.10', retriever: modernSCM(
+        [$class       : 'GitSCMSource',
+         credentialsId: 'jx-pipeline-git-github',
+         remote       : 'https://github.com/nuxeo/nuxeo-napps-tools.git'])
 
 appName = 'nuxeo-coldstorage'
 repositoryUrl = 'https://github.com/nuxeo/nuxeo-coldstorage/'
@@ -38,7 +41,7 @@ pipeline {
       description: 'Folder inside Crowdin\'s project from which download or upload of message files take place. Leave empty for root.'
     )
     string(name: 'FORMAT', defaultValue: 'json', description: 'The format of the Crowdin project.')
-    string(name: 'BRANCH', defaultValue: 'master', description: '')
+    string(name: 'BRANCH', defaultValue: 'lts-2021', description: '')
     string(name: 'JIRA', defaultValue: '', description: 'JIRA issue to be used in automated commit message.')
     booleanParam(
       name: 'UPDATE_CROWDIN_FROM_NUXEO', defaultValue: true,
@@ -62,6 +65,7 @@ pipeline {
     INPUT_FILE = "${PROJECT_PATH}/nuxeo-coldstorage-web/i18n/messages.json"
     OUTPUT_FOLDER = "${PROJECT_PATH}/nuxeo-coldstorage-web/i18n"
     ORG = 'nuxeo'
+    SLACK_CHANNEL = "${env.DRY_RUN == 'true' ? 'infra-napps' : 'napps-notifs'}"
   }
   stages {
     stage('Check parameters') {
@@ -100,18 +104,16 @@ pipeline {
             Setup
             ----------------------------------------
           '''
-          withCredentials([usernamePassword(credentialsId: 'jx-pipeline-git-github', usernameVariable: 'username', passwordVariable: 'password')]) {
-            withEnv(["USERNAME=${username}", "PASSWORD=${password}"]) {
-              sh '''
-                # create the Git credentials
-                jx step git credentials
-                git config credential.helper store
-                git clone -b $CROWDIN_TOOL_VERSION \
-                  https://$USERNAME:$PASSWORD@github.com/nuxeo/tools-nuxeo-crowdin.git $CROWDIN_TOOL_FOLDER
-                python -m pip install --user -r $CROWDIN_TOOL_FOLDER/requirements.txt
-                chmod +x $CROWDIN_TOOL_FOLDER/jenkins/*.sh
-              '''
-            }
+          withCredentials([usernamePassword(credentialsId: 'jx-pipeline-git-github', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+            sh '''
+              # create the Git credentials
+              jx step git credentials
+              git config credential.helper store
+              git clone -b $CROWDIN_TOOL_VERSION \
+                https://$USERNAME:$PASSWORD@github.com/nuxeo/tools-nuxeo-crowdin.git $CROWDIN_TOOL_FOLDER
+              python -m pip install --user -r $CROWDIN_TOOL_FOLDER/requirements.txt
+              chmod +x $CROWDIN_TOOL_FOLDER/jenkins/*.sh
+            '''
           }
         }
       }
@@ -120,21 +122,18 @@ pipeline {
       steps {
         container('python') {
           script {
-            def crowdinToken = sh(script: 'kubectl get secret jenkins-secrets -n ${NAMESPACE} -o=jsonpath=\'{.data.CROWDIN_NUXEO_TOKEN}\' | base64 --decode', returnStdout: true)
-            def crowdinUser = sh(script: 'kubectl get secret jenkins-secrets -n ${NAMESPACE} -o=jsonpath=\'{.data.CROWDIN_NUXEO_USER}\' | base64 --decode', returnStdout: true)
-            withEnv([
-                "CROWDIN_API_KEY=${crowdinToken}",
-                "CROWDIN_USER=${crowdinUser}"
-              ]) {
+            def crowdinToken = sh(script: 'kubectl get secrets jenkins-casc -n ${NAMESPACE} -o=jsonpath=\'{.data.crowdinToken}\' | base64 --decode', returnStdout: true)
+            def crowdinUser = sh(script: 'kubectl get secrets jenkins-casc -n ${NAMESPACE} -o=jsonpath=\'{.data.crowdinUser}\' | base64 --decode', returnStdout: true)
+            withEnv(["CROWDIN_API_KEY=${crowdinToken}", "CROWDIN_USER=${crowdinUser}"]) {
               echo '''
                 ----------------------------------------
                 Run Translation
                 ----------------------------------------
               '''
-              sh """
+              sh '''
                 echo "Start synchronization"
-                bash -xe ${WORKSPACE}/tools-nuxeo-crowdin/jenkins/sync_nuxeo_web_ui_crowdin.sh
-              """
+                bash -xe $WORKSPACE/tools-nuxeo-crowdin/jenkins/sync_nuxeo_web_ui_crowdin.sh
+              '''
             }
           }
         }
@@ -143,17 +142,12 @@ pipeline {
     }
   }
   post {
-    failure {
+    unsuccessful {
       script {
         // update Slack Channel
         String message = "${JOB_NAME} - #${BUILD_NUMBER} ${currentBuild.currentResult} (<${BUILD_URL}|Open>)"
-        slackBuildStatus("${SLACK_CHANNEL}", "${message}", 'danger')
+        slackBuildStatus("${SLACK_CHANNEL}", "${message}", 'gray')
       }
-    }
-    unstable {
-      // update Slack Channel
-      String message = "${JOB_NAME} - #${BUILD_NUMBER} ${currentBuild.currentResult} (<${BUILD_URL}|Open>)"
-      slackBuildStatus("${SLACK_CHANNEL}", "${message}", 'gray')
     }
   }
 }
