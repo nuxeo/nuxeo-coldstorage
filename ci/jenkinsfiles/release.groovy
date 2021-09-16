@@ -18,7 +18,7 @@
 */
 
 /* Using a version specifier, such as branch, tag, etc */
-library identifier: 'nuxeo-napps-tools@0.0.9', retriever: modernSCM(
+library identifier: 'nuxeo-napps-tools@0.0.10', retriever: modernSCM(
         [$class       : 'GitSCMSource',
          credentialsId: 'jx-pipeline-git-github',
          remote       : 'https://github.com/nuxeo/nuxeo-napps-tools.git'])
@@ -80,7 +80,7 @@ def runFrontEndUnitTests() {
 
 pipeline {
   agent {
-    label 'builder-maven-nuxeo-11'
+    label 'builder-maven-nuxeo-lts-2021'
   }
   parameters {
     string(name: 'BUILD_VERSION', description: 'Version to be promoted')
@@ -420,8 +420,7 @@ pipeline {
                   ------------------------------------------------------------
                 """
                 if (env.DRY_RUN_RELEASE == 'false') {
-                  String packageFile = "nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-${VERSION}.zip"
-                  connectUploadPackage.set("${packageFile}", 'connect-preprod', "${CONNECT_PREPROD_URL}")
+                  connectUploadPackage("${PACKAGE_FILENAME}", 'connect-prod', "${CONNECT_PROD_URL}")
                 }
               }
             }
@@ -430,7 +429,7 @@ pipeline {
             always {
               archiveArtifacts (
                 allowEmptyArchive: true,
-                artifacts: 'nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-*.zip'
+                artifacts: "${PACKAGE_FILENAME}"
               )
             }
           }

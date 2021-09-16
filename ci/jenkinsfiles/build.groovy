@@ -17,7 +17,7 @@
 *     Abdoul BA <aba@nuxeo.com>
 */
 /* Using a version specifier, such as branch, tag, etc */
-library identifier: 'nuxeo-napps-tools@0.0.9', retriever: modernSCM(
+library identifier: 'nuxeo-napps-tools@0.0.10', retriever: modernSCM(
         [$class       : 'GitSCMSource',
          credentialsId: 'jx-pipeline-git-github',
          remote       : 'https://github.com/nuxeo/nuxeo-napps-tools.git'])
@@ -74,7 +74,7 @@ def runFrontEndUnitTests() {
 
 pipeline {
   agent {
-    label 'builder-maven-nuxeo-11'
+    label 'builder-maven-nuxeo-lts-2021'
   }
   options {
     disableConcurrentBuilds()
