@@ -53,9 +53,5 @@ targetTestEnvs:
   - mongodb
   - pgsql
 slack:
-  enable: true
+  enable: false
   channel: 'napps-notifs'
-sonar:
-  enable: true
-  project: 'nuxeo_nuxeo-coldstorage'
-  secret: 'sonar-coldstorage'
