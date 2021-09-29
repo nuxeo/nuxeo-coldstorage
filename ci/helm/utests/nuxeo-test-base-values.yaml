@@ -3,13 +3,13 @@ nuxeo:
 redis:
   master:
     podLabels:
-      branch: $BRANCH_NAME
+      branch: $BRANCH_LC
       resource: pod
       team: napps
       usage: utests
     service:
       labels:
-        branch: $BRANCH_NAME
+        branch: $BRANCH_LC
         resource: service
         team: napps
         usage: utests
