@@ -1,12 +1,12 @@
 postgresql:
   podLabels:
-    branch: $BRANCH_NAME
+    branch: $BRANCH_LC
     resource: pod
     team: napps
     usage: utests
   master:
     labels:
-      branch: "$BRANCH_NAME"
+      branch: "$BRANCH_LC"
       resource: deployment
       team: napps
       usage: utests
