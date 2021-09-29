@@ -53,5 +53,5 @@ targetTestEnvs:
   - mongodb
   - pgsql
 slack:
-  enable: false
+  enable: true
   channel: 'napps-notifs'
