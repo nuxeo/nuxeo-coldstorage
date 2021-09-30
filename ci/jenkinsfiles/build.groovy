@@ -17,7 +17,7 @@
 *     Abdoul BA <aba@nuxeo.com>
 */
 /* Using a version specifier, such as branch, tag, etc */
-library identifier: 'nuxeo-napps-tools@0.0.13', retriever: modernSCM(
+library identifier: 'nuxeo-napps-tools@0.0.14', retriever: modernSCM(
         [$class       : 'GitSCMSource',
          credentialsId: 'jx-pipeline-git-github',
          remote       : 'https://github.com/nuxeo/nuxeo-napps-tools.git'])
