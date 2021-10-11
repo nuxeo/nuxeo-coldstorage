@@ -31,7 +31,6 @@
     ]
   },
   "scripts": {
-    "build": "rollup -c",
     "lint": "npm run lint:eslint && npm run lint:polymer && npm run lint:prettier",
     "lint:eslint": "eslint . --ext .js,.mjs,.html",
     "lint:polymer": "polymer lint",

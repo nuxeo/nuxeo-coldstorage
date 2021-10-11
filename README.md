@@ -34,14 +34,6 @@ This will build all the modules except _ci_ and generate the correspondent artif
 `nuxeo-coldstorage-web` module is also generating a _`.jar`_ file containing all the artifacts needed for an integration with Nuxeo's ecosystem.
 Nevertheless this contribution is basically generating an ES Module ready for being integrated with Nuxeo Web UI.
 
-It is possible to isolate this part of the build by running the following command:
-
-```shell script
-npm run build
-```
-
-It is using [rollup.js](https://rollupjs.org/guide/en/) to build, optimize and minify the code, making it ready for deployment.
-
 ## Test
 
 In a similar way to what was written above about the building process, it is possible to run tests against each one of the modules.
