@@ -6,9 +6,10 @@
   </description>
   <home-page>https://doc.nuxeo.com/coldstorage/</home-page>
   <vendor>Nuxeo</vendor>
-  <platforms>
-    <platform>@DISTRIBUTION_NAME@-@NUXEO_TARGET_VERSION@</platform>
-  </platforms>
+  <target-platform>
+    <name>@DISTRIBUTION_NAME@</name>
+    <version>[@NUXEO_PLATFORM_VERSION@,)</version>
+  </target-platform>
   <!-- Dependencies on other packages -->
   <dependencies>
     <package>amazon-s3-online-storage</package>

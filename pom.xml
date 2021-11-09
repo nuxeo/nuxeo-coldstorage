@@ -16,10 +16,6 @@
     compliance, etc.
   </description>
 
-  <properties>
-    <nuxeo.target.version>2021.*</nuxeo.target.version>
-  </properties>
-
   <modules>
     <module>nuxeo-coldstorage</module>
     <module>nuxeo-coldstorage-package</module>
