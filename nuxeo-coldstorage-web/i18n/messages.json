@@ -16,7 +16,7 @@
   "documentContentView.restoreFromColdStorage.description": "This will undo the "Send to cold storage" action on the file.",
   "documentContentView.restoreFromColdStorage.label": "Restore file from cold storage.",
   "documentContentView.restoreFromColdStorage.tooltip": "Restore file from cold storage.",
-  "documentContentView.restoreFromColdStorage.success": "Begin restoring the file from cold storage.",
+  "documentContentView.restoreFromColdStorage.success": "File restoration from cold storage has started.",
   "documentContentView.restoreFromColdStorage.error": "Error restoring the file from cold storage.",
   "documentContentView.retrieveFromColdStorage.confirm" : "Confirm",
   "documentContentView.retrieveFromColdStorage.cancel" : "Cancel",
