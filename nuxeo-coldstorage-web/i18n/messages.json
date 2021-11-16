@@ -24,7 +24,7 @@
   "documentContentView.retrieveFromColdStorage.description": "This will result in an asynchronous action and you will receive an email once the file is ready.",
   "documentContentView.retrieveFromColdStorage.label": "Retrieve file from cold storage",
   "documentContentView.retrieveFromColdStorage.tooltip": "Retrieve file from cold storage",
-  "documentContentView.retrieveFromColdStorage.success": "Begin restoring the file from cold storage.",
+  "documentContentView.retrieveFromColdStorage.success": "File restoration from cold storage has started.",
   "documentContentView.retrieveFromColdStorage.error": "Error retrieving file from cold storage.",
   "label.security.permission.writeColdStorage": "WriteColdStorage",
   "moveDocumentsContentsToColdStorage.ask.confirmation": "Send the documents file's to cold storage?",
