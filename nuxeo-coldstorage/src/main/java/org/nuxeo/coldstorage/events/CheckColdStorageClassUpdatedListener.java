@@ -34,7 +34,7 @@ import org.nuxeo.runtime.api.Framework;
 /**
  * An asynchronous listener that checks if the storage class has been updated.
  *
- * @apiNote: This listener is designed to be called from a scheduler.
+ * @apiNote This listener is designed to be called from a scheduler.
  * @since 10.10
  */
 public class CheckColdStorageClassUpdatedListener implements PostCommitEventListener {
@@ -47,7 +47,7 @@ public class CheckColdStorageClassUpdatedListener implements PostCommitEventList
         List<String> repositoryNames = Framework.getService(RepositoryService.class).getRepositoryNames();
         ColdStorageService service = Framework.getService(ColdStorageService.class);
         for (String repository : repositoryNames) {
-            CoreSession coreSession = CoreInstance.getCoreSession(repository);
+            CoreSession coreSession = CoreInstance.getCoreSessionSystem(repository);
             service.checkColdStorageClass(coreSession);
         }
         log.debug("End checking storage class for cold storage content");
