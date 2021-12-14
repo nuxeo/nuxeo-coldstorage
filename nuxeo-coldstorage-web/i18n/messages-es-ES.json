@@ -1,7 +1,7 @@
 {
-  "documentContentView.infobar.storedInColdStorage": "This is a low resolution preview. The original file can be requested by clicking on retrieve file action.",
-  "documentContentView.infobar.beingRetrieved": "This is a low resolution preview. The original file has been requested. An email notification will be sent when it is available.",
-  "documentContentView.infobar.retrieved": "This is a low resolution preview. The original file will be available until {0}",
+  "documentContentView.infobar.storedInColdStorage": "This is a preview version of the file. The original file can be requested by clicking on the \"retrieve file\" action.",
+  "documentContentView.infobar.beingRetrieved": "This is a preview version of the file. A retrieval of the original file has been requested. An email notification will be sent when the original file is available.",
+  "documentContentView.infobar.retrieved": "This is a preview version of the file. You can download the temporarily retrieved original file until {0}.",
   "documentContentView.moveToColdStorage.ask.confirmation": "¿Enviar el contenido del documento al almacenamiento en frío?",
   "documentContentView.moveToColdStorage.cancel": "Cancelar",
   "documentContentView.moveToColdStorage.confirm": "Confirmar",
