@@ -53,7 +53,7 @@ class ColdStorageInfobar extends mixinBehaviors([FiltersBehavior, FormatBehavior
             <div class="layout horizontal center flex">
               <iron-icon noink icon="coldstorage:default"></iron-icon>
               <span class="storedInColdStorage"> [[_title]] </span>
-              <dom-if if="[[_isDocRetrieved()]]">
+              <dom-if if="[[_isDocRetrieved]]">
                 <template>
                   <nuxeo-download-button document="[[document]]" show-label="true"></nuxeo-download-button>
                 </template>
@@ -86,6 +86,10 @@ class ColdStorageInfobar extends mixinBehaviors([FiltersBehavior, FormatBehavior
         type: String,
         computed: '_getTitle(document)',
       },
+      _isDocRetrieved: {
+        type: Boolean,
+        computed: '_computeDocRetrieved(_documentStatus)',
+      },
     };
   }
 
@@ -93,7 +97,7 @@ class ColdStorageInfobar extends mixinBehaviors([FiltersBehavior, FormatBehavior
     return this.hasFacet(doc, 'ColdStorage') && doc.properties && doc.properties['coldstorage:coldContent'];
   }
 
-  _isDocRetrieved() {
+  _computeDocRetrieved() {
     return this._documentStatus === 'retrieved';
   }
 
