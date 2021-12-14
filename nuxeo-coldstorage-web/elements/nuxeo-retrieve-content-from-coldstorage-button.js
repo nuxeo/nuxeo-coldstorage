@@ -42,9 +42,8 @@ class RetrieveFromColdStorage extends mixinBehaviors([FiltersBehavior, FormatBeh
       <style include="nuxeo-action-button-styles nuxeo-styles"></style>
       <nuxeo-operation id="opRetrieve" op="Document.RequestRetrievalFromColdStorage" input="[[document.uid]]">
       </nuxeo-operation>
-      <nuxeo-connection id="nxcon" user="{{currentUser}}"></nuxeo-connection>
 
-      <dom-if if="[[_isAvailable(document, currentUser)]]">
+      <dom-if if="[[_isAvailable(document)]]">
         <template>
           <div class="action" on-click="_toggleDialog">
             <paper-icon-button icon="coldstorage:default" noink></paper-icon-button>
@@ -80,11 +79,6 @@ class RetrieveFromColdStorage extends mixinBehaviors([FiltersBehavior, FormatBeh
        * Input document.
        */
       document: Object,
-
-      /**
-       * Current user.
-       */
-      currentUser: Object,
     };
   }
 
@@ -92,12 +86,11 @@ class RetrieveFromColdStorage extends mixinBehaviors([FiltersBehavior, FormatBeh
     this.$.contentFromRetrieveDialog.toggle();
   }
 
-  _isAvailable(document, currentUser) {
+  _isAvailable(document) {
     return (
       this.hasFacet(document, 'ColdStorage') &&
       document.properties['coldstorage:availableOnColdstorage'] &&
       !document.properties['coldstorage:beingRetrieved'] &&
-      (this.hasAdministrationPermissions(currentUser) || this.hasPermission(document, 'WriteColdStorage')) &&
       this.hasContent(document) &&
       // Don't show the retrieve btn if the file is retrieved and the rendition
       // still available to download
