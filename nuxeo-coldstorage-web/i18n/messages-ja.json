@@ -10,7 +10,7 @@
   "documentContentView.moveToColdStorage.ok": "OK",
   "documentContentView.moveToColdStorage.description": "これにより、検索時間が長くなります。ファイル形式に応じて、低い解像度のプレビューが使用されます。",
   "documentContentView.moveToColdStorage.success": "ファイルは正常にコールドストレージに移動されました。",
-  "documentContentView.moveToColdStorage.tooltip": "コールドストレージに送信する",
+  "documentContentView.moveToColdStorage.tooltip": "ファイルをコールドストレージに送信",
   "documentContentView.restoreFromColdStorage.confirm": "確定する",
   "documentContentView.restoreFromColdStorage.cancel": "キャンセル",
   "documentContentView.restoreFromColdStorage.ask.confirmation": "コールドストレージからファイルを復元しますか？",
