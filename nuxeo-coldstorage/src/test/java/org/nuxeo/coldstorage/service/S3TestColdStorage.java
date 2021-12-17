@@ -57,7 +57,7 @@ public class S3TestColdStorage extends AbstractTestColdStorageService {
         assertEquals(Boolean.TRUE,
                 documentModel.getPropertyValue(ColdStorageConstants.COLD_STORAGE_BEING_RETRIEVED_PROPERTY));
 
-        assertEquals(Boolean.TRUE, s3TestHelper.isBlobContentBeingRetrieved(documentModel));
+        assertEquals(Boolean.TRUE, ColdStorageServiceImpl.getBlobStatus(documentModel).isOngoingRestore());
     }
 
     @Override
