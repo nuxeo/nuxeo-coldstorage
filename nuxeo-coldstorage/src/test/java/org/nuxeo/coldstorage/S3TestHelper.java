@@ -40,7 +40,6 @@ import com.amazonaws.services.s3.model.CopyObjectRequest;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest;
 import com.amazonaws.services.s3.model.DeleteObjectsResult;
 import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.StorageClass;
 
 public class S3TestHelper {
@@ -175,27 +174,6 @@ public class S3TestHelper {
             log.info("ColdStorage Blob key {} doesn't exist", blobKey);
         }
 
-    }
-
-    /**
-     * Checks if the document's S3 blob is being retrieved.
-     *
-     * @param document the document
-     * @return {@code true} if the blob's document is being retrieved from {@code Glacier} storage, {@code false}
-     *         otherwise
-     */
-    public boolean isBlobContentBeingRetrieved(DocumentModel document) {
-        boolean restoreFlag = false;
-        AmazonS3 amazonS3 = getAmazonS3("glacier");
-        String blobKey = getBlobKey(document, ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY);
-        log.info("ColdStorage Blob key {}", blobKey);
-        if (amazonS3.doesObjectExist(glacierBucket, blobKey)) {
-            ObjectMetadata response = amazonS3.getObjectMetadata(glacierBucket, blobKey);
-            restoreFlag = response.getOngoingRestore();
-        } else {
-            log.info("ColdStorage Blob key {} doesn't exist", blobKey);
-        }
-        return restoreFlag;
     }
 
     public String getBlobKey(DocumentModel document, String blobProperty) {

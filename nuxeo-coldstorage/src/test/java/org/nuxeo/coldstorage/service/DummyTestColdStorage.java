@@ -52,26 +52,28 @@ public class DummyTestColdStorage extends AbstractTestColdStorageService {
         Instant downloadableUntil = Instant.now().plus(7, ChronoUnit.DAYS);
         transactionalFeature.nextTransaction();
 
+        // Create a blob of which retrieval was requested and that is retrieved
         BlobStatus coldContentStatusOfFile1 = new BlobStatus().withDownloadable(true)
                                                               .withDownloadableUntil(downloadableUntil);
         addColdStorageContentBlobStatus(documents.get(0), coldContentStatusOfFile1);
 
-        BlobStatus coldContentStatusOfFile2 = new BlobStatus().withDownloadable(false);
+        // Create a blob of which retrieval was requested and that is still being retrieved
+        BlobStatus coldContentStatusOfFile2 = new BlobStatus().withDownloadable(false).withOngoingRestore(true);
         addColdStorageContentBlobStatus(documents.get(1), coldContentStatusOfFile2);
 
-        BlobStatus coldContentStatusOfFile3 = new BlobStatus().withDownloadable(false);
+        // Create a blob of which retrieval was requested but is no longer retrieved because retrieval time expired
+        BlobStatus coldContentStatusOfFile3 = new BlobStatus().withDownloadable(false).withOngoingRestore(false);
         addColdStorageContentBlobStatus(documents.get(2), coldContentStatusOfFile3);
 
         // only cold content of 'anyFile' is available
-        checkAvailabilityOfDocuments(Collections.singletonList(documents.get(0)), downloadableUntil, 2);
+        checkAvailabilityOfDocuments(Collections.singletonList(documents.get(0)), downloadableUntil, 1);
 
         transactionalFeature.nextTransaction();
 
         coldContentStatusOfFile2.withDownloadable(true).withDownloadableUntil(downloadableUntil);
-        coldContentStatusOfFile3.withDownloadable(true).withDownloadableUntil(downloadableUntil);
 
         // the others 'anyFile2' and 'anyFile3' are now available too
-        checkAvailabilityOfDocuments(Arrays.asList(documents.get(1), documents.get(2)), downloadableUntil, 0);
+        checkAvailabilityOfDocuments(Collections.singletonList(documents.get(1)), downloadableUntil, 0);
     }
 
     protected void addColdStorageContentBlobStatus(String docId, BlobStatus blobStatus) {
