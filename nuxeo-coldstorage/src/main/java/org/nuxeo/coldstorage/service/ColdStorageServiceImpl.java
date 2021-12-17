@@ -420,6 +420,13 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
                     ctx.getProperties().put(COLD_STORAGE_CONTENT_ARCHIVE_LOCATION_MAIL_TEMPLATE_KEY, downloadUrl);
                     eventService.fireEvent(ctx.newEvent(COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME));
                 }
+            } else if(!blobStatus.isOngoingRestore()) {
+                // the blob was probably retrieved and it already went back to cold storage
+                // Let's flag it as not being retrieved
+                log.debug("Document {} is flagged as being retrieved but not its blob", doc::getPath);
+                beingRetrieved--;
+                doc.setPropertyValue(COLD_STORAGE_BEING_RETRIEVED_PROPERTY, false);
+                session.saveDocument(doc);
             }
         }
 
