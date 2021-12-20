@@ -7,7 +7,7 @@
             <property name="awssecret">${nuxeo.aws.secretKey}</property>
             <property name="region">${nuxeo.aws.region}</property>
             <property name="bucket">${nuxeo.aws.glacier.bucket}</property>
-            <property name="bucket_prefix">${nuxeo.aws.glacier.bucket_prefix}/</property>
+            <property name="bucket_prefix">${nuxeo.aws.glacier.bucket_prefix}</property>
             <property name="directdownload">true</property>
             <property name="directdownload.expire">3600</property>
             <property name="cachesize">${nuxeo.s3storage.cachesize}</property>
