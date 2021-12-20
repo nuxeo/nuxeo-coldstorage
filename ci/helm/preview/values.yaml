@@ -53,11 +53,11 @@ nuxeo:
       nuxeo.aws.accessKeyId=${env:AWS_ACCESS_KEY}
       nuxeo.aws.secretKey=${env:AWS_ACCESS_SECRET}
       nuxeo.aws.region=${env:AWS_REGION}
-      nuxeo.s3storage.bucket_prefix=${env:AWS_S3_BUCKET_PREFIX}
       nuxeo.s3storage.bucket=${env:AWS_S3_BUCKET}
+      nuxeo.s3storage.bucket_prefix=${env:AWS_S3_BUCKET_PREFIX}/
       # COLDSTORAGE
       nuxeo.aws.glacier.bucket=${env:AWS_S3_GLACIER_BUCKET}
-      nuxeo.aws.glacier.bucket_prefix=${env:AWS_S3_BUCKET_PREFIX}
+      nuxeo.aws.glacier.bucket_prefix=${env:AWS_S3_BUCKET_PREFIX}/
     customEnvs:
       - name: NUXEO_CLID
         valueFrom:
