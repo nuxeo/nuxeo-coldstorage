@@ -77,6 +77,7 @@ express or implied. See the License for the specific language governing permissi
           this.hasFacet(document, 'ColdStorage')
       && document.properties['coldstorage:availableOnColdstorage']
       && !document.properties['coldstorage:toBeRestored']
+      && !document.properties['coldstorage:beingRestored']
       && (this._hasAdministrationPermissions(currentUser) || this.hasPermission(document, 'WriteColdStorage'))
       && this.hasContent(document)
         );

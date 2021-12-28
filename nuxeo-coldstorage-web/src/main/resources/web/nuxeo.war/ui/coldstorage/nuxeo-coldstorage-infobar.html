@@ -106,6 +106,9 @@ express or implied. See the License for the specific language governing permissi
         if (document.properties['coldstorage:beingRetrieved']) {
           return 'beingRetrieved';
         }
+        if (document.properties['coldstorage:beingRestored']) {
+          return 'beingRestored';
+        }
         if (
           document.properties['coldstorage:downloadableUntil']
       && new Date(document.properties['coldstorage:downloadableUntil']) >= new Date()
