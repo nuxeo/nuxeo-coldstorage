@@ -34,6 +34,8 @@ public class ColdStorageConstants {
 
     public static final String COLD_STORAGE_TO_BE_RESTORED_PROPERTY = "coldstorage:toBeRestored";
 
+    public static final String COLD_STORAGE_BEING_RESTORED_PROPERTY = "coldstorage:beingRestored";
+
     public static final String GET_DOCUMENTS_TO_CHECK_QUERY = String.format(
             "SELECT * FROM Document, Relation WHERE ecm:mixinType = '%s' AND %s = 1", COLD_STORAGE_FACET_NAME, COLD_STORAGE_BEING_RETRIEVED_PROPERTY);
 

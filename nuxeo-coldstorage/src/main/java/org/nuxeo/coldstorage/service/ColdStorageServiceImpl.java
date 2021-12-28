@@ -37,6 +37,7 @@ import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_ST
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_TO_RESTORE_EVENT_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_FACET_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_TO_BE_RESTORED_PROPERTY;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_BEING_RESTORED_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.FILE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.GET_COLDSTORAGE_DOCUMENTS_TO_CHECK_QUERY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.GET_DOCUMENTS_TO_CHECK_QUERY;
@@ -336,6 +337,7 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
                 : (blobStatus.isDownloadable() && blobStatus.getDownloadableUntil() != null);
         if (downloadable) {
             documentModel.setPropertyValue(COLD_STORAGE_TO_BE_RESTORED_PROPERTY, false);
+            documentModel.setPropertyValue(COLD_STORAGE_BEING_RESTORED_PROPERTY, true);
             documentModel = session.saveDocument(documentModel);
             restoreMainContent(documentModel);
         } else {

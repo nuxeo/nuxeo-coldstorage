@@ -109,6 +109,9 @@ class ColdStorageInfobar extends mixinBehaviors([FiltersBehavior, FormatBehavior
     if (document.properties['coldstorage:beingRetrieved']) {
       return 'beingRetrieved';
     }
+    if (document.properties['coldstorage:beingRestored']) {
+      return 'beingRestored';
+    }
     if (
       document.properties['coldstorage:downloadableUntil'] &&
       new Date(document.properties['coldstorage:downloadableUntil']) >= new Date()
