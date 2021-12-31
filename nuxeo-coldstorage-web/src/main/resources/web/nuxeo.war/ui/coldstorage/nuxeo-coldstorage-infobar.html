@@ -35,7 +35,7 @@ express or implied. See the License for the specific language governing permissi
           <div class="layout horizontal center flex">
             <iron-icon noink icon="coldstorage:default"></iron-icon>
             <span class="storedInColdStorage"> [[_title]] </span>
-            <dom-if if="[[_isDocRetrieved(document)]]">
+            <dom-if if="[[_isDocRetrieved]]">
               <nuxeo-download-button document="[[document]]" showLabel></nuxeo-download-button>
             </dom-if>
           </div>
@@ -73,6 +73,11 @@ express or implied. See the License for the specific language governing permissi
             computed: '_getTitle(document)',
           },
 
+          _isDocRetrieved: {
+            type: Boolean,
+            computed: '_computeDocRetrieved(_documentStatus)',
+          },
+
           /**
            *
            * Path of the file object to download.
@@ -89,8 +94,8 @@ express or implied. See the License for the specific language governing permissi
         return this.hasFacet(doc, 'ColdStorage') && doc.properties && doc.properties['coldstorage:coldContent'];
       }
 
-      _isDocRetrieved(document) {
-        return this._getDocumentStatus(document) === 'retrieved';
+      _computeDocRetrieved() {
+        return this._documentStatus === 'retrieved';
       }
 
       _getDocumentStatus(document) {
