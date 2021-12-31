@@ -36,7 +36,11 @@ express or implied. See the License for the specific language governing permissi
             <iron-icon noink icon="coldstorage:default"></iron-icon>
             <span class="storedInColdStorage"> [[_title]] </span>
             <dom-if if="[[_isDocRetrieved]]">
-              <nuxeo-download-button document="[[document]]" showLabel></nuxeo-download-button>
+              <nuxeo-download-button
+                document="[[document]]"
+                xpath="coldstorage:coldContent"
+                show-label
+              ></nuxeo-download-button>
             </dom-if>
           </div>
         </div>
