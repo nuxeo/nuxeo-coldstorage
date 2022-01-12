@@ -20,8 +20,7 @@
         </blobprovider>
     </extension>
     <extension target="org.nuxeo.ecm.core.blob.DocumentBlobManager" point="configuration">
-        <blobdispatcher>
-          <class>org.nuxeo.ecm.core.blob.DefaultBlobDispatcher</class>
+        <blobdispatcher merge="true">
           <property name="blob:xpath=coldstorage:coldContent">glacier</property>
           <property name="default">default</property>
         </blobdispatcher>
