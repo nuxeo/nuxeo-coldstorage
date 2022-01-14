@@ -57,6 +57,8 @@ public class ColdStorageConstants {
 
     public static final String COLD_STORAGE_NUMBER_OF_DAYS_OF_AVAILABILITY_PROPERTY_NAME = "nuxeo.coldstorage.numberOfDaysOfAvailability.value.default";
 
+    public static final String COLD_STORAGE_THUMBNAIL_PREVIEW_REQUIRED_PROPERTY_NAME = "nuxeo.coldstorage.thumbnailPreviewRequired";
+
     // FIXME we have to define the versioning policy for this addon
     public static final String WRITE_COLD_STORAGE = "WriteColdStorage";
 

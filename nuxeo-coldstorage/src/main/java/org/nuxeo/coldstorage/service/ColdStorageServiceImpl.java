@@ -24,6 +24,7 @@ package org.nuxeo.coldstorage.service;
 import static javax.servlet.http.HttpServletResponse.SC_CONFLICT;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
+import static javax.servlet.http.HttpServletResponse.SC_PRECONDITION_FAILED;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_BEING_RETRIEVED_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_ARCHIVE_LOCATION_MAIL_TEMPLATE_KEY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME;
@@ -36,6 +37,7 @@ import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_RE
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_TO_RESTORE_EVENT_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_FACET_NAME;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_THUMBNAIL_PREVIEW_REQUIRED_PROPERTY_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_TO_BE_RESTORED_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_BEING_RESTORED_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.FILE_CONTENT_PROPERTY;
@@ -180,7 +182,16 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
     @Override
     public Blob getRendition(DocumentModel doc, CoreSession session) {
         String renditionName = getRenditionName(doc);
-
+        if (Framework.isBooleanPropertyTrue(COLD_STORAGE_THUMBNAIL_PREVIEW_REQUIRED_PROPERTY_NAME)
+                && "thumbnail".equals(renditionName)) {
+            if (doc.hasFacet(ThumbnailConstants.THUMBNAIL_FACET)
+                    && doc.getPropertyValue(ThumbnailConstants.THUMBNAIL_PROPERTY_NAME) == null) {
+                // We don't want to fall back on the default icon thumbnail
+                throw new NuxeoException(
+                        String.format("No available thumbnail rendition for document %s.", doc.getPath()),
+                        SC_PRECONDITION_FAILED);
+            }
+        }
         try {
             RenditionService renditionService = Framework.getService(RenditionService.class);
             Rendition rendition = renditionService.getRendition(doc, renditionName);
@@ -189,7 +200,6 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
             throw new NuxeoException(String.format("Cannot retrieve the rendition for document %s.", doc), e,
                     SC_NOT_FOUND);
         }
-
     }
 
     @Override
