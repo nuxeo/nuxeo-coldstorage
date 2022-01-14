@@ -10,6 +10,7 @@
   "documentContentView.moveToColdStorage.label": "Send file to cold storage.",
   "documentContentView.moveToColdStorage.ok": "OK",
   "documentContentView.moveToColdStorage.description": "This will result in increased file retrieval times. Depending on the file format, a lower resolution preview will be used.",
+  "documentContentView.moveToColdStorage.preview.unavailable": "Cannot move file content to cold storage: no suitable rendition to replace the preview.",
   "documentContentView.moveToColdStorage.success": "File content moved to cold storage succesfully.",
   "documentContentView.moveToColdStorage.tooltip": "Send file to cold storage.",
   "documentContentView.restoreFromColdStorage.confirm" : "Confirm",
