@@ -20,3 +20,4 @@ nuxeo.s3storage.connection.timeout=50000
 nuxeo.s3storage.socket.timeout=50000
 nuxeo.core.blobstore.digestAsync=false
 nuxeo.coldstorage.numberOfDaysOfAvailability.value.default=1
+nuxeo.coldstorage.thumbnailPreviewRequired=true
