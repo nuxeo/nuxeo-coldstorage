@@ -53,6 +53,7 @@ import org.nuxeo.ecm.core.api.security.ACE;
 import org.nuxeo.ecm.core.api.security.SecurityConstants;
 import org.nuxeo.ecm.core.api.thumbnail.ThumbnailService;
 import org.nuxeo.ecm.core.api.versioning.VersioningService;
+import org.nuxeo.ecm.platform.thumbnail.ThumbnailConstants;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.WithFrameworkProperty;
 
@@ -138,6 +139,15 @@ public abstract class AbstractTestMoveColdStorageOperation extends AbstractTestC
     @WithFrameworkProperty(name = COLD_STORAGE_THUMBNAIL_PREVIEW_REQUIRED_PROPERTY_NAME, value = "true")
     public void shouldFailMoveToColdStorageNoThumbnail() throws OperationException, IOException {
         DocumentModel documentModel = createFileDocument(session, true);
+        try {
+            moveContentToColdStorage(session, documentModel);
+            fail("Should fail because there is no suitable thumbnail to replace document preview");
+        } catch (NuxeoException e) {
+            assertEquals(SC_PRECONDITION_FAILED, e.getStatusCode());
+        }
+        // let's fake the document never had the thumbnail facet
+        documentModel.removeFacet(ThumbnailConstants.THUMBNAIL_FACET);
+        documentModel = session.saveDocument(documentModel);
         try {
             moveContentToColdStorage(session, documentModel);
             fail("Should fail because there is no suitable thumbnail to replace document preview");
