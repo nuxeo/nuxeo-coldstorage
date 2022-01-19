@@ -8,7 +8,7 @@ The Nuxeo Cold Storage addon allows the storage of the document main content in 
 For more details around functionalities, requirements, installation and usage please consider this addon [official documentation](TBD).
 
 ## Context
-Nuxeo Cold Storage is an addon that can be plugged to Nuxeo. 
+Nuxeo Cold Storage is an addon that can be plugged to Nuxeo.
 
 It is bundled as a marketplace package that includes all the backend and frontend contributions needed for [Nuxeo Platform](https://github.com/nuxeo/nuxeo) and [Nuxeo Web UI](https://github.com/nuxeo/nuxeo-web-ui).
 
@@ -88,7 +88,7 @@ The UI contribution has linting to help making the code simpler and safer.
 npm run lint
 ```
 
-To help on code style and formatting the following command is available. 
+To help on code style and formatting the following command is available.
 
 ```sh
 npm run format
@@ -108,7 +108,7 @@ Since it already contemplates the possibility of integrating packages/addons, it
 
 Continuous Integration & Continuous Deployment(and Delivery) are an important part of the development process.
 
-Nuxeo Cold Storage integrates [Jenkins pipelines](https://jenkins.napps.dev.nuxeo.com/job/nuxeo/job/nuxeo-coldstorage/) for each maintenance branch, for _master_ (fast track) and also for each opened PR. 
+Nuxeo Cold Storage integrates [Jenkins pipelines](https://jenkins.napps.dev.nuxeo.com/job/nuxeo/job/nuxeo-coldstorage/) for each maintenance branch, for _master_ (fast track) and also for each opened PR.
 
 The following features are available:
 - Possibility of having a dedicated preview environment for a PR by using the tag GitHub PR tag `preview`
