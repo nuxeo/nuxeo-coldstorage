@@ -173,8 +173,8 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         String renditionName = getRenditionName(doc);
         if (Framework.isBooleanPropertyTrue(COLD_STORAGE_THUMBNAIL_PREVIEW_REQUIRED_PROPERTY_NAME)
                 && "thumbnail".equals(renditionName)) {
-            if (doc.hasFacet(ThumbnailConstants.THUMBNAIL_FACET)
-                    && doc.getPropertyValue(ThumbnailConstants.THUMBNAIL_PROPERTY_NAME) == null) {
+            if (!doc.hasFacet(ThumbnailConstants.THUMBNAIL_FACET)
+                    || doc.getPropertyValue(ThumbnailConstants.THUMBNAIL_PROPERTY_NAME) == null) {
                 // We don't want to fall back on the default icon thumbnail
                 throw new NuxeoException(
                         String.format("No available thumbnail rendition for document %s.", doc.getPath()),
