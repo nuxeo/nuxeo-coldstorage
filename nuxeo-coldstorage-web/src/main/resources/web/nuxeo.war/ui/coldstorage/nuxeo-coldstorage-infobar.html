@@ -35,13 +35,13 @@ express or implied. See the License for the specific language governing permissi
           <div class="layout horizontal center flex">
             <iron-icon noink icon="coldstorage:default"></iron-icon>
             <span class="storedInColdStorage"> [[_title]] </span>
-            <dom-if if="[[_isDocRetrieved]]">
+            <template is="dom-if" if="[[_isDocRetrieved]]">
               <nuxeo-download-button
                 document="[[document]]"
                 xpath="coldstorage:coldContent"
                 show-label
               ></nuxeo-download-button>
-            </dom-if>
+            </template>
           </div>
         </div>
       </template>
