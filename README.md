@@ -1,5 +1,5 @@
-[![Build Status](https://jenkins.napps.dev.nuxeo.com/buildStatus/icon?job=nuxeo%2Fnuxeo-coldstorage%2Fmaster)](https://jenkins.napps.dev.nuxeo.com/job/nuxeo/job/nuxeo-coldstorage/job/master/)
-[![Preview Link](https://img.shields.io/badge/preview-available-blue)](http://preview-coldstorage-master.napps.dev.nuxeo.com/)
+[![Build Status](https://jenkins.napps.dev.nuxeo.com/buildStatus/icon?job=nuxeo%2Fnuxeo-coldstorage%2F10.10)](https://jenkins.napps.dev.nuxeo.com/job/nuxeo/job/nuxeo-coldstorage/job/10.10/)
+[![Preview Link](https://img.shields.io/badge/preview-available-blue)](https://preview-nuxeo-coldstorage-10-10.napps.dev.nuxeo.com/)
 
 # Nuxeo Cold Storage
 
