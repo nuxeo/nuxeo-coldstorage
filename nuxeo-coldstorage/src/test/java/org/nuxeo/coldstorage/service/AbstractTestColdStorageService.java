@@ -66,6 +66,7 @@ import org.nuxeo.ecm.core.blob.SimpleManagedBlob;
 import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
 import org.nuxeo.ecm.core.event.test.CapturingEventListener;
 import org.nuxeo.ecm.core.io.download.DownloadService;
+import org.nuxeo.ecm.platform.ec.notification.service.NotificationServiceHelper;
 import org.nuxeo.ecm.platform.thumbnail.ThumbnailConstants;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.FeaturesRunner;
@@ -373,7 +374,8 @@ public abstract class AbstractTestColdStorageService {
                         downloadableUntil.toString(),
                         properties.get(ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_UNTIL_MAIL_TEMPLATE_KEY));
 
-                String expectedDownloadUrl = downloadService.getDownloadUrl(documentModel,
+                String serverUrl = NotificationServiceHelper.getNotificationService().getServerUrlPrefix();
+                String expectedDownloadUrl = serverUrl + downloadService.getDownloadUrl(documentModel,
                         ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY, null);
                 assertEquals(String.format("An unexpected downloadable url for document: %s", documentModel), //
                         expectedDownloadUrl,
