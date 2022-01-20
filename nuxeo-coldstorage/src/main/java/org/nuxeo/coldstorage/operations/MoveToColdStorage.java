@@ -19,8 +19,6 @@
 
 package org.nuxeo.coldstorage.operations;
 
-import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_MOVED_EVENT_NAME;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.nuxeo.coldstorage.service.ColdStorageService;
@@ -34,9 +32,6 @@ import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentModelList;
 import org.nuxeo.ecm.core.api.NuxeoException;
 import org.nuxeo.ecm.core.api.impl.DocumentModelListImpl;
-import org.nuxeo.ecm.core.event.EventService;
-import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
-import org.nuxeo.runtime.api.Framework;
 
 /**
  * Moves the main content associated with the input {@link DocumentModel} or {@link DocumentModelList} to the cold
@@ -68,11 +63,6 @@ public class MoveToColdStorage {
         if (save) {
             documentModel = session.saveDocument(documentModel);
         }
-
-        // Fire the event only after the move taking place otherwise the duplication listener will run before
-        DocumentEventContext ctx = new DocumentEventContext(session, session.getPrincipal(), documentModel);
-        EventService eventService = Framework.getService(EventService.class);
-        eventService.fireEvent(ctx.newEvent(COLD_STORAGE_CONTENT_MOVED_EVENT_NAME));
 
         return documentModel;
     }

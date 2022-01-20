@@ -43,6 +43,8 @@ public class ColdStorageConstants {
 
     public static final String COLD_STORAGE_CONTENT_TO_RESTORE_EVENT_NAME = "coldStorageContentToRestore";
 
+    public static final String COLD_STORAGE_CONTENT_TO_RETRIEVE_EVENT_NAME = "coldStorageContentToRetrieve";
+
     public static final String COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME = "coldStorageContentAvailable";
 
     public static final String COLD_STORAGE_CONTENT_MOVED_EVENT_NAME = "coldStorageContentMoved";

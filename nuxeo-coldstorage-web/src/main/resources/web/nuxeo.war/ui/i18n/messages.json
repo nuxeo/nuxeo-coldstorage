@@ -1,4 +1,7 @@
 {
+  "activity.coldStorageContentMoved": "Document sent to cold storage",
+  "activity.coldStorageContentToRetrieve": "Retrieve requested",
+  "activity.coldStorageContentToRestore": "Restore requested",
   "documentContentView.infobar.storedInColdStorage": "This is a preview version of the file. The original file can be requested by clicking on the \"retrieve file\" action.",
   "documentContentView.infobar.beingRetrieved": "This is a preview version of the file. A retrieval of the original file has been requested. An email notification will be sent when the original file is available.",
   "documentContentView.infobar.beingRestored": "File restoration from cold storage in progress. Reload document in a short while.",

@@ -32,10 +32,12 @@ import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AV
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_NOTIFICATION_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_UNTIL_MAIL_TEMPLATE_KEY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_MOVED_EVENT_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_RESTORED_NOTIFICATION_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_TO_RESTORE_EVENT_NAME;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_TO_RETRIEVE_EVENT_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_FACET_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_THUMBNAIL_PREVIEW_REQUIRED_PROPERTY_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_TO_BE_RESTORED_PROPERTY;
@@ -69,6 +71,8 @@ import org.nuxeo.ecm.core.api.DocumentModelList;
 import org.nuxeo.ecm.core.api.DocumentRef;
 import org.nuxeo.ecm.core.api.NuxeoException;
 import org.nuxeo.ecm.core.api.NuxeoPrincipal;
+import org.nuxeo.ecm.core.api.event.CoreEventConstants;
+import org.nuxeo.ecm.core.api.event.DocumentEventCategories;
 import org.nuxeo.ecm.core.api.security.SecurityConstants;
 import org.nuxeo.ecm.core.blob.BlobManager;
 import org.nuxeo.ecm.core.blob.BlobStatus;
@@ -77,6 +81,7 @@ import org.nuxeo.ecm.core.blob.ManagedBlob;
 import org.nuxeo.ecm.core.bulk.BulkService;
 import org.nuxeo.ecm.core.bulk.message.BulkCommand;
 import org.nuxeo.ecm.core.bulk.message.BulkStatus;
+import org.nuxeo.ecm.core.event.Event;
 import org.nuxeo.ecm.core.event.EventService;
 import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
 import org.nuxeo.ecm.core.io.download.DownloadService;
@@ -184,8 +189,8 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         String renditionName = getRenditionName(doc);
         if (Framework.isBooleanPropertyTrue(COLD_STORAGE_THUMBNAIL_PREVIEW_REQUIRED_PROPERTY_NAME)
                 && "thumbnail".equals(renditionName)) {
-            if (doc.hasFacet(ThumbnailConstants.THUMBNAIL_FACET)
-                    && doc.getPropertyValue(ThumbnailConstants.THUMBNAIL_PROPERTY_NAME) == null) {
+            if (!doc.hasFacet(ThumbnailConstants.THUMBNAIL_FACET)
+                    || doc.getPropertyValue(ThumbnailConstants.THUMBNAIL_PROPERTY_NAME) == null) {
                 // We don't want to fall back on the default icon thumbnail
                 throw new NuxeoException(
                         String.format("No available thumbnail rendition for document %s.", doc.getPath()),
@@ -218,6 +223,8 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
             // re-set the picture views so that they are dirty and won't be updated
             documentModel.setPropertyValue("picture:views", documentModel.getPropertyValue("picture:views"));
         }
+
+        fireEvent(documentModel, session, COLD_STORAGE_CONTENT_MOVED_EVENT_NAME);
 
         return documentModel;
     }
@@ -289,6 +296,7 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
             throw new NuxeoException(e);
         }
         documentModel.setPropertyValue(COLD_STORAGE_BEING_RETRIEVED_PROPERTY, true);
+        fireEvent(documentModel, session, COLD_STORAGE_CONTENT_TO_RETRIEVE_EVENT_NAME);
         return documentModel;
     }
 
@@ -374,6 +382,7 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         DocumentEventContext ctx = new DocumentEventContext(session, session.getPrincipal(), documentModel);
         EventService eventService = Framework.getService(EventService.class);
         eventService.fireEvent(ctx.newEvent(COLD_STORAGE_CONTENT_TO_RESTORE_EVENT_NAME));
+        fireEvent(documentModel, session, COLD_STORAGE_CONTENT_TO_RESTORE_EVENT_NAME);
     }
 
     @Override
@@ -503,6 +512,16 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         String value = Framework.getProperty(
                 ColdStorageConstants.COLD_STORAGE_NUMBER_OF_DAYS_OF_AVAILABILITY_PROPERTY_NAME, "1");
         return Duration.ofDays(Integer.parseInt(value));
+    }
+
+    protected void fireEvent(DocumentModel doc, CoreSession session, String eventName) {
+        EventService eventService = Framework.getService(EventService.class);
+        DocumentEventContext ctx = new DocumentEventContext(session, session.getPrincipal(), doc);
+        ctx.setProperty(CoreEventConstants.REPOSITORY_NAME, session.getRepositoryName());
+        ctx.setProperty(CoreEventConstants.SESSION_ID, session.getSessionId());
+        ctx.setProperty("category", DocumentEventCategories.EVENT_DOCUMENT_CATEGORY);
+        Event event = ctx.newEvent(eventName);
+        eventService.fireEvent(event);
     }
 
 }
