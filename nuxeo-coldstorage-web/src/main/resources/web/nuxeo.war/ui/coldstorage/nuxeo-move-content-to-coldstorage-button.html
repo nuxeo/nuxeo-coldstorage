@@ -111,7 +111,7 @@ express or implied. See the License for the specific language governing permissi
             );
           })
           .catch((error) => {
-            const message = error.status === 412
+            const message = error.response.status === 412
               ? 'documentContentView.moveToColdStorage.preview.unavailable'
               : 'documentContentView.moveToColdStorage.error';
             this.dispatchEvent(
@@ -121,7 +121,7 @@ express or implied. See the License for the specific language governing permissi
                 detail: { message: this.i18n(message) },
               }),
             );
-            if (error.status !== 412) {
+            if (error.response.status !== 412) {
               throw error;
             }
           });
