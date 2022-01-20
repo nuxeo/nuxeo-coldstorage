@@ -1,5 +1,3 @@
-
-<#assign archiveLocationUrl = "${serverUrlPrefix}" + "${archiveLocation}">
 <html>
 <body>
 <div style="margin:0;padding:0;background-color:#e9ecef;font-family:Arial,sans-serif;" marginheight="0" marginwidth="0">
@@ -107,7 +105,7 @@
                                 </p>
                                 <p style="margin:0;">
                                     <a style="color:#22aee8;text-decoration:underline;word-wrap:break-word !important;"
-                                       href="${archiveLocationUrl}">&#187; Download the archived file</a>
+                                       href="${archiveLocation}">&#187; Download the archived file</a>
                                 </p>
                             </td>
                         </tr>
