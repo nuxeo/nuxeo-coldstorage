@@ -43,7 +43,11 @@ public class ColdStorageConstants {
 
     public static final String COLD_STORAGE_CONTENT_TO_RESTORE_EVENT_NAME = "coldStorageContentToRestore";
 
+    public static final String COLD_STORAGE_CONTENT_TO_RETRIEVE_EVENT_NAME = "coldStorageContentToRetrieve";
+
     public static final String COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME = "coldStorageContentAvailable";
+
+    public static final String COLD_STORAGE_CONTENT_DOWNLOAD_EVENT_NAME = "coldStorageDownload";
 
     public static final String COLD_STORAGE_CONTENT_MOVED_EVENT_NAME = "coldStorageContentMoved";
 
@@ -68,6 +72,10 @@ public class ColdStorageConstants {
             COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED);
 
     public static final String COLD_STORAGE_CONTENT_AVAILABLE_IN_COLDSTORAGE = "coldstorage:availableOnColdstorage";
+
+    public static final String EVENT_CATEGORY = "coldStorage";
+
+    public static final String EVENT_CATEGORY_LABEL = "Cold Storage";
 
     /**
      * Status about the cold storage content being retrieved or available.
