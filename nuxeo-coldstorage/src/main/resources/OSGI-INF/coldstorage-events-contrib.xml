@@ -37,6 +37,11 @@
               class="org.nuxeo.coldstorage.events.CheckColdStorageClassUpdatedListener">
       <event>checkColdStorageClassUpdated</event>
     </listener>
+    <!-- StreamAuditEventListener has a priority of 500, less allows to be evaluated earlier -->
+    <listener name="downloadColdDocumentListener" priority="400"
+              class="org.nuxeo.coldstorage.events.DownloadColdDocumentListener">
+      <event>download</event>
+    </listener>
   </extension>
 
   <extension
