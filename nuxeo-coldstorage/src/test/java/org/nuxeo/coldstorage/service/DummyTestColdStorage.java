@@ -19,27 +19,74 @@
 
 package org.nuxeo.coldstorage.service;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.Serializable;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
 
 import org.junit.Test;
 import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.coldstorage.DummyColdStorageFeature;
 import org.nuxeo.coldstorage.blob.providers.DummyBlobProvider;
+import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.IdRef;
+import org.nuxeo.ecm.core.api.event.CoreEventConstants;
 import org.nuxeo.ecm.core.blob.BlobStatus;
 import org.nuxeo.ecm.core.blob.ManagedBlob;
+import org.nuxeo.ecm.core.event.Event;
+import org.nuxeo.ecm.core.event.EventService;
+import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
+import org.nuxeo.ecm.core.event.test.CapturingEventListener;
+import org.nuxeo.ecm.core.io.download.DownloadService;
 import org.nuxeo.runtime.test.runner.Features;
 
 @Features(DummyColdStorageFeature.class)
 public class DummyTestColdStorage extends AbstractTestColdStorageService {
 
+    @Inject
+    protected EventService eventService;
+
     @Override
     protected String getBlobProviderName() {
         return "dummy";
+    }
+
+    @Test
+    public void shouldFireDedicatedDownloadEvent() {
+        DocumentModel doc = moveAndRequestRetrievalFromColdStorage(DEFAULT_DOC_NAME);
+        Instant downloadableUntil = Instant.now().plus(7, ChronoUnit.DAYS);
+        transactionalFeature.nextTransaction();
+
+        // Create a blob of which retrieval was requested and that is retrieved
+        BlobStatus coldContentStatusOfFile = new BlobStatus().withDownloadable(true)
+                                                              .withDownloadableUntil(downloadableUntil);
+        addColdStorageContentBlobStatus(doc.getId(), coldContentStatusOfFile);
+        try (CapturingEventListener listener = new CapturingEventListener(
+                DownloadService.EVENT_NAME,
+                ColdStorageConstants.COLD_STORAGE_CONTENT_DOWNLOAD_EVENT_NAME)) {
+            // let's mimic a download
+            Map<String, Serializable> map = new HashMap<>();
+            map.put("blobXPath", ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY);
+            DocumentEventContext ctx = new DocumentEventContext(session, session.getPrincipal(), doc);
+            ctx.setProperty(CoreEventConstants.REPOSITORY_NAME, doc.getRepositoryName());
+            ctx.setProperty("extendedInfos", (Serializable) map);
+            Event event = ctx.newEvent(DownloadService.EVENT_NAME);
+            eventService.fireEvent(event);
+
+            // and assert it is cancelled and a cold storage download event is fired instead
+            assertEquals(2, listener.streamCapturedEvents().count());
+            assertTrue(listener.findFirstCapturedEvent(DownloadService.EVENT_NAME).get().isCanceled());
+            assertTrue(listener.findFirstCapturedEvent(ColdStorageConstants.COLD_STORAGE_CONTENT_DOWNLOAD_EVENT_NAME).isPresent());
+        }
     }
 
     @Test
