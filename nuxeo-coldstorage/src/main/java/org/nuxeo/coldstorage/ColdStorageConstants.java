@@ -57,6 +57,8 @@ public class ColdStorageConstants {
 
     public static final String COLD_STORAGE_NUMBER_OF_DAYS_OF_AVAILABILITY_PROPERTY_NAME = "nuxeo.coldstorage.numberOfDaysOfAvailability.value.default";
 
+    public static final String COLD_STORAGE_THUMBNAIL_PREVIEW_REQUIRED_PROPERTY_NAME = "nuxeo.coldstorage.thumbnailPreviewRequired";
+
     public static final String COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL = "coldstorage:downloadableUntil";
 
     public static final String COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED = "coldstorage:classStorageToUpdate";

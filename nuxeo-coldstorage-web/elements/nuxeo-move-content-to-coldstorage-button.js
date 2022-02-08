@@ -130,14 +130,20 @@ class MoveToColdStorage extends mixinBehaviors([FiltersBehavior, FormatBehavior]
         );
       })
       .catch((error) => {
+        const message =
+          error.response.status === 412
+            ? 'documentContentView.moveToColdStorage.preview.unavailable'
+            : 'documentContentView.moveToColdStorage.error';
         this.dispatchEvent(
           new CustomEvent('notify', {
             composed: true,
             bubbles: true,
-            detail: { message: this.i18n('documentContentView.moveToColdStorage.error') },
+            detail: { message: this.i18n(message) },
           }),
         );
-        throw error;
+        if (error.response.status !== 412) {
+          throw error;
+        }
       });
   }
 }

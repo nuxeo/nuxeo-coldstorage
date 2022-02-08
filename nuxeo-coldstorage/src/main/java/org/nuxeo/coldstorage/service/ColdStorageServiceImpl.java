@@ -24,6 +24,7 @@ package org.nuxeo.coldstorage.service;
 import static javax.servlet.http.HttpServletResponse.SC_CONFLICT;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
+import static javax.servlet.http.HttpServletResponse.SC_PRECONDITION_FAILED;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_BEING_RETRIEVED_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_ARCHIVE_LOCATION_MAIL_TEMPLATE_KEY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME;
@@ -41,6 +42,7 @@ import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_BEING_REST
 import static org.nuxeo.coldstorage.ColdStorageConstants.FILE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.GET_COLDSTORAGE_DOCUMENTS_TO_CHECK_QUERY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.GET_DOCUMENTS_TO_CHECK_QUERY;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_THUMBNAIL_PREVIEW_REQUIRED_PROPERTY_NAME;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -78,6 +80,7 @@ import org.nuxeo.ecm.core.event.EventService;
 import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
 import org.nuxeo.ecm.core.io.download.DownloadService;
 import org.nuxeo.ecm.platform.ec.notification.NotificationConstants;
+import org.nuxeo.ecm.platform.ec.notification.service.NotificationServiceHelper;
 import org.nuxeo.ecm.platform.notification.api.NotificationManager;
 import org.nuxeo.ecm.platform.picture.listener.PictureViewsGenerationListener;
 import org.nuxeo.ecm.platform.rendition.Rendition;
@@ -169,7 +172,16 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
     @Override
     public Blob getRendition(DocumentModel doc, CoreSession session) {
         String renditionName = getRenditionName(doc);
-
+        if (Framework.isBooleanPropertyTrue(COLD_STORAGE_THUMBNAIL_PREVIEW_REQUIRED_PROPERTY_NAME)
+                && "thumbnail".equals(renditionName)) {
+            if (!doc.hasFacet(ThumbnailConstants.THUMBNAIL_FACET)
+                    || doc.getPropertyValue(ThumbnailConstants.THUMBNAIL_PROPERTY_NAME) == null) {
+                // We don't want to fall back on the default icon thumbnail
+                throw new NuxeoException(
+                        String.format("No available thumbnail rendition for document %s.", doc.getPath()),
+                        SC_PRECONDITION_FAILED);
+            }
+        }
         try {
             RenditionService renditionService = Framework.getService(RenditionService.class);
             Rendition rendition = renditionService.getRendition(doc, renditionName);
@@ -178,7 +190,6 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
             throw new NuxeoException(String.format("Cannot retrieve the rendition for document %s.", doc), e,
                     SC_NOT_FOUND);
         }
-
     }
 
     @Override
@@ -418,7 +429,10 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
                         doc.setPropertyValue(COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL, Date.from(downloadableUntil));
                         session.saveDocument(doc);
                     }
-                    String downloadUrl = downloadService.getDownloadUrl(doc, COLD_STORAGE_CONTENT_PROPERTY, null);
+                    String fileName = ((Blob) doc.getProperty(COLD_STORAGE_CONTENT_PROPERTY).getValue()).getFilename();
+                    String serverUrl = NotificationServiceHelper.getNotificationService().getServerUrlPrefix();
+                    String downloadUrl = serverUrl
+                            + downloadService.getDownloadUrl(doc, COLD_STORAGE_CONTENT_PROPERTY, fileName);
                     ctx.getProperties().put(COLD_STORAGE_CONTENT_ARCHIVE_LOCATION_MAIL_TEMPLATE_KEY, downloadUrl);
                     eventService.fireEvent(ctx.newEvent(COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME));
                 }
