@@ -13,19 +13,19 @@ redis:
         resource: service
         team: napps
         usage: utests
-  tolerations:
-    - key: team
-      operator: Equal
-      value: napps
-      effect: NoSchedule
-  nodeSelector:
-    team: napps
-  resources:
-    requests:
-      cpu: 500m
-      memory: 250Mi
-    limits:
-      cpu: 1
-      memory: 500Mi
+    tolerations:
+      - key: team
+        operator: Equal
+        value: napps
+        effect: NoSchedule
+    nodeSelector:
+      team: napps
+    resources:
+      requests:
+        cpu: 500m
+        memory: 250Mi
+      limits:
+        cpu: 1
+        memory: 500Mi
 tags:
   redis: true
