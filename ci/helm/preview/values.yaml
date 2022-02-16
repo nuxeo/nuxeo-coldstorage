@@ -24,7 +24,7 @@ nuxeo:
   fullnameOverride: preview
   nuxeo:
     podLabels:
-      branch: "$BRANCH_NAME"
+      branch: "lts-2021"
       team: napps
       resource: pod
       usage: preview
@@ -35,13 +35,13 @@ nuxeo:
           nginx.ingress.kubernetes.io/proxy-body-size: 0
           nginx.ingress.kubernetes.io/server-snippet: ignore_invalid_headers off;
       labels:
-        branch: "$BRANCH_NAME"
+        branch: "lts-2021"
         team: napps
         resource: service
         usage: preview
     image:
-      repository: ${DOCKER_REGISTRY}/${ORG}/nuxeo-coldstorage
-      tag: ${VERSION}
+      repository: docker-registry.napps.dev.nuxeo.com/nuxeo/nuxeo-coldstorage
+      tag: 2021.0.0-rc.15
       pullPolicy: Always
     persistence:
       enabled: disable
@@ -90,7 +90,7 @@ nuxeo:
             name: aws-config-napps
             key: coldstorage.bucket.glacier
       - name: AWS_S3_BUCKET_PREFIX
-        value: $BUCKET_PREFIX
+        value: nuxeo-coldstorage-lts-2021-39
     tolerations:
       - key: team
         operator: Equal
@@ -101,12 +101,12 @@ nuxeo:
   mongodb:
     deploy: true
     labels:
-      branch: $BRANCH_NAME
+      branch: lts-2021
       resource: deployment
       team: napps
       usage: preview
     podLabels:
-      branch: $BRANCH_NAME
+      branch: lts-2021
       resource: pod
       team: napps
       usage: preview
