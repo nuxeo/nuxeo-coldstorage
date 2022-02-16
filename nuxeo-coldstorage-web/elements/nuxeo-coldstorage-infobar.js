@@ -124,7 +124,7 @@ class ColdStorageInfobar extends mixinBehaviors([FiltersBehavior, FormatBehavior
   _getTitle(doc) {
     return this.i18n(
       `documentContentView.infobar.${this._documentStatus}`,
-      this._formatDate(doc.properties['coldstorage:downloadableUntil']),
+      this.formatDateTime(doc.properties['coldstorage:downloadableUntil']),
     );
   }
 }
