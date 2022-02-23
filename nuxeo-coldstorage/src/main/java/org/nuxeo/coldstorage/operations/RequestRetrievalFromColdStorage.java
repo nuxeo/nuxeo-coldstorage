@@ -53,9 +53,6 @@ public class RequestRetrievalFromColdStorage {
     @Context
     protected ColdStorageService service;
 
-    @Param(name = "save", required = false, values = "true")
-    protected boolean save = true;
-
     @OperationMethod(collector = DocumentModelCollector.class)
     public DocumentModel run(DocumentModel doc) {
         Duration duration;
@@ -66,10 +63,6 @@ public class RequestRetrievalFromColdStorage {
         }
 
         DocumentModel documentModel = service.retrieveFromColdStorage(session, doc, duration);
-
-        if (save) {
-            documentModel = session.saveDocument(documentModel);
-        }
 
         return documentModel;
     }

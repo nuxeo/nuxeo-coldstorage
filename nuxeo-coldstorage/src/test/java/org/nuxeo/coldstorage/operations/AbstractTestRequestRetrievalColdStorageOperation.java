@@ -24,6 +24,7 @@ import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.nuxeo.ecm.core.api.security.SecurityConstants.READ;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -31,16 +32,23 @@ import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
+import javax.security.auth.login.LoginException;
 
 import org.junit.Test;
 import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.ecm.automation.OperationContext;
 import org.nuxeo.ecm.automation.OperationException;
+import org.nuxeo.ecm.core.api.CoreInstance;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.NuxeoException;
+import org.nuxeo.ecm.core.api.security.ACE;
+import org.nuxeo.ecm.core.api.security.ACL;
+import org.nuxeo.ecm.core.api.security.ACP;
 import org.nuxeo.ecm.platform.ec.notification.NotificationConstants;
 import org.nuxeo.ecm.platform.notification.api.NotificationManager;
+import org.nuxeo.runtime.api.Framework;
+import org.nuxeo.runtime.api.login.NuxeoLoginContext;
 
 /**
  * @since 11.0
@@ -48,6 +56,8 @@ import org.nuxeo.ecm.platform.notification.api.NotificationManager;
 public abstract class AbstractTestRequestRetrievalColdStorageOperation extends AbstractTestColdStorageOperation {
 
     protected static final int NUMBER_OF_DAYS_OF_AVAILABILITY = 5;
+
+    public static final String READ_USER = "ReadUser";
 
     @Inject
     protected CoreSession session;
@@ -61,7 +71,25 @@ public abstract class AbstractTestRequestRetrievalColdStorageOperation extends A
         // first make the move to cold storage
         moveContentToColdStorage(session, documentModel);
         // request a retrieval from the cold storage
-        requestRetrievalContentFromColdStorage(documentModel);
+        requestRetrievalContentFromColdStorage(documentModel, session);
+    }
+
+    @Test
+    public void shouldRequestRetrievalWithReadAccess() throws OperationException, IOException, LoginException {
+        DocumentModel documentModel = createFileDocument(session, true);
+        // first make the move to cold storage
+        moveContentToColdStorage(session, documentModel);
+        // Let's give READ access to a user
+        ACP acp = documentModel.getACP();
+        ACL acl = acp.getOrCreateACL();
+        acl.add(new ACE(READ_USER, READ, true));
+        session.setACP(documentModel.getRef(), acp, false);
+        session.save();
+        // request a retrieval from the cold storage with READ access
+        try (NuxeoLoginContext ignored = Framework.loginUser(READ_USER)) {
+            CoreSession readSession = CoreInstance.getCoreSession(session.getRepositoryName());
+            requestRetrievalContentFromColdStorage(documentModel, readSession);
+        }
     }
 
     @Test
@@ -70,7 +98,7 @@ public abstract class AbstractTestRequestRetrievalColdStorageOperation extends A
         // first make the move to cold storage
         moveContentToColdStorage(session, documentModel);
         // request a retrieval from the cold storage
-        requestRetrievalContentFromColdStorage(documentModel);
+        requestRetrievalContentFromColdStorage(documentModel,session);
     }
 
     @Test
@@ -80,11 +108,11 @@ public abstract class AbstractTestRequestRetrievalColdStorageOperation extends A
         // move the blob to cold storage
         moveContentToColdStorage(session, documentModel);
         // request a retrieval from the cold storage
-        requestRetrievalContentFromColdStorage(documentModel, NUMBER_OF_DAYS_OF_AVAILABILITY);
+        requestRetrievalContentFromColdStorage(documentModel, session, NUMBER_OF_DAYS_OF_AVAILABILITY);
 
         // request a retrieval for a second time
         try {
-            requestRetrievalContentFromColdStorage(documentModel, NUMBER_OF_DAYS_OF_AVAILABILITY);
+            requestRetrievalContentFromColdStorage(documentModel, session, NUMBER_OF_DAYS_OF_AVAILABILITY);
             fail("Should fail because the cold storage content is being retrieved.");
         } catch (NuxeoException e) {
             assertEquals(SC_FORBIDDEN, e.getStatusCode());
@@ -96,20 +124,21 @@ public abstract class AbstractTestRequestRetrievalColdStorageOperation extends A
         DocumentModel documentModel = createFileDocument(session, true);
         try {
             // request a retrieval from the cold storage
-            requestRetrievalContentFromColdStorage(documentModel, NUMBER_OF_DAYS_OF_AVAILABILITY);
+            requestRetrievalContentFromColdStorage(documentModel, session, NUMBER_OF_DAYS_OF_AVAILABILITY);
             fail("Should fail because there no cold storage content associated to this document.");
         } catch (NuxeoException e) {
             assertEquals(SC_NOT_FOUND, e.getStatusCode());
         }
     }
 
-    protected void requestRetrievalContentFromColdStorage(DocumentModel documentModel) throws OperationException {
-        requestRetrievalContentFromColdStorage(documentModel, 0);
+    protected void requestRetrievalContentFromColdStorage(DocumentModel documentModel, CoreSession userSession)
+            throws OperationException {
+        requestRetrievalContentFromColdStorage(documentModel, userSession, 0);
     }
 
-    protected void requestRetrievalContentFromColdStorage(DocumentModel documentModel, int numberOfAvailabilityDays)
-            throws OperationException {
-        try (OperationContext context = new OperationContext(session)) {
+    protected void requestRetrievalContentFromColdStorage(DocumentModel documentModel, CoreSession userSession,
+            int numberOfAvailabilityDays) throws OperationException {
+        try (OperationContext context = new OperationContext(userSession)) {
             context.setInput(documentModel);
             Map<String, Integer> params = new HashMap<>();
             params.put("numberOfDaysOfAvailability", numberOfAvailabilityDays);
@@ -118,7 +147,7 @@ public abstract class AbstractTestRequestRetrievalColdStorageOperation extends A
             assertEquals(documentModel.getRef(), updatedDocument.getRef());
             assertEquals(Boolean.TRUE,
                     updatedDocument.getPropertyValue(ColdStorageConstants.COLD_STORAGE_BEING_RETRIEVED_PROPERTY));
-            String username = NotificationConstants.USER_PREFIX + session.getPrincipal().getName();
+            String username = NotificationConstants.USER_PREFIX + userSession.getPrincipal().getName();
             List<String> subscriptions = notificationManager.getSubscriptionsForUserOnDocument(username,
                     updatedDocument);
             assertTrue(subscriptions.contains(ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_NOTIFICATION_NAME));
