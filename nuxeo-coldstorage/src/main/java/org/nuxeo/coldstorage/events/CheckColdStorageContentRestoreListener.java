@@ -19,9 +19,15 @@
 
 package org.nuxeo.coldstorage.events;
 
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_BEING_RESTORED_PROPERTY;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_BEING_RETRIEVED_PROPERTY;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_IN_COLDSTORAGE;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_RESTORED_EVENT_NAME;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_FACET_NAME;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_TO_BE_RESTORED_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.FILE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.events.CheckUpdateColdStorageContentListener.DISABLE_COLD_STORAGE_CHECK_UPDATE_COLDSTORAGE_CONTENT_LISTENER;
 import static org.nuxeo.coldstorage.events.CheckUpdateMainContentInColdStorageListener.DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER;
@@ -59,17 +65,14 @@ public class CheckColdStorageContentRestoreListener implements PostCommitEventLi
                 DocumentEventContext docCtx = (DocumentEventContext) e.getContext();
                 DocumentModel documentModel = docCtx.getSourceDocument();
                 log.debug("Start completing ColdStorage restore content for document {}", documentModel::getId);
-                // Disable main and ColdStorage storage contents check otherwise, the restore action won't be allowed
-                documentModel.putContextData(DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER, true);
-                documentModel.putContextData(DISABLE_COLD_STORAGE_CHECK_UPDATE_COLDSTORAGE_CONTENT_LISTENER, true);
 
                 // Restore the main content
                 CoreSession session = e.getContext().getCoreSession();
                 Serializable coldContent = documentModel.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
-                documentModel.setPropertyValue(COLD_STORAGE_CONTENT_PROPERTY, null);
-                documentModel.removeFacet(COLD_STORAGE_FACET_NAME);
+                documentModel = removeColdStorageFacet(session, documentModel);
+
                 documentModel.setPropertyValue(FILE_CONTENT_PROPERTY, coldContent);
-                session.saveDocument(documentModel);
+                documentModel = saveDocument(session, documentModel);
 
                 // Send notification
                 DocumentEventContext ctx = new DocumentEventContext(session, session.getPrincipal(), documentModel);
@@ -80,5 +83,30 @@ public class CheckColdStorageContentRestoreListener implements PostCommitEventLi
             }
 
         });
+    }
+
+    protected DocumentModel removeColdStorageFacet(CoreSession session, DocumentModel documentModel) {
+        // We must reset all properties of the Cold Storage facet before removing it, otherwise the properties will
+        // still have the old values if we add back the facet (i.e. send back to cold storage)
+        documentModel.setPropertyValue(COLD_STORAGE_CONTENT_PROPERTY, null);
+        documentModel.setPropertyValue(COLD_STORAGE_BEING_RESTORED_PROPERTY, null);
+        documentModel.setPropertyValue(COLD_STORAGE_BEING_RETRIEVED_PROPERTY, null);
+        documentModel.setPropertyValue(COLD_STORAGE_TO_BE_RESTORED_PROPERTY, null);
+        documentModel.setPropertyValue(COLD_STORAGE_CONTENT_AVAILABLE_IN_COLDSTORAGE, null);
+        documentModel.setPropertyValue(COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED, null);
+        documentModel.setPropertyValue(COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL, null);
+        documentModel = saveDocument(session, documentModel);
+        documentModel.removeFacet(COLD_STORAGE_FACET_NAME);
+        return documentModel;
+    }
+
+    /**
+     * Specific save method to disable specific listeners.
+     */
+    protected DocumentModel saveDocument(CoreSession session, DocumentModel documentModel) {
+        // Disable main and ColdStorage storage contents check otherwise, the restore action won't be allowed
+        documentModel.putContextData(DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER, true);
+        documentModel.putContextData(DISABLE_COLD_STORAGE_CHECK_UPDATE_COLDSTORAGE_CONTENT_LISTENER, true);
+        return session.saveDocument(documentModel);
     }
 }
