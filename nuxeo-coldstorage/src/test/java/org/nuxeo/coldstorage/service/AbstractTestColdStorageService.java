@@ -28,6 +28,13 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_BEING_RESTORED_PROPERTY;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_BEING_RETRIEVED_PROPERTY;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_IN_COLDSTORAGE;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_TO_BE_RESTORED_PROPERTY;
 import static org.nuxeo.coldstorage.events.CheckUpdateColdStorageContentListener.DISABLE_COLD_STORAGE_CHECK_UPDATE_COLDSTORAGE_CONTENT_LISTENER;
 import static org.nuxeo.coldstorage.events.CheckUpdateMainContentInColdStorageListener.DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER;
 
@@ -126,6 +133,23 @@ public abstract class AbstractTestColdStorageService {
         // with Administrator
         documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
         moveAndVerifyContent(session, documentModel);
+    }
+
+    @Test
+    public void shouldMoveToColdStorageAfterRestore() throws IOException {
+        // with regular user with "WriteColdStorage" permission
+        ACE[] aces = { new ACE("john", SecurityConstants.READ, true), //
+                new ACE("john", SecurityConstants.WRITE, true), //
+                new ACE("john", ColdStorageConstants.WRITE_COLD_STORAGE, true) };
+        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true, aces);
+
+        try (CloseableCoreSession userSession = coreFeature.openCoreSession("john")) {
+            documentModel = moveAndRestore(documentModel);
+            session.saveDocument(documentModel);
+            transactionalFeature.nextTransaction();
+            documentModel.refresh();
+            moveAndVerifyContent(userSession, documentModel);
+        }
     }
 
     @Test
@@ -345,10 +369,16 @@ public abstract class AbstractTestColdStorageService {
         assertNull(documentModel.getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY));
 
         // check if the `coldstorage:coldContent` property contains the original file content
-        Blob content = (Blob) documentModel.getPropertyValue(ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY);
+        Blob content = (Blob) documentModel.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
         assertNotNull(content);
         assertEquals(FILE_CONTENT, content.getString());
         assertEquals(getBlobProviderName(), ((ManagedBlob) content).getProviderId());
+        assertNull(documentModel.getPropertyValue(COLD_STORAGE_BEING_RESTORED_PROPERTY));
+        assertNull(documentModel.getPropertyValue(COLD_STORAGE_BEING_RETRIEVED_PROPERTY));
+        assertNull(documentModel.getPropertyValue(COLD_STORAGE_TO_BE_RESTORED_PROPERTY));
+        assertNull(documentModel.getPropertyValue(COLD_STORAGE_CONTENT_AVAILABLE_IN_COLDSTORAGE));
+        assertTrue(Boolean.TRUE.equals(documentModel.getPropertyValue(COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED)));
+        assertNull(documentModel.getPropertyValue(COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL));
     }
 
     protected DocumentModel moveAndRequestRetrievalFromColdStorage(String documentName) {
