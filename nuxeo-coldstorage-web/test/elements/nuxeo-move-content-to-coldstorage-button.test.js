@@ -109,6 +109,18 @@ suite('Cold Storage', () => {
         expect(isElementVisible(button)).to.be.false;
       });
 
+      test('Should not be visible when document is under retention or legal hold', async () => {
+        document.isUnderRetentionOrLegalHold = true;
+        button = await fixture(
+          html`
+            <nuxeo-move-content-to-coldstorage-button .document=${document}></nuxeo-move-content-to-coldstorage-button>
+          `,
+        );
+
+        await flush();
+        expect(isElementVisible(button)).to.be.false;
+      });
+
       test("Should not be visible when document doesn't have content", async () => {
         document.properties = {};
         button = await fixture(

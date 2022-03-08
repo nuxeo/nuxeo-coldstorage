@@ -244,6 +244,13 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         DocumentModel documentModel = session.getDocument(documentRef);
         log.debug("Move to cold storage the main content of document: {}", documentModel);
 
+        if (session.isUnderRetentionOrLegalHold(documentRef)) {
+            log.debug("The document {} is under retention or legal hold and cannot be moved to cold storage",
+                    () -> documentRef);
+            throw new NuxeoException(String.format(
+                    "The document %s is under retention or legal hold and cannot be moved to cold storage",
+                    documentRef), SC_FORBIDDEN);
+        }
         if (!session.hasPermission(documentRef, SecurityConstants.WRITE_COLD_STORAGE)) {
             log.debug("The user {} does not have the right permissions to move the content of document {}",
                     session::getPrincipal, () -> documentModel);
