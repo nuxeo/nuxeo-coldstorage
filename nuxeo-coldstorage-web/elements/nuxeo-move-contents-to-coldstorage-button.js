@@ -96,6 +96,7 @@ class BulkMoveToColdStorage extends mixinBehaviors([FiltersBehavior, FormatBehav
 
   _canMoveDocument(doc) {
     return (
+      !this.isUnderRetentionOrLegalHold(doc) &&
       (this.hasAdministrationPermissions(this.currentUser) || this.hasPermission(doc, 'WriteColdStorage')) &&
       !this.hasFacet(doc, 'ColdStorage') &&
       this.hasContent(doc)

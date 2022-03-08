@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Calendar;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -184,6 +185,40 @@ public abstract class AbstractTestColdStorageService {
         } catch (NuxeoException e) {
             assertEquals(SC_NOT_FOUND, e.getStatusCode());
             assertEquals(String.format("There is no main content for document: %s.", documentModel), e.getMessage());
+        }
+    }
+
+    @Test
+    public void shouldFailMoveToColdStorageUnderLegalHold() {
+        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
+        session.makeRecord(documentModel.getRef());
+        session.setLegalHold(documentModel.getRef(), true, "any comment");
+        try {
+            moveContentToColdStorage(session, documentModel.getRef());
+            fail("Should fail because the document is under legal hold");
+        } catch (NuxeoException e) {
+            assertEquals(SC_FORBIDDEN, e.getStatusCode());
+            assertEquals(String.format(
+                    "The document %s is under retention or legal hold and cannot be moved to cold storage",
+                    documentModel.getId()), e.getMessage());
+        }
+    }
+
+    @Test
+    public void shouldFailMoveToColdStorageUnderRetention() {
+        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
+        session.makeRecord(documentModel.getRef());
+        Calendar retainUntil = Calendar.getInstance();
+        retainUntil.add(Calendar.DAY_OF_MONTH, 5);
+        session.setRetainUntil(documentModel.getRef(), retainUntil, "any comment");
+        try {
+            moveContentToColdStorage(session, documentModel.getRef());
+            fail("Should fail because the document is under retention");
+        } catch (NuxeoException e) {
+            assertEquals(SC_FORBIDDEN, e.getStatusCode());
+            assertEquals(String.format(
+                    "The document %s is under retention or legal hold and cannot be moved to cold storage",
+                    documentModel.getId()), e.getMessage());
         }
     }
 
