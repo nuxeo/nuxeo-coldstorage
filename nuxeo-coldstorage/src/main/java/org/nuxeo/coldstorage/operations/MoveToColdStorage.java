@@ -71,11 +71,7 @@ public class MoveToColdStorage {
     public DocumentModelList run(DocumentModelList documents) {
         DocumentModelList result = new DocumentModelListImpl();
         for (DocumentModel documentModel : documents) {
-            try {
-                result.add(run(documentModel));
-            } catch (NuxeoException e) {
-                log.error("Unable to move document: {} to cold storage", documentModel.getId(), e);
-            }
+            result.add(run(documentModel));
         }
         return result;
     }
