@@ -29,6 +29,7 @@ import org.nuxeo.runtime.test.runner.RunnerFeature;
  */
 @Features(CoreFeature.class)
 @Deploy("org.nuxeo.ecm.platform.notification.api")
+@Deploy("org.nuxeo.ecm.platform.notification.core")
 @Deploy("org.nuxeo.ecm.automation.core")
 @Deploy("org.nuxeo.ecm.core.management")
 @Deploy("org.nuxeo.ecm.platform.rendition.core")
