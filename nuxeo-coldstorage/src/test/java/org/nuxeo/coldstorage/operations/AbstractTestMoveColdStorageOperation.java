@@ -24,6 +24,7 @@ import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import static javax.servlet.http.HttpServletResponse.SC_PRECONDITION_FAILED;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -56,6 +57,7 @@ import org.nuxeo.ecm.core.api.versioning.VersioningService;
 import org.nuxeo.ecm.platform.thumbnail.ThumbnailConstants;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.WithFrameworkProperty;
+import org.nuxeo.runtime.transaction.TransactionHelper;
 
 /**
  * @since 11.0
@@ -119,6 +121,29 @@ public abstract class AbstractTestMoveColdStorageOperation extends AbstractTestC
                 createFileDocument(session, true));
 
         moveContentToColdStorage(session, documents);
+    }
+
+    @Test
+    public void shouldFailMoveDocsToColdStorage() throws OperationException, IOException {
+        DocumentModel underLegalHold = createFileDocument(session, true);
+        session.makeRecord(underLegalHold.getRef());
+        session.setLegalHold(underLegalHold.getRef(), true, "any comment");
+        List<DocumentModel> documents = Arrays.asList(createFileDocument(session, true), //
+                underLegalHold, //
+                createFileDocument(session, true));
+        transactionalFeature.nextTransaction();
+        try {
+            moveContentToColdStorage(session, documents);
+            fail("Should fail because the document under legal hold should prevent from completing the operation");
+        } catch (NuxeoException e) {
+            // expected, let's check none were sent to cold storage
+            TransactionHelper.commitOrRollbackTransaction();
+            TransactionHelper.startTransaction();
+            documents.stream().forEach(doc -> {
+                doc = session.getDocument(doc.getRef());
+                assertFalse(session.getDocument(doc.getRef()).hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME));
+            });
+        }
     }
 
     @Test

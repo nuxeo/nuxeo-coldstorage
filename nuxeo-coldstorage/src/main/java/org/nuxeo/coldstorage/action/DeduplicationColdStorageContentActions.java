@@ -67,16 +67,14 @@ public class DeduplicationColdStorageContentActions implements StreamProcessorTo
         @Override
         protected void compute(CoreSession session, List<String> ids, Map<String, Serializable> properties) {
             log.debug("Start computing duplicated ColdStorage content for documents {}", ids);
-            IdRef[] docRefs = ids.stream().map(IdRef::new).toArray(IdRef[]::new);
-            DocumentModelList documents = session.getDocuments(docRefs);
+            DocumentModelList documents = loadDocuments(session, ids);
 
             ColdStorageService service = Framework.getService(ColdStorageService.class);
 
             for (DocumentModel document : documents) {
                 // Normally it shouldn't be the case
                 if (!document.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME)) {
-                    DocumentModel documentModel = service.moveToColdStorage(session,
-                            document.getRef());
+                    DocumentModel documentModel = service.moveToColdStorage(session, document.getRef());
                     if (documentModel.isVersion()) {
                         documentModel.putContextData(CoreSession.ALLOW_VERSION_WRITE, true);
                     }
