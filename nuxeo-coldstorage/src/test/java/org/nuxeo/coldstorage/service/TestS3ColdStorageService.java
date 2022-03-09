@@ -31,7 +31,7 @@ import org.nuxeo.ecm.core.api.DocumentRef;
 import org.nuxeo.runtime.test.runner.Features;
 
 @Features(S3ColdStorageFeature.class)
-public class S3TestColdStorage extends AbstractTestColdStorageService {
+public class TestS3ColdStorageService extends AbstractTestColdStorageService {
 
     protected S3TestHelper s3TestHelper = S3TestHelper.getInstance();
 
