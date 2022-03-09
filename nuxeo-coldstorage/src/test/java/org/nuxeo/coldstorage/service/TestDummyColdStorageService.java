@@ -50,7 +50,7 @@ import org.nuxeo.ecm.core.io.download.DownloadService;
 import org.nuxeo.runtime.test.runner.Features;
 
 @Features(DummyColdStorageFeature.class)
-public class DummyTestColdStorage extends AbstractTestColdStorageService {
+public class TestDummyColdStorageService extends AbstractTestColdStorageService {
 
     @Inject
     protected EventService eventService;
