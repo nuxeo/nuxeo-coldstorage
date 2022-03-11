@@ -27,6 +27,7 @@ import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.NuxeoException;
 import org.nuxeo.ecm.core.api.event.CoreEventConstants;
+import org.nuxeo.ecm.core.api.impl.DownloadBlobGuard;
 import org.nuxeo.ecm.core.api.model.Property;
 import org.nuxeo.ecm.core.event.Event;
 import org.nuxeo.ecm.core.event.EventContext;
@@ -62,6 +63,12 @@ public class CheckUpdateMainContentInColdStorageListener implements EventListene
 
         DocumentModel previousDocument = (DocumentModel) eventContext.getProperty(
                 CoreEventConstants.PREVIOUS_DOCUMENT_MODEL);
+        if (doc.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME)
+                || previousDocument.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME)) {
+            // Do not trigger a full text re-indexing since the main blob was sent to cold storage
+            log.trace("Document is in cold storage, skip fulltext reindex", doc::getId);
+            DownloadBlobGuard.enable();
+        }
         if (previousDocument.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME)
                 && previousDocument.getPropertyValue(ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY) != null) {
             DocumentModel document = ((DocumentEventContext) eventContext).getSourceDocument();
