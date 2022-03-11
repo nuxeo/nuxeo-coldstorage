@@ -28,6 +28,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_BEING_RESTORED_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_BEING_RETRIEVED_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_IN_COLDSTORAGE;
@@ -60,6 +61,7 @@ import org.nuxeo.ecm.core.api.Blobs;
 import org.nuxeo.ecm.core.api.CoreInstance;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
+import org.nuxeo.ecm.core.api.DocumentModelList;
 import org.nuxeo.ecm.core.api.DocumentRef;
 import org.nuxeo.ecm.core.api.IdRef;
 import org.nuxeo.ecm.core.api.NuxeoException;
@@ -74,6 +76,8 @@ import org.nuxeo.ecm.core.blob.SimpleManagedBlob;
 import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
 import org.nuxeo.ecm.core.event.test.CapturingEventListener;
 import org.nuxeo.ecm.core.io.download.DownloadService;
+import org.nuxeo.ecm.core.test.CoreFeature;
+import org.nuxeo.ecm.core.test.StorageConfiguration;
 import org.nuxeo.ecm.platform.ec.notification.service.NotificationServiceHelper;
 import org.nuxeo.ecm.platform.thumbnail.ThumbnailConstants;
 import org.nuxeo.runtime.test.runner.Deploy;
@@ -97,6 +101,9 @@ public abstract class AbstractTestColdStorageService {
 
     @Inject
     protected TransactionalFeature transactionalFeature;
+
+    @Inject
+    protected CoreFeature coreFeature;
 
     @Inject
     protected BlobManager blobManager;
@@ -366,6 +373,27 @@ public abstract class AbstractTestColdStorageService {
         SimpleManagedBlob lastThumbnail = (SimpleManagedBlob) thumbnailService.getThumbnail(documentModel, session);
         assertNotNull(lastThumbnail);
         assertEquals(originalThumbnail.getKey(), lastThumbnail.getKey());
+    }
+
+    @Test
+    public void shouldNotRecomputeFullText() {
+        StorageConfiguration storageConfiguration = coreFeature.getStorageConfiguration();
+        assumeTrue("fulltext search not supported", storageConfiguration.supportsFulltextSearch());
+
+        // Create a doc with 'foo' text as main content
+        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
+        transactionalFeature.nextTransaction();
+        DocumentModelList res = session.query("SELECT * FROM Document WHERE ecm:fulltext = 'foo'");
+        assertEquals(1, res.size());
+
+        documentModel = moveContentToColdStorage(session, documentModel.getRef());
+
+        transactionalFeature.nextTransaction();
+        coreFeature.getStorageConfiguration().waitForFulltextIndexing();
+
+        // Assert binary text has not been erased after doc sent to cold storage
+        res = session.query("SELECT * FROM Document WHERE ecm:fulltext = 'foo'");
+        assertEquals(1, res.size());
     }
 
     protected DocumentModel moveAndRestore(DocumentModel documentModel) throws IOException {
