@@ -27,7 +27,7 @@
     </listener>
     <listener name="checkColdStorageContentRestoreListener" async="true"
               class="org.nuxeo.coldstorage.events.CheckColdStorageContentRestoreListener">
-      <event>coldStorageContentToRestore</event>
+      <event>coldStorageContentRestored</event>
     </listener>
     <listener name="checkColdStorageDocumentCheckedIn" async="true"
               class="org.nuxeo.coldstorage.events.CheckColdStorageContentMovedListener">

@@ -21,22 +21,33 @@ package org.nuxeo.coldstorage.service;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.nuxeo.ecm.core.api.security.SecurityConstants.READ;
+import static org.nuxeo.ecm.core.api.security.SecurityConstants.WRITE;
+import static org.nuxeo.ecm.core.api.security.SecurityConstants.WRITE_COLD_STORAGE;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
 import org.junit.Test;
 import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.coldstorage.DummyColdStorageFeature;
+import org.nuxeo.coldstorage.action.PropagateMoveToColdStorageContentAction;
 import org.nuxeo.ecm.core.DummyBlobProvider;
+import org.nuxeo.ecm.core.api.Blobs;
+import org.nuxeo.ecm.core.api.CoreInstance;
+import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.IdRef;
 import org.nuxeo.ecm.core.api.event.CoreEventConstants;
@@ -47,13 +58,18 @@ import org.nuxeo.ecm.core.event.EventService;
 import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
 import org.nuxeo.ecm.core.event.test.CapturingEventListener;
 import org.nuxeo.ecm.core.io.download.DownloadService;
+import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.Features;
+import org.nuxeo.runtime.test.runner.LogCaptureFeature;
 
 @Features(DummyColdStorageFeature.class)
 public class TestDummyColdStorageService extends AbstractTestColdStorageService {
 
     @Inject
     protected EventService eventService;
+    
+    @Inject
+    protected LogCaptureFeature.Result logResult;
 
     @Override
     protected String getBlobProviderName() {
@@ -68,10 +84,9 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
 
         // Create a blob of which retrieval was requested and that is retrieved
         BlobStatus coldContentStatusOfFile = new BlobStatus().withDownloadable(true)
-                                                              .withDownloadableUntil(downloadableUntil);
+                                                             .withDownloadableUntil(downloadableUntil);
         addColdStorageContentBlobStatus(doc.getId(), coldContentStatusOfFile);
-        try (CapturingEventListener listener = new CapturingEventListener(
-                DownloadService.EVENT_NAME,
+        try (CapturingEventListener listener = new CapturingEventListener(DownloadService.EVENT_NAME,
                 ColdStorageConstants.COLD_STORAGE_CONTENT_DOWNLOAD_EVENT_NAME)) {
             // let's mimic a download
             Map<String, Serializable> map = new HashMap<>();
@@ -85,7 +100,55 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
             // and assert it is cancelled and a cold storage download event is fired instead
             assertEquals(2, listener.streamCapturedEvents().count());
             assertTrue(listener.findFirstCapturedEvent(DownloadService.EVENT_NAME).get().isCanceled());
-            assertTrue(listener.findFirstCapturedEvent(ColdStorageConstants.COLD_STORAGE_CONTENT_DOWNLOAD_EVENT_NAME).isPresent());
+            assertTrue(listener.findFirstCapturedEvent(ColdStorageConstants.COLD_STORAGE_CONTENT_DOWNLOAD_EVENT_NAME)
+                               .isPresent());
+        }
+    }
+
+    @Test
+    @Deploy("org.nuxeo.coldstorage.test:OSGI-INF/test-coldstorage-bulk-contrib.xml")
+    @LogCaptureFeature.FilterOn(loggerClass = PropagateMoveToColdStorageContentAction.class, logLevel = "INFO")
+    public void shouldMoveManyDocsWithSameBlobToColdStorage() throws IOException {
+        // with regular user with "WriteColdStorage" permission
+        // Let's create a list of documents all sharing the same blob
+        List<DocumentModel> list1 = createSameBlobFileDocuments(DEFAULT_DOC_NAME, 10, Blobs.createBlob(FILE_CONTENT),
+                "john", READ, WRITE, WRITE_COLD_STORAGE);
+        // and another one with a different blob
+        List<DocumentModel> list2 = createSameBlobFileDocuments(DEFAULT_DOC_NAME, 10,
+                Blobs.createBlob(FILE_CONTENT + FILE_CONTENT), "john", READ, WRITE, WRITE_COLD_STORAGE);
+        coreFeature.waitForAsyncCompletion(); // for thumbnail generation
+        List<DocumentModel> documentModels = new ArrayList<DocumentModel>();
+        documentModels = Stream.concat(list1.stream(), list2.stream()).collect(Collectors.toList());
+        CoreSession userSession = CoreInstance.getCoreSession(documentModels.get(0).getRepositoryName(), "john");
+
+        // Move only the 2 first doc
+        service.moveToColdStorage(userSession, list1.get(0).getRef());
+        service.moveToColdStorage(userSession, list2.get(0).getRef());
+        coreFeature.waitForAsyncCompletion();
+
+        // Moving the 2 first document to cold storage should moved all the other ones
+        for (DocumentModel doc : list1) {
+            verifyContent(userSession, doc.getRef(), true, FILE_CONTENT);
+        }
+        for (DocumentModel doc : list2) {
+            verifyContent(userSession, doc.getRef(), true, FILE_CONTENT + FILE_CONTENT);
+        }
+
+        // The BAF in charge of moving the other documents should be silent
+        List<String> caughtEvents = logResult.getCaughtEventMessages();
+        assertTrue(caughtEvents.isEmpty());
+
+        // Restore only the 2 first doc
+        service.restoreContentFromColdStorage(session, list1.get(0).getRef());
+        service.restoreContentFromColdStorage(session, list2.get(0).getRef());
+
+        // Restoring the first document to cold storage should restore all the other ones
+        coreFeature.waitForAsyncCompletion();
+        for (DocumentModel doc : list1) {
+            verifyRestore(doc.getRef(), FILE_CONTENT);
+        }
+        for (DocumentModel doc : list2) {
+            verifyRestore(doc.getRef(), FILE_CONTENT + FILE_CONTENT);
         }
     }
 
