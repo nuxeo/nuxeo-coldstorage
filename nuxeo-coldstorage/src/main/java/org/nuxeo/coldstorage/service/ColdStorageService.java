@@ -20,6 +20,7 @@
 package org.nuxeo.coldstorage.service;
 
 import java.time.Duration;
+import java.util.List;
 
 import org.nuxeo.coldstorage.ColdStorageConstants.ColdStorageContentStatus;
 import org.nuxeo.ecm.core.api.Blob;
@@ -47,7 +48,21 @@ public interface ColdStorageService {
      */
     DocumentModel moveContentToColdStorage(CoreSession session, DocumentRef documentRef);
 
+    /**
+     * Internal use.
+     */
     DocumentModel moveToColdStorage(CoreSession session, DocumentRef documentRef);
+
+    /**
+     * Internal use.
+     */
+    DocumentModel proceedMoveToColdStorage(CoreSession session, DocumentRef documentRef);
+
+    /**
+     * Internal use.
+     */
+    DocumentModel requestRetrievalFromColdStorage(CoreSession session, DocumentRef documentRef,
+                                                  Duration restoreDuration);
 
     /**
      * Requests a retrieval of the cold storage content associated with the document of the given {@link DocumentRef}.
@@ -62,9 +77,6 @@ public interface ColdStorageService {
      * @throws NuxeoException if there is no cold storage content associated with the given document, or if it is being
      *             retrieved
      */
-    DocumentModel requestRetrievalFromColdStorage(CoreSession session, DocumentRef documentRef,
-                                                  Duration restoreDuration);
-
     DocumentModel retrieveFromColdStorage(CoreSession session, DocumentModel doc, Duration restoreDuration);
 
     /**
@@ -81,24 +93,31 @@ public interface ColdStorageService {
      */
     DocumentModel restoreContentFromColdStorage(CoreSession session, DocumentRef documentRef);
 
+    /**
+     * Internal use.
+     */
     DocumentModel restoreFromColdStorage(CoreSession session, DocumentRef documentRef);
 
     /**
-     * Restores the main content from ColdStorage.
-     *
-     * @implSpec: fires a {@value org.nuxeo.coldstorage.ColdStorageConstants#COLD_STORAGE_CONTENT_TO_RESTORE_EVENT_NAME}
-     *            event.
-     * @see #restoreContentFromColdStorage(CoreSession, DocumentRef)
+     * Internal use.
      */
-    void restoreMainContent(DocumentModel documentModel);
+    DocumentModel proceedRestoreMainContent(CoreSession session, DocumentModel documentModel);
 
     /**
-     * Move to ColdStorage all duplicated documents with the same content.
+     * Move to ColdStorage all documents referencing the given blob digests as main content.
      *
      * @param session the session
-     * @param documentModel the document model
+     * @param blobDigests the blob digests
      */
-    void moveDuplicatedBlobToColdStorage(CoreSession session, DocumentModel documentModel);
+    void propagateMoveToColdStorage(CoreSession session, List<String> blobDigests);
+
+    /**
+     * Restore from ColdStorage all documents referencing the given blob digests as main content.
+     *
+     * @param session the session
+     * @param blobDigests the blob digests
+     */
+    void propagateRestoreFromColdStorage(CoreSession session, List<String> blobDigests);
 
     /**
      * Checks if the retrieved cold storage contents are available for download.

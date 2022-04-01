@@ -34,9 +34,9 @@ import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AV
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_MOVED_EVENT_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_RESTORED_EVENT_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_RESTORED_NOTIFICATION_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED;
-import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_TO_RESTORE_EVENT_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_TO_RETRIEVE_EVENT_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_FACET_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_THUMBNAIL_PREVIEW_REQUIRED_PROPERTY_NAME;
@@ -46,6 +46,8 @@ import static org.nuxeo.coldstorage.ColdStorageConstants.FILE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.GET_COLDSTORAGE_DOCUMENTS_TO_CHECK_QUERY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.GET_DOCUMENTS_TO_CHECK_QUERY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.WRITE_COLD_STORAGE;
+import static org.nuxeo.coldstorage.events.CheckUpdateColdStorageContentListener.DISABLE_COLD_STORAGE_CHECK_UPDATE_COLDSTORAGE_CONTENT_LISTENER;
+import static org.nuxeo.coldstorage.events.CheckUpdateMainContentInColdStorageListener.DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -57,14 +59,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.coldstorage.ColdStorageConstants.ColdStorageContentStatus;
 import org.nuxeo.coldstorage.ColdStorageRenditionDescriptor;
-import org.nuxeo.coldstorage.action.DeduplicationColdStorageContentActions;
+import org.nuxeo.coldstorage.action.PropagateMoveToColdStorageContentAction;
+import org.nuxeo.coldstorage.action.PropagateRestoreFromColdStorageContentAction;
 import org.nuxeo.ecm.core.api.Blob;
+import org.nuxeo.ecm.core.api.CoreInstance;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentModelList;
@@ -232,10 +237,17 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
 
     @Override
     public DocumentModel moveToColdStorage(CoreSession session, DocumentRef documentRef) {
+        DocumentModel documentModel = proceedMoveToColdStorage(session, documentRef);
+        fireEvent(documentModel, session, COLD_STORAGE_CONTENT_MOVED_EVENT_NAME);
+        return session.saveDocument(documentModel);
+    }
+
+    @Override
+    public DocumentModel proceedMoveToColdStorage(CoreSession session, DocumentRef documentRef) {
         DocumentModel documentModel = session.getDocument(documentRef);
         // retrieve the rendition which will be used to replace the content, once the move done
         Blob renditionBlob = getRendition(documentModel, session);
-        // make the move
+        // make the move of the main content
         documentModel = moveContentToColdStorage(session, documentModel.getRef());
 
         // replace the file content document by the rendition
@@ -247,16 +259,12 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
             documentModel.setPropertyValue("picture:views", documentModel.getPropertyValue("picture:views"));
         }
 
-        fireEvent(documentModel, session, COLD_STORAGE_CONTENT_MOVED_EVENT_NAME);
-
         return documentModel;
     }
 
     @Override
     public DocumentModel moveContentToColdStorage(CoreSession session, DocumentRef documentRef) {
         DocumentModel documentModel = session.getDocument(documentRef);
-        log.debug("Move to cold storage the main content of document: {}", documentModel);
-
         if (session.isUnderRetentionOrLegalHold(documentRef)) {
             log.debug("The document {} is under retention or legal hold and cannot be moved to cold storage",
                     () -> documentRef);
@@ -284,7 +292,6 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
             throw new NuxeoException(String.format("There is no main content for document: %s.", documentModel),
                     SC_NOT_FOUND);
         }
-
         documentModel.addFacet(COLD_STORAGE_FACET_NAME);
         documentModel.setPropertyValue(COLD_STORAGE_CONTENT_PROPERTY, mainContent);
         documentModel.setPropertyValue(FILE_CONTENT_PROPERTY, null);
@@ -328,7 +335,11 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         }
         documentModel.setPropertyValue(COLD_STORAGE_BEING_RETRIEVED_PROPERTY, true);
         fireEvent(documentModel, session, COLD_STORAGE_CONTENT_TO_RETRIEVE_EVENT_NAME);
-        return documentModel;
+        return CoreInstance.doPrivileged(session, s -> {
+            // The retrieval is allowed for users with only READ access.
+            // It requires an unrestricted session to update ColdStorage metadata on the document
+            return s.saveDocument(documentModel);
+        });
     }
 
     @Override
@@ -396,10 +407,15 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         boolean downloadable = blobStatus.getStorageClass() == null ? blobStatus.isDownloadable()
                 : (blobStatus.isDownloadable() && blobStatus.getDownloadableUntil() != null);
         if (downloadable) {
-            documentModel.setPropertyValue(COLD_STORAGE_TO_BE_RESTORED_PROPERTY, false);
-            documentModel.setPropertyValue(COLD_STORAGE_BEING_RESTORED_PROPERTY, true);
+            // Restore the main content
+            documentModel = proceedRestoreMainContent(session, documentModel);
             documentModel = session.saveDocument(documentModel);
-            restoreMainContent(documentModel);
+
+            // Send notification
+            DocumentEventContext ctx = new DocumentEventContext(session, session.getPrincipal(), documentModel);
+            EventService eventService = Framework.getService(EventService.class);
+            ctx.setProperty(COLD_STORAGE_CONTENT_RESTORED_EVENT_NAME, "true");
+            eventService.fireEvent(ctx.newEvent(COLD_STORAGE_CONTENT_RESTORED_EVENT_NAME));
         } else {
             documentModel = requestRetrievalFromColdStorage(session, documentModel.getRef(),
                     getDurationAvailability());
@@ -408,22 +424,39 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
     }
 
     @Override
-    public void restoreMainContent(DocumentModel documentModel) {
-        fireEvent(documentModel, documentModel.getCoreSession(), COLD_STORAGE_CONTENT_TO_RESTORE_EVENT_NAME);
+    public DocumentModel proceedRestoreMainContent(CoreSession session, DocumentModel documentModel) {
+        Serializable coldContent = documentModel.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
+        // We must reset all properties of the Cold Storage facet before removing it, otherwise the properties will
+        // still have the old values if we add back the facet (i.e. send back to cold storage)
+        documentModel.setPropertyValue(COLD_STORAGE_CONTENT_PROPERTY, null);
+        documentModel.setPropertyValue(COLD_STORAGE_BEING_RESTORED_PROPERTY, null);
+        documentModel.setPropertyValue(COLD_STORAGE_BEING_RETRIEVED_PROPERTY, null);
+        documentModel.setPropertyValue(COLD_STORAGE_TO_BE_RESTORED_PROPERTY, null);
+        documentModel.setPropertyValue(COLD_STORAGE_CONTENT_AVAILABLE_IN_COLDSTORAGE, null);
+        documentModel.setPropertyValue(COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED, null);
+        documentModel.setPropertyValue(COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL, null);
+
+        // Disable main and ColdStorage storage contents check otherwise, the restore action won't be allowed
+        documentModel.putContextData(DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER, true);
+        documentModel.putContextData(DISABLE_COLD_STORAGE_CHECK_UPDATE_COLDSTORAGE_CONTENT_LISTENER, true);
+        documentModel = session.saveDocument(documentModel);
+        documentModel.removeFacet(COLD_STORAGE_FACET_NAME);
+
+        documentModel.setPropertyValue(FILE_CONTENT_PROPERTY, coldContent);
+        // Disable main and ColdStorage storage contents check otherwise, the restore action won't be allowed
+        documentModel.putContextData(DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER, true);
+        documentModel.putContextData(DISABLE_COLD_STORAGE_CHECK_UPDATE_COLDSTORAGE_CONTENT_LISTENER, true);
+        return documentModel;
     }
 
     @Override
-    public void moveDuplicatedBlobToColdStorage(CoreSession session, DocumentModel documentModel) {
-        String blobDigest = ((Blob) documentModel.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY)).getDigest();
-        String documentId = documentModel.getId();
-        String query = String.format(
-                "SELECT * FROM Document WHERE ecm:uuid != '%s' AND (ecm:isVersion = 0 AND file:content/digest = '%s' "
-                        + "OR ecm:isVersion = 1 AND ecm:versionVersionableId = '%s' AND file:content/digest = '%s')",
-                documentModel.getId(), blobDigest, documentModel.getId(), blobDigest);
+    public void propagateMoveToColdStorage(CoreSession session, List<String> blobDigests) {
+        String query = String.format("SELECT * FROM Document WHERE file:content/digest IN (%s)",
+                blobDigests.stream().map((s) -> "'" + s + "'").collect(Collectors.joining(",")));
 
         BulkService bulkService = Framework.getService(BulkService.class);
         BulkCommand command = new BulkCommand //
-                .Builder(DeduplicationColdStorageContentActions.ACTION_NAME, query) //
+                .Builder(PropagateMoveToColdStorageContentAction.ACTION_NAME, query) //
                                                                                    .user(SecurityConstants.SYSTEM_USERNAME)
                                                                                    .repository(
                                                                                            session.getRepositoryName())
@@ -432,11 +465,32 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         String commandId = bulkService.submit(command);
         BulkStatus status = bulkService.getStatus(commandId);
         if (status == null) {
-            log.error("Unable to move duplicated blob: {} to cold storage", documentId);
+            log.error("Unable to move documents referencing blob: {} to cold storage", blobDigests);
         } else {
-            log.debug("Moving duplicated blob for document: {} status {}", documentId, status.getState());
+            log.debug("Moving documents referencing blob : {} status {}", blobDigests, status.getState());
         }
+    }
 
+    @Override
+    public void propagateRestoreFromColdStorage(CoreSession session, List<String> blobDigests) {
+        String query = String.format("SELECT * FROM Document WHERE %s/digest IN (%s)", COLD_STORAGE_CONTENT_PROPERTY,
+                blobDigests.stream().map((s) -> "'" + s + "'").collect(Collectors.joining(",")));
+
+        BulkService bulkService = Framework.getService(BulkService.class);
+        BulkCommand command = new BulkCommand //
+                .Builder(PropagateRestoreFromColdStorageContentAction.ACTION_NAME, query) //
+                                                                                   .user(SecurityConstants.SYSTEM_USERNAME)
+                                                                                   .repository(
+                                                                                           session.getRepositoryName())
+                                                                                   .build();
+        String commandId = bulkService.submit(command);
+
+        BulkStatus status = bulkService.getStatus(commandId);
+        if (status == null) {
+            log.error("Unable to restore documents referencing blob: {} from cold storage", blobDigests);
+        } else {
+            log.debug("Restoring documents referencing blob : {} status {}", blobDigests, status.getState());
+        }
     }
 
     @Override
@@ -464,8 +518,7 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
                 // Check if the Document should be restored definitively
                 Serializable undoMove = doc.getPropertyValue(COLD_STORAGE_TO_BE_RESTORED_PROPERTY);
                 if (Boolean.TRUE.equals(undoMove)) {
-                    restoreMainContent(doc);
-                    doc.setPropertyValue(COLD_STORAGE_TO_BE_RESTORED_PROPERTY, false);
+                    proceedRestoreMainContent(session, doc);
                     session.saveDocument(doc);
                 } else {
                     doc.setPropertyValue(COLD_STORAGE_BEING_RETRIEVED_PROPERTY, false);
