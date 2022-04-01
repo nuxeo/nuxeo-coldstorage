@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.List;
@@ -56,6 +57,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.coldstorage.ColdStorageConstants.ColdStorageContentStatus;
+import org.nuxeo.ecm.core.DummyThumbnailFactory;
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.Blobs;
 import org.nuxeo.ecm.core.api.CoreInstance;
@@ -128,11 +130,11 @@ public abstract class AbstractTestColdStorageService {
         DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true, aces);
 
         CoreSession userSession = CoreInstance.getCoreSession(documentModel.getRepositoryName(), "john");
-        moveAndVerifyContent(userSession, documentModel);
+        moveAndVerifyContent(userSession, documentModel.getRef());
 
         // with Administrator
         documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
-        moveAndVerifyContent(session, documentModel);
+        moveAndVerifyContent(session, documentModel.getRef());
     }
 
     @Test
@@ -146,9 +148,9 @@ public abstract class AbstractTestColdStorageService {
         CoreSession userSession = CoreInstance.getCoreSession(documentModel.getRepositoryName(), "john");
         documentModel = moveAndRestore(documentModel);
         userSession.saveDocument(documentModel);
-        transactionalFeature.nextTransaction();
-        documentModel.refresh();
-        moveAndVerifyContent(userSession, documentModel);
+        coreFeature.waitForAsyncCompletion();
+        documentModel = verifyRestore(documentModel.getRef(), FILE_CONTENT);
+        moveAndVerifyContent(userSession, documentModel.getRef());
     }
 
     @Test
@@ -237,8 +239,7 @@ public abstract class AbstractTestColdStorageService {
         documentModel = moveContentToColdStorage(session, documentModel.getRef());
         session.saveDocument(documentModel);
         // request a retrieval from the cold storage
-        documentModel = service.requestRetrievalFromColdStorage(session, documentModel.getRef(),
-                RESTORE_DURATION);
+        documentModel = service.requestRetrievalFromColdStorage(session, documentModel.getRef(), RESTORE_DURATION);
         session.saveDocument(documentModel);
         transactionalFeature.nextTransaction();
         documentModel.refresh();
@@ -255,8 +256,7 @@ public abstract class AbstractTestColdStorageService {
         documentModel = moveContentToColdStorage(session, documentModel.getRef());
         session.saveDocument(documentModel);
         // request a retrieval from the cold storage
-        documentModel = service.requestRetrievalFromColdStorage(session, documentModel.getRef(),
-                RESTORE_DURATION);
+        documentModel = service.requestRetrievalFromColdStorage(session, documentModel.getRef(), RESTORE_DURATION);
         session.saveDocument(documentModel);
 
         // try to request a retrieval for a second time
@@ -288,7 +288,7 @@ public abstract class AbstractTestColdStorageService {
     public void shouldFailUpdateMainContentAlreadyInColdStorage() throws IOException {
         // move the main content into the cold storage
         DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
-        moveAndVerifyContent(session, documentModel);
+        moveAndVerifyContent(session, documentModel.getRef());
 
         // we cannot update the main content as it is already in cold storage
         documentModel.refresh();
@@ -324,16 +324,20 @@ public abstract class AbstractTestColdStorageService {
         DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
         documentModel = moveAndRestore(documentModel);
         session.saveDocument(documentModel);
-        transactionalFeature.nextTransaction();
-        documentModel.refresh();
+        coreFeature.waitForAsyncCompletion();
+        verifyRestore(documentModel.getRef(), FILE_CONTENT);
+    }
+
+    protected DocumentModel verifyRestore(DocumentRef documentRef, String expectedContent) throws IOException {
+        DocumentModel documentModel = session.getDocument(documentRef);
 
         // check main blobs
         Blob fileContent = (Blob) documentModel.getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY);
-        assertEquals(FILE_CONTENT, fileContent.getString());
+        assertEquals(expectedContent, fileContent.getString());
 
         // we shouldn't have any ColdStorage content
         assertFalse(documentModel.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME));
-
+        return documentModel;
     }
 
     @Test
@@ -341,15 +345,14 @@ public abstract class AbstractTestColdStorageService {
     public void shouldNotRecomputeThumbnail() throws IOException {
         DocumentModel documentModel = session.createDocumentModel("/", DEFAULT_DOC_NAME, "MyCustomFile");
         documentModel.setPropertyValue("file:content", (Serializable) Blobs.createBlob(FILE_CONTENT));
-        DocumentModel document = session.createDocument(documentModel);
+        documentModel = session.createDocument(documentModel);
         documentModel = session.saveDocument(documentModel);
-        transactionalFeature.nextTransaction();
-        documentModel.refresh();
+        coreFeature.waitForAsyncCompletion();
 
         SimpleManagedBlob originalThumbnail = (SimpleManagedBlob) thumbnailService.getThumbnail(documentModel, session);
         assertNotNull(originalThumbnail);
 
-        moveAndVerifyContent(session, documentModel);
+        documentModel = moveAndVerifyContent(session, documentModel.getRef());
 
         SimpleManagedBlob thumbnailUpdateOne = (SimpleManagedBlob) thumbnailService.getThumbnail(documentModel,
                 session);
@@ -400,25 +403,35 @@ public abstract class AbstractTestColdStorageService {
 
     protected DocumentModel moveAndRestore(DocumentModel documentModel) throws IOException {
         // move the blob to cold storage and verify the content
-        moveAndVerifyContent(session, documentModel);
+        moveAndVerifyContent(session, documentModel.getRef());
         // undo move from the cold storage
         return service.restoreContentFromColdStorage(session, documentModel.getRef());
     }
 
-    protected void moveAndVerifyContent(CoreSession session, DocumentModel documentModel) throws IOException {
-        documentModel = moveContentToColdStorage(session, documentModel.getRef());
+    protected DocumentModel moveAndVerifyContent(CoreSession session, DocumentRef ref) throws IOException {
+        DocumentModel documentModel = moveContentToColdStorage(session, ref);
         session.saveDocument(documentModel);
         transactionalFeature.nextTransaction();
-        documentModel.refresh();
+        return verifyContent(session, documentModel.getRef(), false, FILE_CONTENT);
+    }
+
+    protected DocumentModel verifyContent(CoreSession session, DocumentRef documentRef, boolean withThumbnail,
+            String expectedContent) throws IOException {
+        DocumentModel documentModel = session.getDocument(documentRef);
 
         assertTrue(documentModel.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME));
 
-        assertNull(documentModel.getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY));
+        if (withThumbnail) {
+            Blob fileContent = (Blob) documentModel.getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY);
+            assertEquals(DummyThumbnailFactory.DUMMY_THUMBNAIL_CONTENT, fileContent.getString());
+        } else {
+            assertNull(documentModel.getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY));
+        }
 
         // check if the `coldstorage:coldContent` property contains the original file content
         Blob content = (Blob) documentModel.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
         assertNotNull(content);
-        assertEquals(FILE_CONTENT, content.getString());
+        assertEquals(expectedContent, content.getString());
         assertEquals(getBlobProviderName(), ((ManagedBlob) content).getProviderId());
         assertNull(documentModel.getPropertyValue(COLD_STORAGE_BEING_RESTORED_PROPERTY));
         assertNull(documentModel.getPropertyValue(COLD_STORAGE_BEING_RETRIEVED_PROPERTY));
@@ -426,6 +439,7 @@ public abstract class AbstractTestColdStorageService {
         assertNull(documentModel.getPropertyValue(COLD_STORAGE_CONTENT_AVAILABLE_IN_COLDSTORAGE));
         assertTrue(Boolean.TRUE.equals(documentModel.getPropertyValue(COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED)));
         assertNull(documentModel.getPropertyValue(COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL));
+        return documentModel;
     }
 
     protected DocumentModel moveAndRequestRetrievalFromColdStorage(String documentName) {
@@ -433,8 +447,7 @@ public abstract class AbstractTestColdStorageService {
         documentModel = moveContentToColdStorage(session, documentModel.getRef());
         session.saveDocument(documentModel);
         // request a retrieval from the cold storage
-        documentModel = service.requestRetrievalFromColdStorage(session, documentModel.getRef(),
-                RESTORE_DURATION);
+        documentModel = service.requestRetrievalFromColdStorage(session, documentModel.getRef(), RESTORE_DURATION);
         return session.saveDocument(documentModel);
     }
 
@@ -442,8 +455,7 @@ public abstract class AbstractTestColdStorageService {
             int totalBeingRetrieved) {
         try (CapturingEventListener listener = new CapturingEventListener(
                 ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME)) {
-            ColdStorageContentStatus coldStorageContentStatus = service.checkColdStorageContentAvailability(
-                    session);
+            ColdStorageContentStatus coldStorageContentStatus = service.checkColdStorageContentAvailability(session);
 
             assertEquals(totalBeingRetrieved, coldStorageContentStatus.getTotalBeingRetrieved());
             var expectedSizeOfDocs = expectedAvailableDocIds.size();
@@ -492,6 +504,24 @@ public abstract class AbstractTestColdStorageService {
             document.setACP(acp, true);
         }
         return document;
+    }
+
+    protected List<DocumentModel> createSameBlobFileDocuments(String name, int nbDoc, Blob blob, String username,
+            String... permissions) {
+        List<DocumentModel> docs = new ArrayList<DocumentModel>();
+        for (int i = 0; i < nbDoc; i++) {
+            DocumentModel documentModel = session.createDocumentModel("/", name + (i + 1), "File");
+            documentModel.setPropertyValue("file:content", (Serializable) blob);
+            DocumentModel document = session.createDocument(documentModel);
+            ACP acp = document.getACP();
+            ACL acl = acp.getOrCreateACL();
+            for (String permission : permissions) {
+                acl.add(new ACE(username, permission, true));
+            }
+            session.setACP(document.getRef(), acp, false);
+            docs.add(document);
+        }
+        return docs;
     }
 
     protected DocumentModel moveContentToColdStorage(CoreSession session, DocumentRef documentRef) {

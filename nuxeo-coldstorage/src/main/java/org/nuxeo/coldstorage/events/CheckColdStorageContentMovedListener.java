@@ -19,12 +19,18 @@
 
 package org.nuxeo.coldstorage.events;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.coldstorage.service.ColdStorageService;
+import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
+import org.nuxeo.ecm.core.event.Event;
 import org.nuxeo.ecm.core.event.EventBundle;
 import org.nuxeo.ecm.core.event.PostCommitEventListener;
 import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
@@ -42,7 +48,6 @@ public class CheckColdStorageContentMovedListener implements PostCommitEventList
 
     private static final Logger log = LogManager.getLogger(CheckColdStorageContentMovedListener.class);
 
-
     @Override
     public void handleEvent(EventBundle events) {
         if (events.isEmpty()) {
@@ -50,19 +55,27 @@ public class CheckColdStorageContentMovedListener implements PostCommitEventList
         }
 
         ColdStorageService service = Framework.getService(ColdStorageService.class);
-
-        events.forEach(event -> {
+        List<String> blobDigests = new ArrayList<String>();
+        Iterator<Event> it = events.iterator();
+        while (it.hasNext()) {
+            Event event = it.next();
             DocumentEventContext docCtx = (DocumentEventContext) event.getContext();
             DocumentModel documentModel = docCtx.getSourceDocument();
-            CoreSession coreSession = documentModel.getCoreSession();
+            CoreSession coreSession = docCtx.getCoreSession();
             if (documentModel.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME)) {
                 log.debug("Start moving to ColdStorage all versions and duplicated blobs for document {}",
                         documentModel::getId);
-                service.moveDuplicatedBlobToColdStorage(coreSession, documentModel);
+                String blobDigest = ((Blob) documentModel.getPropertyValue(
+                        ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY)).getDigest();
+                blobDigests.add(blobDigest);
                 log.debug("End moving to ColdStorage all versions and duplicated blobs for document {}",
                         documentModel::getId);
             }
-        });
+            if (!it.hasNext() && !blobDigests.isEmpty()) {
+                service.propagateMoveToColdStorage(coreSession, blobDigests);
+            }
+        }
+
     }
 
 }
