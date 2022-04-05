@@ -20,6 +20,7 @@
 package org.nuxeo.coldstorage.service;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.nuxeo.ecm.core.api.security.SecurityConstants.READ;
 import static org.nuxeo.ecm.core.api.security.SecurityConstants.WRITE;
@@ -43,6 +44,7 @@ import javax.inject.Inject;
 import org.junit.Test;
 import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.coldstorage.DummyColdStorageFeature;
+import org.nuxeo.coldstorage.action.MoveToColdStorageContentAction;
 import org.nuxeo.coldstorage.action.PropagateMoveToColdStorageContentAction;
 import org.nuxeo.ecm.core.DummyBlobProvider;
 import org.nuxeo.ecm.core.api.Blobs;
@@ -51,13 +53,18 @@ import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.IdRef;
 import org.nuxeo.ecm.core.api.event.CoreEventConstants;
+import org.nuxeo.ecm.core.api.security.SecurityConstants;
 import org.nuxeo.ecm.core.blob.BlobStatus;
 import org.nuxeo.ecm.core.blob.ManagedBlob;
+import org.nuxeo.ecm.core.bulk.BulkService;
+import org.nuxeo.ecm.core.bulk.message.BulkCommand;
+import org.nuxeo.ecm.core.bulk.message.BulkStatus;
 import org.nuxeo.ecm.core.event.Event;
 import org.nuxeo.ecm.core.event.EventService;
 import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
 import org.nuxeo.ecm.core.event.test.CapturingEventListener;
 import org.nuxeo.ecm.core.io.download.DownloadService;
+import org.nuxeo.runtime.api.Framework;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.Features;
 import org.nuxeo.runtime.test.runner.LogCaptureFeature;
@@ -74,6 +81,28 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
     @Override
     protected String getBlobProviderName() {
         return "dummy";
+    }
+
+    @Test
+    public void shouldBulkMoveToColdStorage() throws IOException {
+        List<DocumentModel> docs = new ArrayList<DocumentModel>();
+        for (int i = 0; i < 10; i++) {
+            docs.add(createFileDocument(DEFAULT_DOC_NAME, Blobs.createBlob(FILE_CONTENT + i)));
+        }
+        transactionalFeature.nextTransaction();
+        String query = "SELECT * FROM File";
+
+        BulkService bulkService = Framework.getService(BulkService.class);
+        String username = SecurityConstants.SYSTEM_USERNAME;
+        String commandId = bulkService.submit(
+                new BulkCommand.Builder(MoveToColdStorageContentAction.ACTION_NAME, query, username).build());
+        coreFeature.waitForAsyncCompletion();
+
+        BulkStatus status = bulkService.getStatus(commandId);
+        assertNotNull(status);
+        for (DocumentModel doc : docs) {
+            verifyContent(session, doc.getRef(), true, FILE_CONTENT);
+        }
     }
 
     @Test
