@@ -57,6 +57,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.coldstorage.ColdStorageConstants.ColdStorageContentStatus;
+import org.nuxeo.coldstorage.action.MoveToColdStorageContentAction;
+import org.nuxeo.coldstorage.action.PropagateMoveToColdStorageContentAction;
 import org.nuxeo.ecm.core.DummyThumbnailFactory;
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.Blobs;
@@ -75,6 +77,9 @@ import org.nuxeo.ecm.core.api.thumbnail.ThumbnailService;
 import org.nuxeo.ecm.core.blob.BlobManager;
 import org.nuxeo.ecm.core.blob.ManagedBlob;
 import org.nuxeo.ecm.core.blob.SimpleManagedBlob;
+import org.nuxeo.ecm.core.bulk.BulkService;
+import org.nuxeo.ecm.core.bulk.message.BulkCommand;
+import org.nuxeo.ecm.core.bulk.message.BulkStatus;
 import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
 import org.nuxeo.ecm.core.event.test.CapturingEventListener;
 import org.nuxeo.ecm.core.io.download.DownloadService;
@@ -82,6 +87,7 @@ import org.nuxeo.ecm.core.test.CoreFeature;
 import org.nuxeo.ecm.core.test.StorageConfiguration;
 import org.nuxeo.ecm.platform.ec.notification.service.NotificationServiceHelper;
 import org.nuxeo.ecm.platform.thumbnail.ThumbnailConstants;
+import org.nuxeo.runtime.api.Framework;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.FeaturesRunner;
 import org.nuxeo.runtime.test.runner.TransactionalFeature;
@@ -492,8 +498,12 @@ public abstract class AbstractTestColdStorageService {
     }
 
     protected DocumentModel createFileDocument(String name, boolean addBlobContent, ACE... aces) {
+        return createFileDocument(name, addBlobContent ? Blobs.createBlob(FILE_CONTENT) : null, aces);
+    }
+
+    protected DocumentModel createFileDocument(String name, Blob blob, ACE... aces) {
         DocumentModel documentModel = session.createDocumentModel("/", name, "File");
-        if (addBlobContent) {
+        if (blob != null) {
             documentModel.setPropertyValue("file:content", (Serializable) Blobs.createBlob(FILE_CONTENT));
         }
         DocumentModel document = session.createDocument(documentModel);

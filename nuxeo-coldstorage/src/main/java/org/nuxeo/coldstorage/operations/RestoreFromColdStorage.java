@@ -33,17 +33,9 @@ public class RestoreFromColdStorage {
     @Context
     protected ColdStorageService service;
 
-    @Param(name = "save", required = false, values = "true")
-    protected boolean save = true;
-
     @OperationMethod
     public DocumentModel run(DocumentModel document) {
-        DocumentModel documentModel = service.restoreFromColdStorage(session, document.getRef());
-        if (save) {
-            documentModel = session.saveDocument(documentModel);
-        }
-
-        return documentModel;
+        return service.restoreFromColdStorage(session, document.getRef());
     }
 
     @OperationMethod
