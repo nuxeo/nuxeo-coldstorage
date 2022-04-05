@@ -504,8 +504,12 @@ public abstract class AbstractTestColdStorageService {
     }
 
     protected DocumentModel createFileDocument(String name, boolean addBlobContent, ACE... aces) {
+        return createFileDocument(name, addBlobContent ? Blobs.createBlob(FILE_CONTENT) : null, aces);
+    }
+
+    protected DocumentModel createFileDocument(String name, Blob blob, ACE... aces) {
         DocumentModel documentModel = session.createDocumentModel("/", name, "File");
-        if (addBlobContent) {
+        if (blob != null) {
             documentModel.setPropertyValue("file:content", (Serializable) Blobs.createBlob(FILE_CONTENT));
         }
         DocumentModel document = session.createDocument(documentModel);

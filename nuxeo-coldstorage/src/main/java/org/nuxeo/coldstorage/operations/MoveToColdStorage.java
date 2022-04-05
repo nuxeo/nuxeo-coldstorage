@@ -42,8 +42,6 @@ import org.nuxeo.ecm.core.api.impl.DocumentModelListImpl;
 @Operation(id = MoveToColdStorage.ID, category = Constants.CAT_BLOB, label = "Move to Cold Storage", description = "Move the main document content to the cold storage.")
 public class MoveToColdStorage {
 
-    private static final Logger log = LogManager.getLogger(MoveToColdStorage.ID);
-
     public static final String ID = "Document.MoveToColdStorage";
 
     @Context
@@ -52,19 +50,9 @@ public class MoveToColdStorage {
     @Context
     protected ColdStorageService service;
 
-    @Param(name = "save", required = false, values = "true")
-    protected boolean save = true;
-
     @OperationMethod
     public DocumentModel run(DocumentModel document) {
-        // make the move
-        DocumentModel documentModel = service.moveToColdStorage(session,document.getRef());
-
-        if (save) {
-            documentModel = session.saveDocument(documentModel);
-        }
-
-        return documentModel;
+        return service.moveToColdStorage(session,document.getRef());
     }
 
     @OperationMethod
