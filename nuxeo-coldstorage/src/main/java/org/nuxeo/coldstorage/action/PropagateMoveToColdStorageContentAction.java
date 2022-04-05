@@ -51,18 +51,20 @@ public class PropagateMoveToColdStorageContentAction implements StreamProcessorT
 
     public static final String ACTION_NAME = "propagateMoveToColdStorage";
 
+    public static final String ACTION_FULL_NAME = "bulk/" + ACTION_NAME;
+
     @Override
     public Topology getTopology(Map<String, String> options) {
         return Topology.builder()
                        .addComputation(PropagateMoveToColdStorageContentComputation::new, //
-                               List.of(INPUT_1 + ":" + ACTION_NAME, OUTPUT_1 + ":" + STATUS_STREAM))
+                               List.of(INPUT_1 + ":" + ACTION_FULL_NAME, OUTPUT_1 + ":" + STATUS_STREAM))
                        .build();
     }
 
     public static class PropagateMoveToColdStorageContentComputation extends AbstractBulkComputation {
 
         public PropagateMoveToColdStorageContentComputation() {
-            super(ACTION_NAME);
+            super(ACTION_FULL_NAME);
         }
 
         @Override

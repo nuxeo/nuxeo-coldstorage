@@ -51,18 +51,20 @@ public class PropagateRestoreFromColdStorageContentAction implements StreamProce
 
     public static final String ACTION_NAME = "propagateRestoreFromColdStorage";
 
+    public static final String ACTION_FULL_NAME = "bulk/" + ACTION_NAME;
+
     @Override
     public Topology getTopology(Map<String, String> options) {
         return Topology.builder()
                        .addComputation(PropagateRestoreFromColdStorageContentComputation::new, //
-                               List.of(INPUT_1 + ":" + ACTION_NAME, OUTPUT_1 + ":" + STATUS_STREAM))
+                               List.of(INPUT_1 + ":" + ACTION_FULL_NAME, OUTPUT_1 + ":" + STATUS_STREAM))
                        .build();
     }
 
     public static class PropagateRestoreFromColdStorageContentComputation extends AbstractBulkComputation {
 
         public PropagateRestoreFromColdStorageContentComputation() {
-            super(ACTION_NAME);
+            super(ACTION_FULL_NAME);
         }
 
         @Override

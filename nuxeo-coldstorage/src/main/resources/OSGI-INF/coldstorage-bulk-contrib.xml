@@ -2,41 +2,32 @@
 <component name="org.nuxeo.coldstorage.bulk.contrib">
 
   <extension target="org.nuxeo.ecm.core.bulk" point="actions">
-    <action name="moveToColdStorage" bucketSize="100" batchSize="50" httpEnabled="true" />
-  </extension>
-
-  <extension target="org.nuxeo.ecm.core.bulk" point="actions">
-    <action name="propagateMoveToColdStorage" bucketSize="100" batchSize="50" httpEnabled="false" />
-  </extension>
-
-  <extension target="org.nuxeo.ecm.core.bulk" point="actions">
-    <action name="propagateRestoreFromColdStorage" bucketSize="100" batchSize="50" httpEnabled="false" />
+    <action name="moveToColdStorage" inputStream="bulk/moveToColdStorage"
+      bucketSize="100" batchSize="50" httpEnabled="true" />
+    <action name="propagateMoveToColdStorage" inputStream="bulk/propagateMoveToColdStorage"
+      bucketSize="100" batchSize="50" httpEnabled="false" />
+    <action name="propagateRestoreFromColdStorage" inputStream="bulk/propagateRestoreFromColdStorage"
+      bucketSize="100" batchSize="50" httpEnabled="false" />
   </extension>
 
   <extension target="org.nuxeo.runtime.stream.service" point="streamProcessor">
     <streamProcessor name="moveToColdStorage"
-      class="org.nuxeo.coldstorage.action.MoveToColdStorageContentAction" logConfig="bulk"
-      defaultConcurrency="2" defaultPartitions="2">
+      class="org.nuxeo.coldstorage.action.MoveToColdStorageContentAction"
+      defaultConcurrency="${nuxeo.bulk.action.moveToColdStorage.defaultConcurrency:=2}"
+      defaultPartitions="${nuxeo.bulk.action.moveToColdStorage.defaultPartitions:=2}">
       <policy name="default" maxRetries="3" delay="1s" maxDelay="10s" continueOnFailure="true" />
-      <option name="produceImmediate">false</option>
     </streamProcessor>
-  </extension>
-
-  <extension target="org.nuxeo.runtime.stream.service" point="streamProcessor">
     <streamProcessor name="propagateMoveToColdStorage"
-      class="org.nuxeo.coldstorage.action.PropagateMoveToColdStorageContentAction" logConfig="bulk"
-      defaultConcurrency="2" defaultPartitions="2">
+      class="org.nuxeo.coldstorage.action.PropagateMoveToColdStorageContentAction"
+      defaultConcurrency="${nuxeo.bulk.action.propagateMoveToColdStorage.defaultConcurrency:=2}"
+      defaultPartitions="${nuxeo.bulk.action.propagateMoveToColdStorage.defaultPartitions:=2}">
       <policy name="default" maxRetries="3" delay="1s" maxDelay="10s" continueOnFailure="true" />
-      <option name="produceImmediate">false</option>
     </streamProcessor>
-  </extension>
-
-  <extension target="org.nuxeo.runtime.stream.service" point="streamProcessor">
     <streamProcessor name="propagateRestoreFromColdStorage"
-      class="org.nuxeo.coldstorage.action.PropagateRestoreFromColdStorageContentAction" logConfig="bulk"
-      defaultConcurrency="2" defaultPartitions="2">
+      class="org.nuxeo.coldstorage.action.PropagateRestoreFromColdStorageContentAction"
+      defaultConcurrency="${nuxeo.bulk.action.propagateRestoreFromColdStorage.defaultConcurrency:=2}"
+      defaultPartitions="${nuxeo.bulk.action.propagateRestoreFromColdStorage.defaultPartitions:=2}">
       <policy name="default" maxRetries="3" delay="1s" maxDelay="10s" continueOnFailure="true" />
-      <option name="produceImmediate">false</option>
     </streamProcessor>
   </extension>
 
