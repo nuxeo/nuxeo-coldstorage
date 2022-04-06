@@ -5,7 +5,7 @@
   "activity.coldStorageDownload": "downloaded the cold document",
   "documentContentView.infobar.storedInColdStorage": "To jest podgląd w niskiej rozdzielczości. Dostęp do oryginalnego pliku może zostać uzyskany klikając na akcję pobierania pliku.",
   "documentContentView.infobar.beingRetrieved": "To jest podgląd w niskiej rozdzielczości. Prośba o dostęp została wysłana. Powiadanie email zostanie wysłane, gdy dokument będzie dostępny. ",
-  "documentContentView.infobar.beingRestored": "File restoration from cold storage in progress. Reload document in a short while.",
+  "documentContentView.infobar.toBeRestored": "File restoration from cold storage in progress. Reload document in a short while.",
   "documentContentView.infobar.retrieved": "To jest podgląd w niskiej rozdzielczości. Oryginał będzie dostępny do {0}",
   "documentContentView.moveToColdStorage.ask.confirmation": "Wysłać zawartość dokumentów do \"cold storage\"?",
   "documentContentView.moveToColdStorage.cancel": "Anuluj",

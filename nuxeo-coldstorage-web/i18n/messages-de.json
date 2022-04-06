@@ -5,7 +5,7 @@
   "activity.coldStorageDownload": "das kalte Dokument heruntergeladen",
   "documentContentView.infobar.storedInColdStorage": "Dies ist eine Vorschauversion der Datei. Die Originaldatei kann durch Klicken auf die Aktion \"Datei abrufen\" abgerufen werden.",
   "documentContentView.infobar.beingRetrieved": "Dies ist eine Vorschauversion der Datei. Ein Abruf der Originaldatei wurde angefordert. Eine E-Mail-Benachrichtigung wird gesendet, wenn die Originaldatei verfügbar ist.",
-  "documentContentView.infobar.beingRestored": "Wiederherstellung der Datei von der Kältespeicherung im Gange. Dokument in Kürze neu laden.",
+  "documentContentView.infobar.toBeRestored": "Wiederherstellung der Datei von der Kältespeicherung im Gange. Dokument in Kürze neu laden.",
   "documentContentView.infobar.retrieved": "Dies ist eine Vorschauversion der Datei. Sie können die vorübergehend abgerufene Originaldatei bis {0} herunterladen.",
   "documentContentView.moveToColdStorage.ask.confirmation": "Die Datei zum kalten Speicher senden?",
   "documentContentView.moveToColdStorage.cancel": "Abbrechen",

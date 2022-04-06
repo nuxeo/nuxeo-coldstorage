@@ -26,7 +26,7 @@ import org.nuxeo.runtime.test.runner.LogCaptureFeature;
 import org.nuxeo.runtime.test.runner.RunnerFeature;
 
 /**
- * @since 11.1
+ * @since 2021.20
  */
 @Features({CoreFeature.class, LogCaptureFeature.class})
 @Deploy("org.nuxeo.ecm.platform.notification")
