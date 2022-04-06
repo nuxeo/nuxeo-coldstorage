@@ -8,9 +8,7 @@
   <xs:element name="coldContent" type="nxs:content" />
   <xs:element name="beingRetrieved" type="xs:boolean" />
   <xs:element name="toBeRestored" type="xs:boolean" />
-  <xs:element name="beingRestored" type="xs:boolean" />
   <xs:element name="downloadableUntil" type="xs:date" />
   <xs:element name="availableOnColdstorage" type="xs:boolean" />
-  <xs:element name="classStorageToUpdate" type="xs:boolean" />
 
 </xs:schema>

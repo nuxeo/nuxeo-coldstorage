@@ -20,7 +20,7 @@
 package org.nuxeo.coldstorage;
 
 /**
- * @since 10.10
+ * @since 2021.20
  */
 public class ColdStorageConstants {
 
@@ -34,16 +34,19 @@ public class ColdStorageConstants {
 
     public static final String COLD_STORAGE_TO_BE_RESTORED_PROPERTY = "coldstorage:toBeRestored";
 
-    public static final String COLD_STORAGE_BEING_RESTORED_PROPERTY = "coldstorage:beingRestored";
-
     public static final String GET_DOCUMENTS_TO_CHECK_QUERY = String.format(
-            "SELECT * FROM Document, Relation WHERE ecm:mixinType = '%s' AND %s = 1", COLD_STORAGE_FACET_NAME, COLD_STORAGE_BEING_RETRIEVED_PROPERTY);
+            "SELECT * FROM Document, Relation WHERE ecm:mixinType = '%s' AND %s = 1", COLD_STORAGE_FACET_NAME,
+            COLD_STORAGE_BEING_RETRIEVED_PROPERTY);
 
     public static final String COLD_STORAGE_CONTENT_RESTORED_EVENT_NAME = "coldStorageContentRestored";
+
+    public static final String COLD_STORAGE_CONTENT_TO_RESTORE_EVENT_NAME = "coldStorageContentToRestore";
 
     public static final String COLD_STORAGE_CONTENT_TO_RETRIEVE_EVENT_NAME = "coldStorageContentToRetrieve";
 
     public static final String COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME = "coldStorageContentAvailable";
+
+    public static final String COLD_STORAGE_CHECK_CONTENT_AVAILABILITY_EVENT_NAME = "checkColdStorageContentAvailability";
 
     public static final String COLD_STORAGE_CONTENT_DOWNLOAD_EVENT_NAME = "coldStorageDownload";
 
@@ -65,14 +68,6 @@ public class ColdStorageConstants {
     public static final String WRITE_COLD_STORAGE = "WriteColdStorage";
 
     public static final String COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL = "coldstorage:downloadableUntil";
-
-    public static final String COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED = "coldstorage:classStorageToUpdate";
-
-    public static final String GET_COLDSTORAGE_DOCUMENTS_TO_CHECK_QUERY = String.format(
-            "SELECT * FROM Document, Relation WHERE ecm:mixinType = '%s' AND %s = 1", COLD_STORAGE_FACET_NAME,
-            COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED);
-
-    public static final String COLD_STORAGE_CONTENT_AVAILABLE_IN_COLDSTORAGE = "coldstorage:availableOnColdstorage";
 
     public static final String EVENT_CATEGORY = "coldStorage";
 

@@ -29,12 +29,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
-import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_BEING_RESTORED_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_BEING_RETRIEVED_PROPERTY;
-import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_IN_COLDSTORAGE;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY;
-import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_TO_BE_RESTORED_PROPERTY;
 import static org.nuxeo.coldstorage.events.CheckUpdateColdStorageContentListener.DISABLE_COLD_STORAGE_CHECK_UPDATE_COLDSTORAGE_CONTENT_LISTENER;
 import static org.nuxeo.coldstorage.events.CheckUpdateMainContentInColdStorageListener.DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER;
@@ -42,15 +39,12 @@ import static org.nuxeo.coldstorage.events.CheckUpdateMainContentInColdStorageLi
 import java.io.IOException;
 import java.io.Serializable;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -58,7 +52,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.nuxeo.coldstorage.ColdStorageConstants;
-import org.nuxeo.coldstorage.ColdStorageConstants.ColdStorageContentStatus;
 import org.nuxeo.coldstorage.thumbnail.DummyThumbnailFactory;
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.Blobs;
@@ -67,7 +60,6 @@ import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentModelList;
 import org.nuxeo.ecm.core.api.DocumentRef;
-import org.nuxeo.ecm.core.api.IdRef;
 import org.nuxeo.ecm.core.api.NuxeoException;
 import org.nuxeo.ecm.core.api.security.ACE;
 import org.nuxeo.ecm.core.api.security.ACL;
@@ -75,21 +67,20 @@ import org.nuxeo.ecm.core.api.security.ACP;
 import org.nuxeo.ecm.core.api.security.SecurityConstants;
 import org.nuxeo.ecm.core.api.thumbnail.ThumbnailService;
 import org.nuxeo.ecm.core.blob.BlobManager;
+import org.nuxeo.ecm.core.blob.BlobProvider;
+import org.nuxeo.ecm.core.blob.BlobStatus;
 import org.nuxeo.ecm.core.blob.ManagedBlob;
 import org.nuxeo.ecm.core.blob.SimpleManagedBlob;
-import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
-import org.nuxeo.ecm.core.event.test.CapturingEventListener;
 import org.nuxeo.ecm.core.io.download.DownloadService;
 import org.nuxeo.ecm.core.test.CoreFeature;
 import org.nuxeo.ecm.core.test.StorageConfiguration;
-import org.nuxeo.ecm.platform.ec.notification.service.NotificationServiceHelper;
 import org.nuxeo.ecm.platform.thumbnail.ThumbnailConstants;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.FeaturesRunner;
 import org.nuxeo.runtime.test.runner.TransactionalFeature;
 
 /**
- * @since 11.1
+ * @since 2021.20
  */
 @RunWith(FeaturesRunner.class)
 public abstract class AbstractTestColdStorageService {
@@ -107,21 +98,19 @@ public abstract class AbstractTestColdStorageService {
     protected TransactionalFeature transactionalFeature;
 
     @Inject
+    protected CoreFeature coreFeature;
+
+    @Inject
     protected BlobManager blobManager;
 
     @Inject
     protected DownloadService downloadService;
 
     @Inject
-    protected CoreFeature coreFeature;
-
-    @Inject
     protected ThumbnailService thumbnailService;
 
     @Inject
     protected ColdStorageService service;
-
-    protected abstract String getBlobProviderName();
 
     @Test
     public void shouldMoveToColdStorage() throws IOException {
@@ -134,36 +123,28 @@ public abstract class AbstractTestColdStorageService {
         try (CloseableCoreSession userSession = coreFeature.openCoreSession("john")) {
             moveAndVerifyContent(userSession, documentModel.getRef());
         }
+    }
 
-        // with Administrator
+    @Test
+    public void shouldMoveToColdStorageSameContent() throws IOException {
+        // First doc with given content
+        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
+        moveAndVerifyContent(session, documentModel.getRef());
+
+        // Second doc with same content
         documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
         moveAndVerifyContent(session, documentModel.getRef());
     }
 
     @Test
-    public void shouldMoveToColdStorageAfterRestore() throws IOException {
-        // with regular user with "WriteColdStorage" permission
-        ACE[] aces = { new ACE("john", SecurityConstants.READ, true), //
-                new ACE("john", SecurityConstants.WRITE, true), //
-                new ACE("john", ColdStorageConstants.WRITE_COLD_STORAGE, true) };
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true, aces);
-
-        try (CloseableCoreSession userSession = coreFeature.openCoreSession("john")) {
-            documentModel = moveAndRestore(documentModel);
-            session.saveDocument(documentModel);
-            transactionalFeature.nextTransaction();
-            documentModel.refresh();
-            moveAndVerifyContent(userSession, documentModel.getRef());
-        }
-    }
-
-    @Test
-    public void shouldFailWithoutRightPermissions() {
+    public void shouldFailWithoutRightPermissions() throws IOException {
         ACE[] aces = { new ACE("john", SecurityConstants.READ, true) };
         DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true, aces);
 
-        try (CloseableCoreSession userSession = coreFeature.openCoreSession("john")) {
-            moveContentToColdStorage(userSession, documentModel.getRef());
+        try {
+            try (CloseableCoreSession userSession = coreFeature.openCoreSession("john")) {
+                moveAndVerifyContent(userSession, documentModel.getRef());
+            }
             fail("Should fail because the user does not have permissions to move document to cold storage");
         } catch (NuxeoException e) {
             assertEquals(SC_FORBIDDEN, e.getStatusCode());
@@ -175,11 +156,11 @@ public abstract class AbstractTestColdStorageService {
         DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
 
         // move for the first time
-        documentModel = moveContentToColdStorage(session, documentModel.getRef());
+        documentModel = service.moveToColdStorage(session, documentModel.getRef());
 
         // try to make another move
         try {
-            moveContentToColdStorage(session, documentModel.getRef());
+            service.moveToColdStorage(session, documentModel.getRef());
             fail("Should fail because the content is already in cold storage");
         } catch (NuxeoException e) {
             assertEquals(SC_CONFLICT, e.getStatusCode());
@@ -192,7 +173,7 @@ public abstract class AbstractTestColdStorageService {
     public void shouldFailMoveToColdStorageNoContent() {
         DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, false);
         try {
-            moveContentToColdStorage(session, documentModel.getRef());
+            service.moveToColdStorage(session, documentModel.getRef());
             fail("Should fail because there is no main content associated with the document");
         } catch (NuxeoException e) {
             assertEquals(SC_NOT_FOUND, e.getStatusCode());
@@ -206,7 +187,7 @@ public abstract class AbstractTestColdStorageService {
         session.makeRecord(documentModel.getRef());
         session.setLegalHold(documentModel.getRef(), true, "any comment");
         try {
-            moveContentToColdStorage(session, documentModel.getRef());
+            service.moveToColdStorage(session, documentModel.getRef());
             fail("Should fail because the document is under legal hold");
         } catch (NuxeoException e) {
             assertEquals(SC_FORBIDDEN, e.getStatusCode());
@@ -224,7 +205,7 @@ public abstract class AbstractTestColdStorageService {
         retainUntil.add(Calendar.DAY_OF_MONTH, 5);
         session.setRetainUntil(documentModel.getRef(), retainUntil, "any comment");
         try {
-            moveContentToColdStorage(session, documentModel.getRef());
+            service.moveToColdStorage(session, documentModel.getRef());
             fail("Should fail because the document is under retention");
         } catch (NuxeoException e) {
             assertEquals(SC_FORBIDDEN, e.getStatusCode());
@@ -239,13 +220,9 @@ public abstract class AbstractTestColdStorageService {
         DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
 
         // move the blob to cold storage
-        documentModel = moveContentToColdStorage(session, documentModel.getRef());
-        session.saveDocument(documentModel);
+        service.moveToColdStorage(session, documentModel.getRef());
         // request a retrieval from the cold storage
-        documentModel = service.requestRetrievalFromColdStorage(session, documentModel.getRef(), RESTORE_DURATION);
-        session.saveDocument(documentModel);
-        transactionalFeature.nextTransaction();
-        documentModel.refresh();
+        documentModel = service.retrieveFromColdStorage(session, documentModel.getRef(), RESTORE_DURATION);
 
         assertEquals(Boolean.TRUE,
                 documentModel.getPropertyValue(ColdStorageConstants.COLD_STORAGE_BEING_RETRIEVED_PROPERTY));
@@ -256,15 +233,13 @@ public abstract class AbstractTestColdStorageService {
         DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
 
         // move the blob to cold storage
-        documentModel = moveContentToColdStorage(session, documentModel.getRef());
-        session.saveDocument(documentModel);
+        service.moveToColdStorage(session, documentModel.getRef());
         // request a retrieval from the cold storage
-        documentModel = service.requestRetrievalFromColdStorage(session, documentModel.getRef(), RESTORE_DURATION);
-        session.saveDocument(documentModel);
+        documentModel = service.retrieveFromColdStorage(session, documentModel.getRef(), RESTORE_DURATION);
 
         // try to request a retrieval for a second time
         try {
-            service.requestRetrievalFromColdStorage(session, documentModel.getRef(), RESTORE_DURATION);
+            service.retrieveFromColdStorage(session, documentModel.getRef(), RESTORE_DURATION);
             fail("Should fail because the cold storage content is being retrieved.");
         } catch (NuxeoException e) {
             assertEquals(SC_FORBIDDEN, e.getStatusCode());
@@ -278,7 +253,7 @@ public abstract class AbstractTestColdStorageService {
         DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
         try {
             // try a request retrieval from the cold storage where the blob is not stored in it
-            service.requestRetrievalFromColdStorage(session, documentModel.getRef(), RESTORE_DURATION);
+            service.retrieveFromColdStorage(session, documentModel.getRef(), RESTORE_DURATION);
             fail("Should fail because there no cold storage content associated to this document.");
         } catch (NuxeoException e) {
             assertEquals(SC_NOT_FOUND, e.getStatusCode());
@@ -321,28 +296,22 @@ public abstract class AbstractTestColdStorageService {
         documentModel = session.saveDocument(documentModel);
         assertEquals("I update the title", documentModel.getPropertyValue("dc:title"));
         assertEquals("I add a description", documentModel.getPropertyValue("dc:description"));
-
+        @SuppressWarnings("unchecked")
         List<Map<String, Serializable>> actualAttachments = (List<Map<String, Serializable>>) documentModel.getPropertyValue(
                 "files:files");
         assertTrue(CollectionUtils.isEqualCollection(attachments, actualAttachments));
-    }
-
-    @Test
-    public void shouldMakeRestoreImmediately() throws IOException {
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
-        documentModel = moveAndRestore(documentModel);
-        session.saveDocument(documentModel);
-        coreFeature.waitForAsyncCompletion();
-        verifyRestore(documentModel.getRef(), FILE_CONTENT);
     }
 
     protected DocumentModel verifyRestore(DocumentRef documentRef, String expectedContent) throws IOException {
         DocumentModel documentModel = session.getDocument(documentRef);
 
         // check main blobs
-        Blob fileContent = (Blob) documentModel.getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY);
+        ManagedBlob fileContent = (ManagedBlob) documentModel.getPropertyValue(
+                ColdStorageConstants.FILE_CONTENT_PROPERTY);
         assertEquals(expectedContent, fileContent.getString());
-
+        BlobStatus status = getStatus(fileContent);
+        assertFalse(status.isOngoingRestore());
+        assertTrue(status.isDownloadable());
         // we shouldn't have any ColdStorage content
         assertFalse(documentModel.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME));
         return documentModel;
@@ -350,10 +319,6 @@ public abstract class AbstractTestColdStorageService {
 
     @Test
     @Deploy("org.nuxeo.coldstorage.test:OSGI-INF/test-thumbnail-recomputation-contrib.xml")
-    @Deploy("org.nuxeo.ecm.platform.thumbnail:OSGI-INF/thumbnail-listener-contrib.xml")
-    @Deploy("org.nuxeo.ecm.platform.thumbnail:OSGI-INF/thumbnail-core-types-contrib.xml")
-    @Deploy("org.nuxeo.ecm.platform.types.api")
-    @Deploy("org.nuxeo.ecm.platform.types.core")
     public void shouldNotRecomputeThumbnail() throws IOException {
         DocumentModel documentModel = session.createDocumentModel("/", DEFAULT_DOC_NAME, "MyCustomFile");
         documentModel.setPropertyValue("file:content", (Serializable) Blobs.createBlob(FILE_CONTENT));
@@ -364,9 +329,8 @@ public abstract class AbstractTestColdStorageService {
         SimpleManagedBlob originalThumbnail = (SimpleManagedBlob) thumbnailService.getThumbnail(documentModel, session);
         assertNotNull(originalThumbnail);
 
-        documentModel = moveAndVerifyContent(session, documentModel.getRef());
+        documentModel = service.moveToColdStorage(session, documentModel.getRef());
 
-        // Move action will update the main the content with a `null` the thumbnail shouldn't be recomputed
         SimpleManagedBlob thumbnailUpdateOne = (SimpleManagedBlob) thumbnailService.getThumbnail(documentModel,
                 session);
         assertNotNull(thumbnailUpdateOne);
@@ -403,7 +367,7 @@ public abstract class AbstractTestColdStorageService {
         DocumentModelList res = session.query("SELECT * FROM Document WHERE ecm:fulltext = 'foo'");
         assertEquals(1, res.size());
 
-        documentModel = moveContentToColdStorage(session, documentModel.getRef());
+        documentModel = service.moveToColdStorage(session, documentModel.getRef());
 
         transactionalFeature.nextTransaction();
         coreFeature.getStorageConfiguration().waitForFulltextIndexing();
@@ -417,90 +381,40 @@ public abstract class AbstractTestColdStorageService {
         // move the blob to cold storage and verify the content
         moveAndVerifyContent(session, documentModel.getRef());
         // undo move from the cold storage
-        return service.restoreContentFromColdStorage(session, documentModel.getRef());
+        return service.restoreFromColdStorage(session, documentModel.getRef());
     }
 
     protected DocumentModel moveAndVerifyContent(CoreSession session, DocumentRef ref) throws IOException {
-        DocumentModel documentModel = moveContentToColdStorage(session, ref);
-        session.saveDocument(documentModel);
+        DocumentModel documentModel = service.moveToColdStorage(session, ref);
         transactionalFeature.nextTransaction();
-        return verifyContent(session, documentModel.getRef(), false, FILE_CONTENT);
+        return verifyContent(session, documentModel.getRef(), FILE_CONTENT);
     }
 
-    protected DocumentModel verifyContent(CoreSession session, DocumentRef documentRef, boolean withThumbnail,
-            String expectedContent) throws IOException {
+    protected DocumentModel verifyContent(CoreSession session, DocumentRef documentRef, String expectedContent)
+            throws IOException {
         DocumentModel documentModel = session.getDocument(documentRef);
 
         assertTrue(documentModel.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME));
 
-        if (withThumbnail) {
-            Blob fileContent = (Blob) documentModel.getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY);
-            assertEquals(DummyThumbnailFactory.DUMMY_THUMBNAIL_CONTENT, fileContent.getString());
-        } else {
-            assertNull(documentModel.getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY));
-        }
+        Blob fileContent = (Blob) documentModel.getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY);
+        assertEquals(DummyThumbnailFactory.DUMMY_THUMBNAIL_CONTENT, fileContent.getString());
 
         // check if the `coldstorage:coldContent` property contains the original file content
         Blob content = (Blob) documentModel.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
-        assertNotNull(content);
-        assertEquals(expectedContent, content.getString());
-        assertEquals(getBlobProviderName(), ((ManagedBlob) content).getProviderId());
-        assertNull(documentModel.getPropertyValue(COLD_STORAGE_BEING_RESTORED_PROPERTY));
+        verifyColdContent(content);
+
         assertNull(documentModel.getPropertyValue(COLD_STORAGE_BEING_RETRIEVED_PROPERTY));
         assertNull(documentModel.getPropertyValue(COLD_STORAGE_TO_BE_RESTORED_PROPERTY));
-        assertNull(documentModel.getPropertyValue(COLD_STORAGE_CONTENT_AVAILABLE_IN_COLDSTORAGE));
-        assertTrue(Boolean.TRUE.equals(documentModel.getPropertyValue(COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED)));
         assertNull(documentModel.getPropertyValue(COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL));
         return documentModel;
     }
 
+    protected abstract void verifyColdContent(Blob content) throws IOException;
+
     protected DocumentModel moveAndRequestRetrievalFromColdStorage(String documentName) {
         DocumentModel documentModel = createFileDocument(documentName, true);
-        documentModel = moveContentToColdStorage(session, documentModel.getRef());
-        session.saveDocument(documentModel);
-        // request a retrieval from the cold storage
-        documentModel = service.requestRetrievalFromColdStorage(session, documentModel.getRef(), RESTORE_DURATION);
-        return session.saveDocument(documentModel);
-    }
-
-    protected void checkAvailabilityOfDocuments(List<String> expectedAvailableDocIds, Instant downloadableUntil,
-            int totalBeingRetrieved) {
-        try (CapturingEventListener listener = new CapturingEventListener(
-                ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME)) {
-            ColdStorageContentStatus coldStorageContentStatus = service.checkColdStorageContentAvailability(session);
-
-            assertEquals(totalBeingRetrieved, coldStorageContentStatus.getTotalBeingRetrieved());
-            int expectedSizeOfDocs = expectedAvailableDocIds.size();
-            assertEquals(expectedSizeOfDocs, coldStorageContentStatus.getTotalAvailable());
-            assertTrue(listener.hasBeenFired(ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME));
-            assertEquals(expectedSizeOfDocs, listener.streamCapturedEvents().count());
-
-            List<String> docEventIds = listener.streamCapturedEventContexts(DocumentEventContext.class)
-                                               .map(docCtx -> docCtx.getSourceDocument().getId())
-                                               .sorted()
-                                               .collect(Collectors.toList());
-
-            expectedAvailableDocIds.sort(Comparator.naturalOrder());
-            assertEquals(expectedAvailableDocIds, docEventIds);
-
-            listener.streamCapturedEvents().forEach(event -> {
-                DocumentEventContext docCtx = (DocumentEventContext) event.getContext();
-                Map<String, Serializable> properties = docCtx.getProperties();
-
-                DocumentModel documentModel = session.getDocument(new IdRef(docCtx.getSourceDocument().getId()));
-                assertEquals(String.format("An unexpected deadline for cold storage of document: %s", documentModel), //
-                        downloadableUntil.toString(),
-                        properties.get(ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_UNTIL_MAIL_TEMPLATE_KEY));
-
-                String serverUrl = NotificationServiceHelper.getNotificationService().getServerUrlPrefix();
-                String expectedDownloadUrl = serverUrl + downloadService.getDownloadUrl(documentModel,
-                        ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY, null);
-                assertEquals(String.format("An unexpected downloadable url for document: %s", documentModel), //
-                        expectedDownloadUrl,
-                        properties.get(ColdStorageConstants.COLD_STORAGE_CONTENT_ARCHIVE_LOCATION_MAIL_TEMPLATE_KEY));
-            });
-        }
-
+        documentModel = service.moveToColdStorage(session, documentModel.getRef());
+        return service.retrieveFromColdStorage(session, documentModel.getRef(), RESTORE_DURATION);
     }
 
     protected DocumentModel createFileDocument(String name, boolean addBlobContent, ACE... aces) {
@@ -540,10 +454,17 @@ public abstract class AbstractTestColdStorageService {
         return docs;
     }
 
-    protected DocumentModel moveContentToColdStorage(CoreSession session, DocumentRef documentRef) {
-        DocumentModel documentModel = service.moveContentToColdStorage(session, documentRef);
-        session.saveDocument(documentModel);
-        return documentModel;
+    protected BlobStatus getColdContentStatus(DocumentRef documentRef) throws IOException {
+        ManagedBlob coldContent = (ManagedBlob) session.getDocument(documentRef)
+                                                       .getPropertyValue(
+                                                               ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY);
+
+        return getStatus(coldContent);
+    }
+
+    protected BlobStatus getStatus(ManagedBlob blob) throws IOException {
+        BlobProvider blobProvider = blobManager.getBlobProvider(blob.getProviderId());
+        return blobProvider.getStatus(blob);
     }
 
 }

@@ -20,67 +20,28 @@
 package org.nuxeo.coldstorage.service;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
-import org.junit.Test;
-import org.nuxeo.coldstorage.ColdStorageConstants;
+import java.io.IOException;
+
 import org.nuxeo.coldstorage.S3ColdStorageFeature;
-import org.nuxeo.coldstorage.S3TestHelper;
-import org.nuxeo.ecm.core.api.CoreSession;
-import org.nuxeo.ecm.core.api.DocumentModel;
-import org.nuxeo.ecm.core.api.DocumentRef;
+import org.nuxeo.ecm.core.api.Blob;
+import org.nuxeo.ecm.core.blob.BlobStatus;
+import org.nuxeo.ecm.core.blob.ManagedBlob;
 import org.nuxeo.runtime.test.runner.Features;
+
+import com.amazonaws.services.s3.model.StorageClass;
 
 @Features(S3ColdStorageFeature.class)
 public class TestS3ColdStorageService extends AbstractTestColdStorageService {
 
-    protected S3TestHelper s3TestHelper = S3TestHelper.getInstance();
-
     @Override
-    protected String getBlobProviderName() {
-        return "glacier";
+    protected void verifyColdContent(Blob content) throws IOException {
+        assertNotNull(content);
+        BlobStatus status = getStatus((ManagedBlob) content);
+        assertFalse(status.isDownloadable());
+        assertEquals(StorageClass.Glacier.toString(), status.getStorageClass());
     }
 
-    @Test
-    public void shouldBeingRetrieved() {
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
-
-        // move the blob to cold storage
-        documentModel = moveContentToColdStorage(session, documentModel.getRef());
-        session.saveDocument(documentModel);
-        // request a retrieval from the cold storage
-        documentModel = service.requestRetrievalFromColdStorage(session, documentModel.getRef(),
-                RESTORE_DURATION);
-        session.saveDocument(documentModel);
-        transactionalFeature.nextTransaction();
-        documentModel.refresh();
-
-        assertEquals(Boolean.TRUE,
-                documentModel.getPropertyValue(ColdStorageConstants.COLD_STORAGE_BEING_RETRIEVED_PROPERTY));
-
-        assertEquals(Boolean.TRUE, ColdStorageServiceImpl.getBlobStatus(documentModel).isOngoingRestore());
-    }
-
-    @Override
-    protected DocumentModel moveAndRestore(DocumentModel documentModel) {
-        // move the blob to cold storage
-        moveContentToColdStorage(session, documentModel.getRef(), false);
-        // undo move from the cold storage
-        return service.restoreContentFromColdStorage(session, documentModel.getRef());
-    }
-
-    @Override
-    protected DocumentModel moveContentToColdStorage(CoreSession session, DocumentRef documentRef) {
-        return moveContentToColdStorage(session, documentRef, true);
-    }
-
-    protected DocumentModel moveContentToColdStorage(CoreSession session, DocumentRef documentRef,
-            boolean changeStorageClass) {
-        DocumentModel documentModel = super.moveContentToColdStorage(session, documentRef);
-        session.saveDocument(documentModel);
-        // Mock AWS Lifecycle rule
-        if (changeStorageClass) {
-            s3TestHelper.moveBlobContentToGlacier(session.getDocument(documentRef));
-        }
-        return documentModel;
-    }
 }

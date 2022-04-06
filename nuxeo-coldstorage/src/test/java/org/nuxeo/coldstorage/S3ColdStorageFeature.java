@@ -19,8 +19,11 @@
 
 package org.nuxeo.coldstorage;
 
+import static com.amazonaws.SDKGlobalConfiguration.AWS_SESSION_TOKEN_ENV_VAR;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static org.nuxeo.ecm.blob.s3.S3BlobStoreConfiguration.AWS_ID_PROPERTY;
 import static org.nuxeo.ecm.blob.s3.S3BlobStoreConfiguration.AWS_SECRET_PROPERTY;
+import static org.nuxeo.ecm.blob.s3.S3BlobStoreConfiguration.AWS_SESSION_TOKEN_PROPERTY;
 import static org.nuxeo.ecm.blob.s3.S3BlobStoreConfiguration.BUCKET_NAME_PROPERTY;
 import static org.nuxeo.ecm.blob.s3.S3BlobStoreConfiguration.BUCKET_PREFIX_PROPERTY;
 import static org.nuxeo.ecm.blob.s3.S3BlobStoreConfiguration.BUCKET_REGION_PROPERTY;
@@ -47,10 +50,11 @@ public class S3ColdStorageFeature extends ColdStorageFeature {
             AWSCredentials credentials = s3TestHelper.getCredentials();
             setProperty(AWS_ID_PROPERTY, credentials.getAWSAccessKeyId());
             setProperty(AWS_SECRET_PROPERTY, credentials.getAWSSecretKey());
+            String envSessionToken = defaultIfBlank(System.getenv(AWS_SESSION_TOKEN_ENV_VAR), "");
+            setProperty(AWS_SESSION_TOKEN_PROPERTY, envSessionToken);
             setProperty(BUCKET_REGION_PROPERTY, s3TestHelper.getRegion());
             setProperty(BUCKET_NAME_PROPERTY, s3TestHelper.getMainBucket());
             setProperty(BUCKET_PREFIX_PROPERTY, s3TestHelper.getBucketPrefix());
-            System.getProperties().put("nuxeo.aws.glacier.bucket", s3TestHelper.getGlacierBucket());
         }
 
         public static void setProperty(String key, String value) {

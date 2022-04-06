@@ -21,6 +21,7 @@ package org.nuxeo.coldstorage.operations;
 
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -49,7 +50,7 @@ import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.Features;
 
 /**
- * @since 10.10
+ * @since 2021.20
  */
 @Features(S3ColdStorageFeature.class)
 public class TestColdStorageRendition extends AbstractTestColdStorageOperation {
@@ -67,11 +68,14 @@ public class TestColdStorageRendition extends AbstractTestColdStorageOperation {
         Rendition rendition = renditionService.getRendition(document, "thumbnail");
         Blob expectedBlob = rendition.getBlob();
 
-        moveContentToColdStorage(session, document);
-
+        // Check if the FILE_CONTENT_PROPERTY and the rendition are NOT equal
         Blob mainContent = (Blob) document.getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY);
+        assertNotEquals(expectedBlob.getDigest(), mainContent.getDigest());
+
+        document = moveContentToColdStorage(session, document);
 
         // Check if the FILE_CONTENT_PROPERTY and the rendition are equal
+        mainContent = (Blob) document.getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY);
         assertEquals(expectedBlob.getString(), mainContent.getString());
     }
 
@@ -82,16 +86,19 @@ public class TestColdStorageRendition extends AbstractTestColdStorageOperation {
 
         transactionalFeature.nextTransaction();
 
-        // Retrieve the expected rendition
+        // Retrieve the expected renditionrenditionBlob
         Rendition rendition = renditionService.getRendition(document, "Small");
         Blob expectedBlob = rendition.getBlob();
 
-        moveContentToColdStorage(session, document);
-
+        // Check if the FILE_CONTENT_PROPERTY and the rendition are NOT equal
         Blob mainContent = (Blob) document.getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY);
+        assertNotEquals(expectedBlob.getDigest(), mainContent.getDigest());
+
+        document = moveContentToColdStorage(session, document);
 
         // Check if the FILE_CONTENT_PROPERTY and the rendition are equal
-        assertEquals(expectedBlob.getString(), mainContent.getString());
+        mainContent = (Blob) document.getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY);
+        assertEquals(expectedBlob.getDigest(), mainContent.getDigest());
     }
 
     @Test
@@ -120,11 +127,14 @@ public class TestColdStorageRendition extends AbstractTestColdStorageOperation {
         Rendition rendition = renditionService.getRendition(document, "MP4 480p");
         Blob expectedBlob = rendition.getBlob();
 
-        moveContentToColdStorage(session, document);
-
+        // Check if the FILE_CONTENT_PROPERTY and the rendition are NOT equal
         Blob mainContent = (Blob) document.getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY);
+        assertNotEquals(expectedBlob.getDigest(), mainContent.getDigest());
+
+        document = moveContentToColdStorage(session, document);
 
         // Check if the FILE_CONTENT_PROPERTY and the rendition are equal
+        mainContent = (Blob) document.getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY);
         assertEquals(expectedBlob.getDigest(), mainContent.getDigest());
     }
 
