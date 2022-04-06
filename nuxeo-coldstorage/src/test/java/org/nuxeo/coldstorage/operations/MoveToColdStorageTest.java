@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2021 Nuxeo (http://nuxeo.com/) and others.
+ * (C) Copyright 2020 Nuxeo (http://nuxeo.com/) and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,9 @@
  * limitations under the License.
  *
  * Contributors:
- *     Abdoul BA<aba@nuxeo.com>
+ *     Salem Aouana
+ *     Nuno Cunha <ncunha@nuxeo.com>
+ *
  */
 
 package org.nuxeo.coldstorage.operations;
@@ -40,6 +42,7 @@ import javax.inject.Inject;
 
 import org.junit.Test;
 import org.nuxeo.coldstorage.ColdStorageConstants;
+import org.nuxeo.coldstorage.DummyColdStorageFeature;
 import org.nuxeo.ecm.automation.OperationException;
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.Blobs;
@@ -54,14 +57,15 @@ import org.nuxeo.ecm.core.api.thumbnail.ThumbnailService;
 import org.nuxeo.ecm.core.api.versioning.VersioningService;
 import org.nuxeo.ecm.platform.thumbnail.ThumbnailConstants;
 import org.nuxeo.runtime.test.runner.Deploy;
+import org.nuxeo.runtime.test.runner.Features;
 import org.nuxeo.runtime.test.runner.WithFrameworkProperty;
 import org.nuxeo.runtime.transaction.TransactionHelper;
 
 /**
- * @since 11.0
+ * @since 2021.20
  */
-public abstract class AbstractTestMoveColdStorageOperation extends AbstractTestColdStorageOperation {
-
+@Features(DummyColdStorageFeature.class)
+public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
     @Inject
     protected CoreSession session;
 
@@ -277,8 +281,8 @@ public abstract class AbstractTestMoveColdStorageOperation extends AbstractTestC
         DocumentModel documentModel = documents.get(0);
 
         // first make the move to cold storage
-        moveContentToColdStorage(session, documentModel);
-        transactionalFeature.nextTransaction();
+        documentModel = moveContentToColdStorage(session, documentModel);
+        coreFeature.waitForAsyncCompletion();
 
         // No duplicated documents after moving the main document to ColdStorage
         documents = session.query(query);
@@ -319,9 +323,9 @@ public abstract class AbstractTestMoveColdStorageOperation extends AbstractTestC
         assertEquals(4, documents.size());
 
         // first make the move to cold storage
-        moveContentToColdStorage(session, documentModel);
+        documentModel = moveContentToColdStorage(session, documentModel);
 
-        transactionalFeature.nextTransaction();
+        coreFeature.waitForAsyncCompletion();
 
         // Check if all the versions have been moved to ColdStorage
         documents = session.query(query);
@@ -338,8 +342,9 @@ public abstract class AbstractTestMoveColdStorageOperation extends AbstractTestC
     @Test
     public void shouldMoveVersionsWithSameColdStorageContent() throws IOException, OperationException {
         DocumentModel documentModel = session.createDocumentModel("/", "MyFile1", "File");
-        documentModel.setPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY,
-                (Serializable) Blobs.createBlob("Initial Blob"));
+        Blob initialBlob = Blobs.createBlob("Initial Blob");
+        initialBlob.setDigest(UUID.randomUUID().toString());
+        documentModel.setPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY, (Serializable) initialBlob);
         session.createDocument(documentModel);
         documentModel.putContextData(VersioningService.VERSIONING_OPTION, VersioningOption.valueOf("MINOR"));
         documentModel = session.saveDocument(documentModel);
@@ -347,8 +352,9 @@ public abstract class AbstractTestMoveColdStorageOperation extends AbstractTestC
         transactionalFeature.nextTransaction();
 
         // Update the blob content
-        documentModel.setPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY,
-                (Serializable) Blobs.createBlob(FILE_CONTENT));
+        Blob updatedBlob = Blobs.createBlob(FILE_CONTENT);
+        updatedBlob.setDigest(UUID.randomUUID().toString());
+        documentModel.setPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY, (Serializable) updatedBlob);
         documentModel.putContextData(VersioningService.VERSIONING_OPTION, VersioningOption.valueOf("MINOR"));
         documentModel = session.saveDocument(documentModel);
 
@@ -379,9 +385,9 @@ public abstract class AbstractTestMoveColdStorageOperation extends AbstractTestC
         assertEquals(2, documents.size());
 
         // first make the move to cold storage
-        moveContentToColdStorage(session, documentModel);
+        documentModel = moveContentToColdStorage(session, documentModel);
 
-        transactionalFeature.nextTransaction();
+        coreFeature.waitForAsyncCompletion();
 
         // Check if all the versions have been moved to ColdStorage
         documents = session.query(query);
@@ -409,7 +415,12 @@ public abstract class AbstractTestMoveColdStorageOperation extends AbstractTestC
             assertEquals(originalThumbnail.getString(), thumbnailUpdateOne.getString());
 
             // Check ColdStorage content
-            assertEquals(blob.getString(), coldContent.getString());
+            try {
+                coldContent.getString();
+                fail("Cold content should not be available");
+            } catch (IOException e) {
+                // expected
+            }
         }
     }
 }

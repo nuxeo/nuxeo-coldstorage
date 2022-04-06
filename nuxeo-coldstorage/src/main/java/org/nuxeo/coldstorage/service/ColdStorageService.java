@@ -20,9 +20,7 @@
 package org.nuxeo.coldstorage.service;
 
 import java.time.Duration;
-import java.util.List;
 
-import org.nuxeo.coldstorage.ColdStorageConstants.ColdStorageContentStatus;
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
@@ -31,14 +29,37 @@ import org.nuxeo.ecm.core.api.NuxeoException;
 import org.nuxeo.ecm.core.blob.ManagedBlob;
 
 /**
- * @since 10.10
+ * @since 2021.20
  */
 public interface ColdStorageService {
+
+    /**
+     * Gets the number of days where the document's blob is available, once it's retrieved from cold storage.
+     *
+     * @return the number of days of availability if property
+     *         {@value org.nuxeo.coldstorage.ColdStorageConstants#COLD_STORAGE_NUMBER_OF_DAYS_OF_AVAILABILITY_PROPERTY_NAME}
+     *         is configured, {@code 1} otherwise.
+     */
+    Duration getAvailabilityDuration();
+
+    /**
+     * Return the ColStorage rendition blob for the given {@link DocumentModel}.
+     * <p>
+     * A rendition blob is returned if found.
+     *
+     * @param documentModel the document to render
+     * @return the {@link Blob} object
+     * @throws NuxeoException if the rendition doesn't exist.
+     * @since 2021.20
+     */
+    Blob getRendition(DocumentModel documentModel, CoreSession session);
 
     /**
      * Moves the main content associated with the document of the given {@link DocumentRef} to a cold storage.
      * <p/>
      * The permission {@value org.nuxeo.ecm.core.api.security.SecurityConstants#WRITE_COLD_STORAGE} is required.
+     * <p/>
+     * All documents referencing the same main content will also be moved to cold storage.
      *
      * @implSpec moves the main content to ColdStorage and fires an
      *           {@value org.nuxeo.coldstorage.ColdStorageConstants#COLD_STORAGE_CONTENT_MOVED_EVENT_NAME} event.
@@ -46,23 +67,7 @@ public interface ColdStorageService {
      * @throws NuxeoException if the main content is already in the cold storage, if there is no main content associated
      *             with the given document, or if the user does not have the permissions needed to perform the action.
      */
-    DocumentModel moveContentToColdStorage(CoreSession session, DocumentRef documentRef);
-
-    /**
-     * Internal use.
-     */
     DocumentModel moveToColdStorage(CoreSession session, DocumentRef documentRef);
-
-    /**
-     * Internal use.
-     */
-    DocumentModel proceedMoveToColdStorage(CoreSession session, DocumentRef documentRef);
-
-    /**
-     * Internal use.
-     */
-    DocumentModel requestRetrievalFromColdStorage(CoreSession session, DocumentRef documentRef,
-                                                  Duration restoreDuration);
 
     /**
      * Requests a retrieval of the cold storage content associated with the document of the given {@link DocumentRef}.
@@ -77,7 +82,7 @@ public interface ColdStorageService {
      * @throws NuxeoException if there is no cold storage content associated with the given document, or if it is being
      *             retrieved
      */
-    DocumentModel retrieveFromColdStorage(CoreSession session, DocumentModel doc, Duration restoreDuration);
+    DocumentModel retrieveFromColdStorage(CoreSession session, DocumentRef documentRef, Duration restoreDuration);
 
     /**
      * Restores the cold content associated with the document of the given {@link DocumentRef} into its main storage.
@@ -86,77 +91,37 @@ public interface ColdStorageService {
      *
      * @implSpec This method will rely on the {@link org.nuxeo.ecm.core.blob.BlobProvider#getStatus(ManagedBlob)} to
      *           check if the restore can be done, otherwise it will request a retrieval
-     *           {@link #requestRetrievalFromColdStorage(CoreSession, DocumentRef, Duration)}
+     *           {@link #retrieveFromColdStorage(CoreSession, DocumentRef, Duration)}
      * @return the updated document model if the restore succeeds
      * @throws NuxeoException if the cold content is already in the main storage, if there is no cold content associated
      *             with the given document, or if the user does not have the permissions needed to perform the action.
      */
-    DocumentModel restoreContentFromColdStorage(CoreSession session, DocumentRef documentRef);
-
-    /**
-     * Internal use.
-     */
     DocumentModel restoreFromColdStorage(CoreSession session, DocumentRef documentRef);
 
     /**
-     * Internal use.
-     */
-    DocumentModel proceedRestoreMainContent(CoreSession session, DocumentModel documentModel);
-
-    /**
-     * Move to ColdStorage all documents referencing the given blob digests as main content.
+     * Checks if the main content is ready for download.
      *
-     * @param session the session
-     * @param blobDigests the blob digests
-     */
-    void propagateMoveToColdStorage(CoreSession session, List<String> blobDigests);
-
-    /**
-     * Restore from ColdStorage all documents referencing the given blob digests as main content.
-     *
-     * @param session the session
-     * @param blobDigests the blob digests
-     */
-    void propagateRestoreFromColdStorage(CoreSession session, List<String> blobDigests);
-
-    /**
-     * Checks if the retrieved cold storage contents are available for download.
-     *
-     * @implSpec: Queries all documents with a cold storage content which are being retrieved, meaning
+     * @implSpec: Checks document with a cold storage content which is being retrieved, meaning
      *            {@value org.nuxeo.coldstorage.ColdStorageConstants#COLD_STORAGE_BEING_RETRIEVED_PROPERTY} is
      *            {@code true}, and it checks if it is available for download. In which case its fires a
      *            {@value org.nuxeo.coldstorage.ColdStorageConstants#COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME} event.
-     * @see #requestRetrievalFromColdStorage(CoreSession, DocumentRef, Duration)
+     * @see #retrieveFromColdStorage(CoreSession, DocumentRef, Duration)
      */
-    ColdStorageContentStatus checkColdStorageContentAvailability(CoreSession session);
+    boolean checkIsRetrieved(CoreSession session, DocumentModel documentModel);
 
     /**
-     * Checks if the class storage of document moved to ColdStorage has been updated.
-     *
-     * @implSpec: Queries all documents with a cold storage class to be updated, meaning
-     *            {@value org.nuxeo.coldstorage.ColdStorageConstants#COLD_STORAGE_CONTENT_STORAGE_CLASS_TO_UPDATED} is
-     *            {@code true}, and it checks if it isn't available for download.
+     * Internal use.
      */
-    void checkColdStorageClass(CoreSession session);
+    DocumentModel proceedRestoreMainContent(CoreSession session, DocumentModel documentModel, boolean notify);
 
     /**
-     * Gets the number of days where the document's blob is available, once it's retrieved from cold storage.
-     *
-     * @return the number of days of availability if property
-     *         {@value org.nuxeo.coldstorage.ColdStorageConstants#COLD_STORAGE_NUMBER_OF_DAYS_OF_AVAILABILITY_PROPERTY_NAME}
-     *         is configured, {@code 1} otherwise.
+     * Internal use.
      */
-    Duration getDurationAvailability();
+    void checkDocToBeRetrieved(CoreSession session);
 
     /**
-     * Return the ColStorage rendition blob for the given {@link DocumentModel}.
-     * <p>
-     * A rendition blob is returned if found.
-     *
-     * @param documentModel the document to render
-     * @return the {@link Blob} object
-     * @throws NuxeoException if the rendition doesn't exist.
-     * @since 10.10
+     * Internal use.
      */
-    Blob getRendition(DocumentModel documentModel, CoreSession session);
+    DocumentModel proceedMoveToColdStorage(CoreSession session, DocumentRef documentRef);
+
 }

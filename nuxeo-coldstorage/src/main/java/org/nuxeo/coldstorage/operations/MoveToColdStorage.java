@@ -19,25 +19,21 @@
 
 package org.nuxeo.coldstorage.operations;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.nuxeo.coldstorage.service.ColdStorageService;
 import org.nuxeo.ecm.automation.core.Constants;
 import org.nuxeo.ecm.automation.core.annotations.Context;
 import org.nuxeo.ecm.automation.core.annotations.Operation;
 import org.nuxeo.ecm.automation.core.annotations.OperationMethod;
-import org.nuxeo.ecm.automation.core.annotations.Param;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentModelList;
-import org.nuxeo.ecm.core.api.NuxeoException;
 import org.nuxeo.ecm.core.api.impl.DocumentModelListImpl;
 
 /**
  * Moves the main content associated with the input {@link DocumentModel} or {@link DocumentModelList} to the cold
  * storage.
  * 
- * @since 11.1
+ * @since 2021.20
  */
 @Operation(id = MoveToColdStorage.ID, category = Constants.CAT_BLOB, label = "Move to Cold Storage", description = "Move the main document content to the cold storage.")
 public class MoveToColdStorage {

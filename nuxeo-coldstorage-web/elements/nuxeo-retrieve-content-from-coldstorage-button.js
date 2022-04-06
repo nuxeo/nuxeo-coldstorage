@@ -89,7 +89,6 @@ class RetrieveFromColdStorage extends mixinBehaviors([FiltersBehavior, FormatBeh
   _isAvailable(document) {
     return (
       this.hasFacet(document, 'ColdStorage') &&
-      document.properties['coldstorage:availableOnColdstorage'] &&
       !document.properties['coldstorage:beingRetrieved'] &&
       this.hasContent(document) &&
       // Don't show the retrieve btn if the file is retrieved and the rendition

@@ -32,7 +32,7 @@ import org.nuxeo.ecm.core.event.EventContext;
 import org.nuxeo.ecm.core.event.EventListener;
 import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
 /**
- * @since 10.10
+ * @since 2021.20
  */
 public class CheckUpdateColdStorageContentListener implements EventListener {
 

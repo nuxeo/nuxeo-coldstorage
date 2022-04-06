@@ -43,7 +43,7 @@ import org.nuxeo.runtime.stream.StreamProcessorTopology;
  * Bulk action in charge of restoring documents referencing a blob shared by another document that was just restored
  * from cold storage.
  *
- * @since 10.10
+ * @since 2021.20
  */
 public class PropagateRestoreFromColdStorageContentAction implements StreamProcessorTopology {
 
@@ -77,7 +77,7 @@ public class PropagateRestoreFromColdStorageContentAction implements StreamProce
             for (DocumentModel document : documents) {
                 // Normally it shouldn't be the case
                 if (document.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME)) {
-                    DocumentModel documentModel = service.proceedRestoreMainContent(session, document);
+                    DocumentModel documentModel = service.proceedRestoreMainContent(session, document, false);
                     if (documentModel.isVersion()) {
                         documentModel.putContextData(CoreSession.ALLOW_VERSION_WRITE, true);
                     }

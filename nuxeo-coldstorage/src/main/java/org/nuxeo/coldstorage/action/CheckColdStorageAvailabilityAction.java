@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2021 Nuxeo (http://nuxeo.com/) and others.
+ * (C) Copyright 2022 Nuxeo (http://nuxeo.com/) and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Contributors:
- *     Abdoul BA<aba@nuxeo.com>
+ *     Guillaume Renard<grenard@nuxeo.com>
  */
 
 package org.nuxeo.coldstorage.action;
@@ -29,10 +29,8 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.coldstorage.service.ColdStorageService;
 import org.nuxeo.ecm.core.api.CoreSession;
-import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentModelList;
 import org.nuxeo.ecm.core.bulk.action.computation.AbstractBulkComputation;
 import org.nuxeo.lib.stream.computation.Topology;
@@ -40,53 +38,41 @@ import org.nuxeo.runtime.api.Framework;
 import org.nuxeo.runtime.stream.StreamProcessorTopology;
 
 /**
- * Bulk action in charge of moving documents referencing a blob shared by another document that was just moved to cold
- * storage.
+ * Check availability of documents on which a retrieval request has been done.
  *
- * @since 2021.20
  */
-public class PropagateMoveToColdStorageContentAction implements StreamProcessorTopology {
+public class CheckColdStorageAvailabilityAction implements StreamProcessorTopology {
 
-    private static final Logger log = LogManager.getLogger(PropagateMoveToColdStorageContentAction.class);
+    private static final Logger log = LogManager.getLogger(CheckColdStorageAvailabilityAction.class);
 
-    public static final String ACTION_NAME = "propagateMoveToColdStorage";
+    public static final String ACTION_NAME = "checkColdStorageAvailability";
 
     public static final String ACTION_FULL_NAME = "bulk/" + ACTION_NAME;
 
     @Override
     public Topology getTopology(Map<String, String> options) {
         return Topology.builder()
-                       .addComputation(PropagateMoveToColdStorageContentComputation::new, //
+                       .addComputation(CheckColdStorageAvailabilityComputation::new, //
                                List.of(INPUT_1 + ":" + ACTION_FULL_NAME, OUTPUT_1 + ":" + STATUS_STREAM))
                        .build();
     }
 
-    public static class PropagateMoveToColdStorageContentComputation extends AbstractBulkComputation {
+    public static class CheckColdStorageAvailabilityComputation extends AbstractBulkComputation {
 
-        public PropagateMoveToColdStorageContentComputation() {
+        public CheckColdStorageAvailabilityComputation() {
             super(ACTION_FULL_NAME);
         }
 
         @Override
         protected void compute(CoreSession session, List<String> ids, Map<String, Serializable> properties) {
-            log.debug("Start computing documents of which content has been sent to ColdStorage {}", ids);
+            log.debug("Start computing documents to checked {}", ids);
             DocumentModelList documents = loadDocuments(session, ids);
 
             ColdStorageService service = Framework.getService(ColdStorageService.class);
-
-            for (DocumentModel document : documents) {
-                // Normally it shouldn't be the case
-                if (!document.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME)) {
-                    DocumentModel documentModel = service.proceedMoveToColdStorage(session, document.getRef());
-                    if (documentModel.isVersion()) {
-                        documentModel.putContextData(CoreSession.ALLOW_VERSION_WRITE, true);
-                    }
-                    session.saveDocument(documentModel);
-                } else {
-                    log.info("The main content is already in cold storage for document {}", document::getId);
-                }
-            }
-            log.debug("End computing documents of which content has been sent to ColdStorage");
+            documents.stream().forEach((doc) -> {
+                service.checkIsRetrieved(session, doc);
+            });
+            log.debug("End computing documents to checked");
         }
     }
 

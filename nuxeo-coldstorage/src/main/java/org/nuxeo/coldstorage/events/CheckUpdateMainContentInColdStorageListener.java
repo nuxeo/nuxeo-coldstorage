@@ -37,14 +37,14 @@ import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
 /**
  * A synchronous listener that prevents any main content replacement when it's stored in cold storage.
  * 
- * @since 11.1
+ * @since 2021.20
  */
 public class CheckUpdateMainContentInColdStorageListener implements EventListener {
 
-    /** @since 10.10 **/
+    /** @since 2021.20 **/
     private static final Logger log = LogManager.getLogger(CheckUpdateMainContentInColdStorageListener.class);
 
-    /** @since 10.10 **/
+    /** @since 2021.20 **/
     public static final String DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER = "disableColdStorageCheckUpdateMainContentListener";
 
     @Override

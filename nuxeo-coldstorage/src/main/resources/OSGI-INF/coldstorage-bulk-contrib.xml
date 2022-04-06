@@ -8,6 +8,8 @@
       bucketSize="100" batchSize="50" httpEnabled="false" />
     <action name="propagateRestoreFromColdStorage" inputStream="bulk/propagateRestoreFromColdStorage"
       bucketSize="100" batchSize="50" httpEnabled="false" />
+    <action name="checkColdStorageAvailability" inputStream="bulk/checkColdStorageAvailability"
+      bucketSize="100" batchSize="50" httpEnabled="false" />
   </extension>
 
   <extension target="org.nuxeo.runtime.stream.service" point="streamProcessor">
@@ -27,6 +29,12 @@
       class="org.nuxeo.coldstorage.action.PropagateRestoreFromColdStorageContentAction"
       defaultConcurrency="${nuxeo.bulk.action.propagateRestoreFromColdStorage.defaultConcurrency:=2}"
       defaultPartitions="${nuxeo.bulk.action.propagateRestoreFromColdStorage.defaultPartitions:=2}">
+      <policy name="default" maxRetries="3" delay="1s" maxDelay="10s" continueOnFailure="true" />
+    </streamProcessor>
+    <streamProcessor name="checkColdStorageAvailability"
+      class="org.nuxeo.coldstorage.action.CheckColdStorageAvailabilityAction"
+      defaultConcurrency="${nuxeo.bulk.action.checkColdStorageAvailability.defaultConcurrency:=2}"
+      defaultPartitions="${nuxeo.bulk.action.checkColdStorageAvailability.defaultPartitions:=2}">
       <policy name="default" maxRetries="3" delay="1s" maxDelay="10s" continueOnFailure="true" />
     </streamProcessor>
   </extension>
