@@ -20,20 +20,21 @@
 package org.nuxeo.coldstorage.operations;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
 import org.junit.runner.RunWith;
 import org.nuxeo.coldstorage.ColdStorageConstants;
-import org.nuxeo.coldstorage.thumbnail.DummyThumbnailFactory;
+import org.nuxeo.coldstorage.ColdStorageHelper;
 import org.nuxeo.ecm.automation.AutomationService;
 import org.nuxeo.ecm.automation.OperationContext;
 import org.nuxeo.ecm.automation.OperationException;
@@ -45,13 +46,14 @@ import org.nuxeo.ecm.core.api.DocumentModelList;
 import org.nuxeo.ecm.core.api.security.ACE;
 import org.nuxeo.ecm.core.api.security.ACL;
 import org.nuxeo.ecm.core.api.security.ACP;
+import org.nuxeo.ecm.core.blob.ManagedBlob;
 import org.nuxeo.ecm.core.test.CoreFeature;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.FeaturesRunner;
 import org.nuxeo.runtime.test.runner.TransactionalFeature;
 
 /**
- * @since 11.1
+ * @since 2021.20
  */
 @RunWith(FeaturesRunner.class)
 @Deploy("org.nuxeo.ecm.platform.notification.api")
@@ -65,31 +67,40 @@ public abstract class AbstractTestColdStorageOperation {
     protected AutomationService automationService;
 
     @Inject
-    protected CoreFeature coreFeature;
+    protected CoreSession session;
 
     @Inject
-    protected CoreSession session;
+    protected CoreFeature coreFeature;
 
     @Inject
     protected TransactionalFeature transactionalFeature;
 
-    protected void moveContentToColdStorage(CoreSession session, DocumentModel documentModel)
+    protected DocumentModel moveContentToColdStorage(CoreSession session, DocumentModel documentModel)
             throws OperationException, IOException {
         try (OperationContext context = new OperationContext(session)) {
             context.setInput(documentModel);
-            DocumentModel updatedDocModel = (DocumentModel) automationService.run(context, MoveToColdStorage.ID);
-            checkMoveContent(Collections.singletonList(documentModel), Collections.singletonList(updatedDocModel));
-            documentModel.refresh();
+            documentModel = (DocumentModel) automationService.run(context, MoveToColdStorage.ID);
+            checkMoveContent(documentModel);
+            return documentModel;
         }
     }
 
     protected void moveContentToColdStorage(CoreSession session, List<DocumentModel> documents)
             throws OperationException, IOException {
-        List<String> documentIds = documents.stream().map(DocumentModel::getId).collect(Collectors.toList());
         try (OperationContext context = new OperationContext(session)) {
             context.setInput(documents);
             checkMoveContent(documents, (DocumentModelList) automationService.run(context, MoveToColdStorage.ID));
         }
+    }
+
+    protected void checkMoveContent(DocumentModel doc) throws IOException {
+        // check document
+        assertTrue(doc.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME));
+
+        // check blob
+        Blob coldStorageContent = (Blob) doc.getPropertyValue(ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY);
+        assertNotNull(coldStorageContent);
+        ColdStorageHelper.isInColdStorage((ManagedBlob) coldStorageContent);
     }
 
     protected void checkMoveContent(List<DocumentModel> expectedDocs, List<DocumentModel> actualDocs)
@@ -97,26 +108,17 @@ public abstract class AbstractTestColdStorageOperation {
         assertEquals(expectedDocs.size(), actualDocs.size());
         List<String> expectedDocIds = expectedDocs.stream().map(DocumentModel::getId).collect(Collectors.toList());
         for (DocumentModel updatedDoc : actualDocs) {
-            Blob fileContent = (Blob) updatedDoc.getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY);
-            Blob coldStorageContent = (Blob) updatedDoc.getPropertyValue(
-                    ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY);
-
-            // check document
             assertTrue(expectedDocIds.contains(updatedDoc.getId()));
-            assertTrue(updatedDoc.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME));
-
-            // check blobs
-            assertEquals(DummyThumbnailFactory.DUMMY_THUMBNAIL_CONTENT, fileContent.getString());
-            assertEquals(FILE_CONTENT, coldStorageContent.getString());
+            checkMoveContent(updatedDoc);
         }
-
     }
 
     protected DocumentModel createFileDocument(CoreSession session, boolean withBlobContent, ACE... aces) {
         DocumentModel documentModel = session.createDocumentModel("/", "MyFile", "File");
         if (withBlobContent) {
-            documentModel.setPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY,
-                    (Serializable) Blobs.createBlob(FILE_CONTENT));
+            Blob blob = Blobs.createBlob(FILE_CONTENT);
+            blob.setDigest(UUID.randomUUID().toString());
+            documentModel.setPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY, (Serializable) blob);
         }
         DocumentModel document = session.createDocument(documentModel);
         if (aces.length > 0) {

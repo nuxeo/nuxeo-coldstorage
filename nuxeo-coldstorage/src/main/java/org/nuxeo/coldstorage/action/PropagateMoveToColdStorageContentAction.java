@@ -44,7 +44,7 @@ import org.nuxeo.runtime.stream.StreamProcessorTopology;
  * Bulk action in charge of moving documents referencing a blob shared by another document that was just moved to cold
  * storage.
  *
- * @since 10.10
+ * @since 2021.20
  */
 public class PropagateMoveToColdStorageContentAction implements StreamProcessorTopology {
 
@@ -82,7 +82,7 @@ public class PropagateMoveToColdStorageContentAction implements StreamProcessorT
                     }
                     session.saveDocument(documentModel);
                 } else {
-                    log.info("The main content for document: {} is already in cold storage.", document::getId);
+                    log.info("The main content is already in cold storage for document {}", document::getId);
                 }
             }
             log.debug("End computing documents of which content has been sent to ColdStorage");

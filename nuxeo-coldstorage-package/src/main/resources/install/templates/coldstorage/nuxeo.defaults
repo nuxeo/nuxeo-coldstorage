@@ -5,19 +5,7 @@ coldstorage.target=.
 
 # Every hour at the 7th minute
 nuxeo.coldstorage.check.retrieve.state.cronExpression=0 7 * ? * * *
-nuxeo.coldstorage.check.storage.state.cronExpression=0 7 * ? * * *
-
-# mandatory
-nuxeo.aws.glacier.bucket=
-nuxeo.core.binarymanager=org.nuxeo.ecm.blob.s3.S3BlobProvider
-nuxeo.core.blobstore.digestAsync=false
 
 # optional
-nuxeo.aws.glacier.bucket_prefix=
-nuxeo.s3storage.cachesize=100MB
-nuxeo.s3storage.connection.max=50
-nuxeo.s3storage.connection.retry=3
-nuxeo.s3storage.connection.timeout=50000
-nuxeo.s3storage.socket.timeout=50000
 nuxeo.coldstorage.numberOfDaysOfAvailability.value.default=1
 nuxeo.coldstorage.thumbnailPreviewRequired=true

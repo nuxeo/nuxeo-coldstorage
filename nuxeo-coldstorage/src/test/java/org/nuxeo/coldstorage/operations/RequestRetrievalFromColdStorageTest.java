@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2021 Nuxeo (http://nuxeo.com/) and others.
+ * (C) Copyright 2020 Nuxeo (http://nuxeo.com/) and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Contributors:
- *     Abdoul BA<aba@nuxeo.com>
+ *     Salem Aouana
  */
 
 package org.nuxeo.coldstorage.operations;
@@ -36,6 +36,7 @@ import javax.security.auth.login.LoginException;
 
 import org.junit.Test;
 import org.nuxeo.coldstorage.ColdStorageConstants;
+import org.nuxeo.coldstorage.DummyColdStorageFeature;
 import org.nuxeo.ecm.automation.OperationContext;
 import org.nuxeo.ecm.automation.OperationException;
 import org.nuxeo.ecm.core.api.CloseableCoreSession;
@@ -47,11 +48,13 @@ import org.nuxeo.ecm.core.api.security.ACL;
 import org.nuxeo.ecm.core.api.security.ACP;
 import org.nuxeo.ecm.platform.ec.notification.NotificationConstants;
 import org.nuxeo.ecm.platform.notification.api.NotificationManager;
+import org.nuxeo.runtime.test.runner.Features;
 
 /**
- * @since 11.0
+ * @since 2021.20
  */
-public abstract class AbstractTestRequestRetrievalColdStorageOperation extends AbstractTestColdStorageOperation {
+@Features(DummyColdStorageFeature.class)
+public class RequestRetrievalFromColdStorageTest extends AbstractTestColdStorageOperation {
 
     protected static final int NUMBER_OF_DAYS_OF_AVAILABILITY = 5;
 
@@ -67,7 +70,7 @@ public abstract class AbstractTestRequestRetrievalColdStorageOperation extends A
     public void shouldRequestRetrieval() throws OperationException, IOException {
         DocumentModel documentModel = createFileDocument(session, true);
         // first make the move to cold storage
-        moveContentToColdStorage(session, documentModel);
+        documentModel = moveContentToColdStorage(session, documentModel);
         // request a retrieval from the cold storage
         requestRetrievalContentFromColdStorage(documentModel, session);
     }
@@ -76,7 +79,7 @@ public abstract class AbstractTestRequestRetrievalColdStorageOperation extends A
     public void shouldRequestRetrievalWithReadAccess() throws OperationException, IOException, LoginException {
         DocumentModel documentModel = createFileDocument(session, true);
         // first make the move to cold storage
-        moveContentToColdStorage(session, documentModel);
+        documentModel = moveContentToColdStorage(session, documentModel);
         // Let's give READ access to a user
         ACP acp = documentModel.getACP();
         ACL acl = acp.getOrCreateACL();
@@ -93,9 +96,9 @@ public abstract class AbstractTestRequestRetrievalColdStorageOperation extends A
     public void shouldRequestRetrievalWithDefaultValue() throws OperationException, IOException {
         DocumentModel documentModel = createFileDocument(session, true);
         // first make the move to cold storage
-        moveContentToColdStorage(session, documentModel);
+        documentModel = moveContentToColdStorage(session, documentModel);
         // request a retrieval from the cold storage
-        requestRetrievalContentFromColdStorage(documentModel,session);
+        requestRetrievalContentFromColdStorage(documentModel, session);
     }
 
     @Test
@@ -103,9 +106,9 @@ public abstract class AbstractTestRequestRetrievalColdStorageOperation extends A
         DocumentModel documentModel = createFileDocument(session, true);
 
         // move the blob to cold storage
-        moveContentToColdStorage(session, documentModel);
+        documentModel = moveContentToColdStorage(session, documentModel);
         // request a retrieval from the cold storage
-        requestRetrievalContentFromColdStorage(documentModel, session, NUMBER_OF_DAYS_OF_AVAILABILITY);
+        documentModel = requestRetrievalContentFromColdStorage(documentModel, session, NUMBER_OF_DAYS_OF_AVAILABILITY);
 
         // request a retrieval for a second time
         try {
@@ -128,12 +131,12 @@ public abstract class AbstractTestRequestRetrievalColdStorageOperation extends A
         }
     }
 
-    protected void requestRetrievalContentFromColdStorage(DocumentModel documentModel, CoreSession userSession)
+    protected DocumentModel requestRetrievalContentFromColdStorage(DocumentModel documentModel, CoreSession userSession)
             throws OperationException {
-        requestRetrievalContentFromColdStorage(documentModel, userSession, 0);
+        return requestRetrievalContentFromColdStorage(documentModel, userSession, 0);
     }
 
-    protected void requestRetrievalContentFromColdStorage(DocumentModel documentModel, CoreSession userSession,
+    protected DocumentModel requestRetrievalContentFromColdStorage(DocumentModel documentModel, CoreSession userSession,
             int numberOfAvailabilityDays) throws OperationException {
         try (OperationContext context = new OperationContext(userSession)) {
             context.setInput(documentModel);
@@ -148,6 +151,7 @@ public abstract class AbstractTestRequestRetrievalColdStorageOperation extends A
             List<String> subscriptions = notificationManager.getSubscriptionsForUserOnDocument(username,
                     updatedDocument);
             assertTrue(subscriptions.contains(ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_NOTIFICATION_NAME));
+            return updatedDocument;
         }
     }
 }

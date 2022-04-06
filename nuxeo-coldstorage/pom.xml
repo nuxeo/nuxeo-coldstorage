@@ -101,6 +101,13 @@
       <artifactId>aws-java-sdk-s3</artifactId>
       <scope>test</scope>
     </dependency>
+    <!-- TODO  Remove when S3BlobProviderFeature is available in test jar.-->
+    <dependency>
+      <groupId>org.nuxeo.ecm.core</groupId>
+      <artifactId>nuxeo-core-api</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
 </project>
