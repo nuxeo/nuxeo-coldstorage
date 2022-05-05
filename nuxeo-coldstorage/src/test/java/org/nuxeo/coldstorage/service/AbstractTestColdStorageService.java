@@ -79,7 +79,7 @@ import org.nuxeo.runtime.test.runner.FeaturesRunner;
 import org.nuxeo.runtime.test.runner.TransactionalFeature;
 
 /**
- * @since 2021.20
+ * @since 2021.19
  */
 @RunWith(FeaturesRunner.class)
 public abstract class AbstractTestColdStorageService {

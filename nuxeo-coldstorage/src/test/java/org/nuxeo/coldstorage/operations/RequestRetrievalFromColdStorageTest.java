@@ -51,7 +51,7 @@ import org.nuxeo.ecm.platform.notification.api.NotificationManager;
 import org.nuxeo.runtime.test.runner.Features;
 
 /**
- * @since 2021.20
+ * @since 2021.19
  */
 @Features(DummyColdStorageFeature.class)
 public class RequestRetrievalFromColdStorageTest extends AbstractTestColdStorageOperation {
