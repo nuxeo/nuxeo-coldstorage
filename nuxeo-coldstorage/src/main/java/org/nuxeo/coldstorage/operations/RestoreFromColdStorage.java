@@ -17,7 +17,7 @@ import org.nuxeo.ecm.core.api.impl.DocumentModelListImpl;
  * Restores the cold storage content associated with the input {@link DocumentModel} or {@link DocumentModelList} to the
  * main storage.
  *
- * @since 2021.20
+ * @since 2021.19
  */
 @Operation(id = RestoreFromColdStorage.ID, category = Constants.CAT_BLOB, label = "Restore from Cold Storage", description = "Restore document under cold storage content to the main storage.")
 public class RestoreFromColdStorage {

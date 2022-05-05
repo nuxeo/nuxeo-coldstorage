@@ -51,7 +51,7 @@ import org.osgi.framework.Bundle;
 /**
  * TODO Remove when S3BlobProviderFeature is available in test jar.
  *
- * @since 2021.20
+ * @since 2021.19
  */
 @Features({ BlobManagerFeature.class, ColdStorageFeature.class })
 public class S3ColdStorageBlobProviderFeature implements RunnerFeature {

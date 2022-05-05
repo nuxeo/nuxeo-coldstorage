@@ -101,7 +101,7 @@ import org.nuxeo.runtime.model.DefaultComponent;
 /**
  * Default implementation of {@link ColdStorageService}.
  *
- * @since 2021.20
+ * @since 2021.19
  */
 public class ColdStorageServiceImpl extends DefaultComponent implements ColdStorageService {
 
