@@ -53,7 +53,7 @@ import org.nuxeo.runtime.test.runner.FeaturesRunner;
 import org.nuxeo.runtime.test.runner.TransactionalFeature;
 
 /**
- * @since 2021.20
+ * @since 2021.19
  */
 @RunWith(FeaturesRunner.class)
 @Deploy("org.nuxeo.ecm.platform.notification.api")

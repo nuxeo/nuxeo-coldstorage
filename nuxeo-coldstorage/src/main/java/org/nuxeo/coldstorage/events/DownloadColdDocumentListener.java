@@ -37,7 +37,7 @@ import org.nuxeo.runtime.api.Framework;
  * A synchronous listener that intercepts the download event in order to change the event id in the audit if the
  * targetted blob is the cold one.
  *
- * @since 2021.15
+ * @since 2021.19
  */
 public class DownloadColdDocumentListener implements EventListener {
 

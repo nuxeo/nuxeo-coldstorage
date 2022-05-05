@@ -26,7 +26,7 @@ import org.nuxeo.runtime.model.Descriptor;
 /**
  * XMap descriptor for contributed ColdStorage rendition
  *
- * @since 2021.20
+ * @since 2021.19
  */
 @XObject("coldStorageRendition")
 public class ColdStorageRenditionDescriptor implements Descriptor {
