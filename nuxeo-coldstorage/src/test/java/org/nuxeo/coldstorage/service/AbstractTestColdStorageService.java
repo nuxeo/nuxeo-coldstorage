@@ -33,8 +33,7 @@ import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_BEING_RETR
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_TO_BE_RESTORED_PROPERTY;
-import static org.nuxeo.coldstorage.events.CheckUpdateColdStorageContentListener.DISABLE_COLD_STORAGE_CHECK_UPDATE_COLDSTORAGE_CONTENT_LISTENER;
-import static org.nuxeo.coldstorage.events.CheckUpdateMainContentInColdStorageListener.DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER;
+import static org.nuxeo.coldstorage.events.PreventColdStorageUpdateListener.DISABLE_PREVENT_COLD_STORAGE_UPDATE_LISTENER;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -278,7 +277,7 @@ public abstract class AbstractTestColdStorageService {
         } catch (NuxeoException e) {
             assertEquals(SC_FORBIDDEN, e.getStatusCode());
             assertEquals(
-                    String.format("The main content of document: %s cannot be updated. It's already in cold storage.",
+                    String.format("Cannot edit content of cold storage document %s",
                             documentModel),
                     e.getMessage());
         }
@@ -300,6 +299,27 @@ public abstract class AbstractTestColdStorageService {
         List<Map<String, Serializable>> actualAttachments = (List<Map<String, Serializable>>) documentModel.getPropertyValue(
                 "files:files");
         assertTrue(CollectionUtils.isEqualCollection(attachments, actualAttachments));
+    }
+
+    @Test
+    public void shouldFailRemoveColdStorageFacet() throws IOException {
+        // move the main content into the cold storage
+        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
+        moveAndVerifyContent(session, documentModel.getRef());
+
+        // we cannot update the main content as it is already in cold storage
+        documentModel.refresh();
+        documentModel.removeFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME);
+        try {
+            session.saveDocument(documentModel);
+            fail("Should fail because a main content document in cold storage cannot be updated.");
+        } catch (NuxeoException e) {
+            assertEquals(SC_FORBIDDEN, e.getStatusCode());
+            assertEquals(
+                    String.format("Cannot remove cold storage facet from document %s",
+                            documentModel),
+                    e.getMessage());
+        }
     }
 
     protected DocumentModel verifyRestore(DocumentRef documentRef, String expectedContent) throws IOException {
@@ -343,8 +363,7 @@ public abstract class AbstractTestColdStorageService {
         documentModel.putContextData(ThumbnailConstants.DISABLE_THUMBNAIL_COMPUTATION, true);
 
         // Only for tests purposes
-        documentModel.putContextData(DISABLE_COLD_STORAGE_CHECK_UPDATE_MAIN_CONTENT_LISTENER, true);
-        documentModel.putContextData(DISABLE_COLD_STORAGE_CHECK_UPDATE_COLDSTORAGE_CONTENT_LISTENER, true);
+        documentModel.putContextData(DISABLE_PREVENT_COLD_STORAGE_UPDATE_LISTENER, true);
         documentModel = session.saveDocument(documentModel);
 
         transactionalFeature.nextTransaction();

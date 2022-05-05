@@ -13,12 +13,8 @@
               class="org.nuxeo.coldstorage.events.CheckColdStorageContentAvailabilityListener">
       <event>checkColdStorageContentAvailability</event>
     </listener>
-    <listener name="checkUpdateMainContentInColdStorage"
-              class="org.nuxeo.coldstorage.events.CheckUpdateMainContentInColdStorageListener">
-      <event>beforeDocumentModification</event>
-    </listener>
     <listener name="checkUpdateColdStorageContentListener"
-              class="org.nuxeo.coldstorage.events.CheckUpdateColdStorageContentListener">
+              class="org.nuxeo.coldstorage.events.PreventColdStorageUpdateListener">
       <event>beforeDocumentModification</event>
     </listener>
     <!-- StreamAuditEventListener has a priority of 500, less allows to be evaluated earlier -->
