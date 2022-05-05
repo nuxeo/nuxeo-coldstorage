@@ -38,7 +38,7 @@ import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
  * Listener on beforeDocumentModification event to prevent from removing Cold Storage facet or edit main and cold
  * storage content.
  *
- * @since 2021.20
+ * @since 2021.19
  */
 public class PreventColdStorageUpdateListener implements EventListener {
 

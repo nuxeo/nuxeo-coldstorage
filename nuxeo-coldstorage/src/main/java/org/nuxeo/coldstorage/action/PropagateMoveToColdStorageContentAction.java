@@ -43,7 +43,7 @@ import org.nuxeo.runtime.stream.StreamProcessorTopology;
  * Bulk action in charge of moving documents referencing a blob shared by another document that was just moved to cold
  * storage.
  *
- * @since 2021.20
+ * @since 2021.19
  */
 public class PropagateMoveToColdStorageContentAction implements StreamProcessorTopology {
 

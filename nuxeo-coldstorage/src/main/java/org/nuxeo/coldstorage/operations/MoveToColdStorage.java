@@ -33,7 +33,7 @@ import org.nuxeo.ecm.core.api.impl.DocumentModelListImpl;
  * Moves the main content associated with the input {@link DocumentModel} or {@link DocumentModelList} to the cold
  * storage.
  * 
- * @since 2021.20
+ * @since 2021.19
  */
 @Operation(id = MoveToColdStorage.ID, category = Constants.CAT_BLOB, label = "Move to Cold Storage", description = "Move the main document content to the cold storage.")
 public class MoveToColdStorage {
