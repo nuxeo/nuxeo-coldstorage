@@ -67,6 +67,18 @@ Then('I can see the file is not stored in cold storage', function () {
   page.infoBar.isVisible('#coldStorageInfoBar .storedInColdStorage').should.be.equals(false);
 });
 
+Then('I can see the file is retrieved', function () {
+  this.ui.reload();
+  const page = this.ui.browser.documentPage(this.doc.type);
+  page.infoBar.waitForVisible('#coldStorageInfoBar #retrieved.storedInColdStorage');
+});
+
+Then('I can see the file is being retrieved', function () {
+  this.ui.reload();
+  const page = this.ui.browser.documentPage(this.doc.type);
+  page.infoBar.waitForVisible('#coldStorageInfoBar #beingRetrieved.storedInColdStorage');
+});
+
 Then('I can see the Send the selected files to cold storage action button', function () {
   const toolbar = this.ui.browser.selectionToolbar;
   toolbar.waitForVisible();

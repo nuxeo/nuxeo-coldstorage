@@ -52,7 +52,7 @@ class ColdStorageInfobar extends mixinBehaviors([FiltersBehavior, FormatBehavior
           <div id="coldStorageInfoBar" class="bar coldStorage">
             <div class="layout horizontal center flex">
               <iron-icon noink icon="coldstorage:default"></iron-icon>
-              <span class="storedInColdStorage"> [[_title]] </span>
+              <span id="[[_documentStatus]]" class="storedInColdStorage"> [[_title]] </span>
               <dom-if if="[[_isDocRetrieved]]">
                 <template>
                   <nuxeo-download-button
