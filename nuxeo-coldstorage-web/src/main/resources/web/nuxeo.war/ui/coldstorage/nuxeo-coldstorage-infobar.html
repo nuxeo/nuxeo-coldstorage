@@ -34,7 +34,7 @@ express or implied. See the License for the specific language governing permissi
         <div id="coldStorageInfoBar" class="bar coldStorage">
           <div class="layout horizontal center flex">
             <iron-icon noink icon="coldstorage:default"></iron-icon>
-            <span class="storedInColdStorage"> [[_title]] </span>
+            <span id="[[_documentStatus]]" class="storedInColdStorage"> [[_title]] </span>
             <template is="dom-if" if="[[_isDocRetrieved]]">
               <nuxeo-download-button
                 document="[[document]]"
@@ -106,8 +106,8 @@ express or implied. See the License for the specific language governing permissi
         if (document.properties['coldstorage:beingRetrieved']) {
           return 'beingRetrieved';
         }
-        if (document.properties['coldstorage:beingRestored']) {
-          return 'beingRestored';
+        if (document.properties['coldstorage:toBeRestored']) {
+          return 'toBeRestored';
         }
         if (
           document.properties['coldstorage:downloadableUntil']

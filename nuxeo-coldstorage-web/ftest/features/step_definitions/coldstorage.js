@@ -1,4 +1,18 @@
-import { Given, When, Then } from 'cucumber';
+import { Given, When, Then, Before } from 'cucumber';
+import Nuxeo from 'nuxeo';
+
+Before(function () {
+  // We want to delete left over binaries in cold storage states else tests will fail
+  const nuxeo = new Nuxeo({
+    auth: { method: 'basic', username: 'Administrator', password: 'Administrator' },
+    baseURL: process.env.NUXEO_URL,
+  });
+  var baseURL = process.env.NUXEO_URL || 'http://localhost:8080/nuxeo';
+  nuxeo.http({
+    url: baseURL + '/site/management/binaries/orphaned',
+    method: 'DELETE',
+  });
+});
 
 Given('I have the following documents in the platform', function (table) {
   driver.pause(1000);
@@ -112,6 +126,24 @@ Then('I can see the file is not stored in cold storage', function () {
   driver.refresh();
   const page = this.ui.browser.documentPage(this.doc.type);
   page.infoBar.isVisible('#coldStorageInfoBar .storedInColdStorage').should.be.equals(false);
+});
+
+Then('I can see the file is retrieved', function () {
+  driver.waitUntil(() => {
+    driver.refresh();
+    const page = this.ui.browser.documentPage(this.doc.type);
+    page.infoBar.waitForVisible('#coldStorageInfoBar #retrieved.storedInColdStorage');
+    return true;
+  });
+});
+
+Then('I can see the file is being retrieved', function () {
+  driver.waitUntil(() => {
+    driver.refresh();
+    const page = this.ui.browser.documentPage(this.doc.type);
+    page.infoBar.waitForVisible('#coldStorageInfoBar #beingRetrieved.storedInColdStorage');
+    return true;
+  });
 });
 
 Then('I can see the Send the selected files to cold storage action button', function () {
