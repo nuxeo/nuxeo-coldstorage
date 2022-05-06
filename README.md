@@ -65,6 +65,8 @@ The tests run against bundled versions of Chromium, Firefox and Webkit, using [P
 npm run ftest
 ```
 
+The `nuxeo-management-rest-api` addon needs to be installed on the server to have the tests passing.
+
 To run the functional tests, [Nuxeo Web UI Functional Testing Framework](https://github.com/nuxeo/nuxeo-web-ui/tree/master/packages/nuxeo-web-ui-ftest) is used.
 Due to its inner dependencies, it only works using NodeJS `lts/dubnium`, i.e., `v10`.
 

@@ -45,7 +45,7 @@ nuxeo:
       pullPolicy: Always
     persistence:
       enabled: disable
-    packages: nuxeo-dam nuxeo-web-ui amazon-s3-online-storage nuxeo-jsf-ui /packages/nuxeo-coldstorage-package.zip
+    packages: nuxeo-dam nuxeo-web-ui nuxeo-management-rest-api amazon-s3-online-storage nuxeo-jsf-ui /packages/nuxeo-coldstorage-package.zip
     livenessProbe:
       initialDelaySeconds: 420
       periodSeconds: 20
