@@ -38,7 +38,7 @@ import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
  * Listener on beforeDocumentModification event to prevent from removing Cold Storage facet or edit main and cold
  * storage content.
  *
- * @since 2021.19
+ * @since 2021.0.0
  */
 public class PreventColdStorageUpdateListener implements EventListener {
 
@@ -65,7 +65,7 @@ public class PreventColdStorageUpdateListener implements EventListener {
         boolean docHasFacet = doc.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME);
         boolean previousDocumentHasFacet = previousDocument.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME);
         if (previousDocumentHasFacet) {
-            // Prevent replacing the cold storage facet of a document whose is stored in S3 Glacier
+            // Prevent removing the cold storage facet of a document whose is stored in S3 Glacier
             if (!doc.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME)) {
                 // mark the event to bubble the exception, which results on a TX rollback
                 event.markBubbleException();

@@ -62,7 +62,7 @@ import org.nuxeo.runtime.test.runner.WithFrameworkProperty;
 import org.nuxeo.runtime.transaction.TransactionHelper;
 
 /**
- * @since 2021.19
+ * @since 2021.0.0
  */
 @Features(DummyColdStorageFeature.class)
 public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
