@@ -13,7 +13,7 @@
               class="org.nuxeo.coldstorage.events.CheckColdStorageContentAvailabilityListener">
       <event>checkColdStorageContentAvailability</event>
     </listener>
-    <listener name="checkUpdateColdStorageContentListener"
+    <listener name="preventColdStorageUpdateListener" priority="0"
               class="org.nuxeo.coldstorage.events.PreventColdStorageUpdateListener">
       <event>beforeDocumentModification</event>
     </listener>
@@ -21,6 +21,12 @@
     <listener name="downloadColdDocumentListener" priority="400"
               class="org.nuxeo.coldstorage.events.DownloadColdDocumentListener">
       <event>download</event>
+    </listener>
+    <!-- UpdateThumbnailListener has a priority of 999, more allows to be evaluated later -->
+    <listener name="checkAlreadyInColdStorageListener" priority="900"
+      class="org.nuxeo.coldstorage.events.CheckAlreadyInColdStorageListener">
+      <event>documentModified</event>
+      <event>documentCreated</event>
     </listener>
   </extension>
 

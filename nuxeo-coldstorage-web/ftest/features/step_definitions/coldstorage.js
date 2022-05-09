@@ -1,4 +1,14 @@
-import { When, Then } from '@cucumber/cucumber';
+import { When, Then, Before } from '@cucumber/cucumber';
+import Nuxeo from 'nuxeo';
+
+Before(function () {
+  // We want to delete left over binaries in cold storage states else tests will fail
+  const nuxeo = new Nuxeo({
+    auth: { method: 'basic', username: 'Administrator', password: 'Administrator' },
+    baseURL: process.env.NUXEO_URL,
+  });
+  nuxeo.request('management/binaries/orphaned').delete();
+});
 
 When('I click the Send file to cold storage action button', function () {
   this.ui.browser.clickDocumentActionMenu('nuxeo-move-content-to-coldstorage-button');
