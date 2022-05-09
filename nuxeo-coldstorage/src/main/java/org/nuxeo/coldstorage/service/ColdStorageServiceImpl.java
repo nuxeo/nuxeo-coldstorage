@@ -55,10 +55,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.nuxeo.coldstorage.ColdStorageConstants;
+import org.nuxeo.coldstorage.ColdStorageHelper;
 import org.nuxeo.coldstorage.ColdStorageRenditionDescriptor;
 import org.nuxeo.coldstorage.action.CheckColdStorageAvailabilityAction;
 import org.nuxeo.coldstorage.action.PropagateMoveToColdStorageContentAction;
@@ -73,7 +75,6 @@ import org.nuxeo.ecm.core.api.NuxeoPrincipal;
 import org.nuxeo.ecm.core.api.event.CoreEventConstants;
 import org.nuxeo.ecm.core.api.security.SecurityConstants;
 import org.nuxeo.ecm.core.blob.BlobManager;
-import org.nuxeo.ecm.core.blob.BlobProvider;
 import org.nuxeo.ecm.core.blob.BlobStatus;
 import org.nuxeo.ecm.core.blob.BlobUpdateContext;
 import org.nuxeo.ecm.core.blob.ManagedBlob;
@@ -258,9 +259,8 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
 
         try {
             Blob coldContent = (Blob) mainContent;
-            BlobStatus oldStatus = getStatus(coldContent);
-            if (oldStatus.getStorageClass() == null) {
-                // XXX if the storage class != null, we assume it is already in cold storage.
+            BlobStatus oldStatus = ColdStorageHelper.getStatus((ManagedBlob) coldContent);
+            if (!ColdStorageHelper.isInColdStorage(oldStatus)) {
                 // No need to update the class
                 // To be re-factored when we support more storage class
                 String key = getContentBlobKey(coldContent);
@@ -313,25 +313,16 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
                             documentModel),
                     SC_FORBIDDEN);
         }
-        BlobStatus blobStatus = getBlobStatus(documentModel);
-        boolean notify = false;
+        BlobStatus blobStatus = ColdStorageHelper.getBlobStatus(documentModel);
+        Function<DocumentModel, Boolean> doNotify;
         DocumentModel docResult = null;
-        if (isDownloadable(blobStatus)) {
+        if (ColdStorageHelper.isDownloadable(blobStatus)) {
             documentModel.setPropertyValue(COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL,
                     Date.from(blobStatus.getDownloadableUntil()));
-            docResult = CoreInstance.doPrivileged(session, s -> {
-                // The retrieval is allowed for users with only READ access.
-                // It requires an unrestricted session to update ColdStorage metadata on the document
-                return s.saveDocument(documentModel);
-            });
+            doNotify = doc -> false;
         } else if (blobStatus.isOngoingRestore()) {
             documentModel.setPropertyValue(COLD_STORAGE_BEING_RETRIEVED_PROPERTY, true);
-            notify = true;
-            docResult = CoreInstance.doPrivileged(session, s -> {
-                // The retrieval is allowed for users with only READ access.
-                // It requires an unrestricted session to update ColdStorage metadata on the document
-                return s.saveDocument(documentModel);
-            });
+            doNotify = doc -> true;
         } else {
             try {
                 Blob coldContent = (Blob) documentModel.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
@@ -344,21 +335,22 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
                 throw new NuxeoException(e);
             }
             documentModel.setPropertyValue(COLD_STORAGE_BEING_RETRIEVED_PROPERTY, true);
-            docResult = CoreInstance.doPrivileged(session, s -> {
-                // The retrieval is allowed for users with only READ access.
-                // It requires an unrestricted session to update ColdStorage metadata on the document
-                return s.saveDocument(documentModel);
-            });
-            notify = CoreInstance.doPrivileged(session, s -> {
+            doNotify = doc -> CoreInstance.doPrivileged(session, s -> {
                 // The check retrieval may need to modify metadata of document too
-                return !checkIsRetrieved(session, documentModel);
+                return !checkIsRetrieved(s, doc);
             });
         }
+        CoreInstance.doPrivileged(session, s -> {
+            // The retrieval is allowed for users with only READ access.
+            // It requires an unrestricted session to update ColdStorage metadata on the document
+            s.saveDocument(documentModel);
+        });
+        docResult = session.getDocument(documentRef);
 
         // Fire event for audit purpose
-        fireEvent(documentModel, session, COLD_STORAGE_CONTENT_TO_RETRIEVE_EVENT_NAME);
-        Serializable beingRestored = documentModel.getPropertyValue(COLD_STORAGE_TO_BE_RESTORED_PROPERTY);
-        if (!Boolean.TRUE.equals(beingRestored) && notify) {
+        fireEvent(docResult, session, COLD_STORAGE_CONTENT_TO_RETRIEVE_EVENT_NAME);
+        Serializable beingRestored = docResult.getPropertyValue(COLD_STORAGE_TO_BE_RESTORED_PROPERTY);
+        if (!Boolean.TRUE.equals(beingRestored) && doNotify.apply(docResult)) {
             // auto-subscribe the user, this way they will receive the mail notification when the content is
             // available
             NuxeoPrincipal principal = session.getPrincipal();
@@ -402,8 +394,8 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
                             documentModel),
                     SC_CONFLICT);
         }
-        BlobStatus blobStatus = getBlobStatus(documentModel);
-        if (isDownloadable(blobStatus)) {
+        BlobStatus blobStatus = ColdStorageHelper.getBlobStatus(documentModel);
+        if (ColdStorageHelper.isDownloadable(blobStatus)) {
             // Restore the main content synchronously no need to notify.
             documentModel = proceedRestoreMainContent(session, documentModel, false);
         } else {
@@ -532,7 +524,7 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
             return false;
         }
 
-        BlobStatus blobStatus = getBlobStatus(doc);
+        BlobStatus blobStatus = ColdStorageHelper.getBlobStatus(doc);
         if (blobStatus.isDownloadable()) {
             // Check if the Document should be restored definitively
             Serializable undoMove = doc.getPropertyValue(COLD_STORAGE_TO_BE_RESTORED_PROPERTY);
@@ -577,27 +569,6 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
             key = key.substring(colon + 1);
         }
         return key;
-    }
-
-    public boolean isDownloadable(BlobStatus blobStatus) {
-        boolean downloadable = blobStatus.getStorageClass() == null ? blobStatus.isDownloadable()
-                : (blobStatus.isDownloadable() && blobStatus.getDownloadableUntil() != null);
-        return downloadable;
-    }
-
-    public static BlobStatus getBlobStatus(DocumentModel doc) {
-        Blob coldContent = (Blob) doc.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
-        return getStatus(coldContent);
-    }
-
-    public static BlobStatus getStatus(Blob blob) {
-        try {
-            BlobProvider provider = Framework.getService(BlobManager.class).getBlobProvider(blob);
-            return provider.getStatus((ManagedBlob) blob);
-        } catch (IOException e) {
-            log.error("Unable to get blob status for blob: {}", blob, e);
-            return null;
-        }
     }
 
     @Override
