@@ -50,7 +50,7 @@ import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.Features;
 
 /**
- * @since 2021.19
+ * @since 2021.0.0
  */
 @Features(S3ColdStorageFeature.class)
 public class TestColdStorageRendition extends AbstractTestColdStorageOperation {

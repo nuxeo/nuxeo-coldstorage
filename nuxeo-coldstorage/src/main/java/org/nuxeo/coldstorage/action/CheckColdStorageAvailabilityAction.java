@@ -40,7 +40,6 @@ import org.nuxeo.runtime.stream.StreamProcessorTopology;
 
 /**
  * Check availability of documents on which a retrieval request has been done.
- *
  */
 public class CheckColdStorageAvailabilityAction implements StreamProcessorTopology {
 
@@ -68,9 +67,7 @@ public class CheckColdStorageAvailabilityAction implements StreamProcessorTopolo
             DocumentModelList documents = loadDocuments(session, ids);
 
             ColdStorageService service = Framework.getService(ColdStorageService.class);
-            documents.stream().forEach((doc) -> {
-                service.checkIsRetrieved(session, doc);
-            });
+            documents.forEach((doc) -> service.checkIsRetrieved(session, doc));
             log.debug("End computing documents to checked");
         }
     }

@@ -35,7 +35,7 @@ import org.nuxeo.runtime.api.Framework;
  * An asynchronous listener that checks if the contents being retrieved from cold storage are available.
  *
  * @apiNote This listener is designed to be called from a scheduler.
- * @since 2021.20
+ * @since 2021.0.0
  */
 public class CheckColdStorageContentAvailabilityListener implements PostCommitEventListener {
 

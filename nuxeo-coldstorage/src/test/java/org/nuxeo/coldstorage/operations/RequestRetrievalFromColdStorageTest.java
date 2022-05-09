@@ -51,7 +51,7 @@ import org.nuxeo.ecm.platform.notification.api.NotificationManager;
 import org.nuxeo.runtime.test.runner.Features;
 
 /**
- * @since 2021.19
+ * @since 2021.0.0
  */
 @Features(DummyColdStorageFeature.class)
 public class RequestRetrievalFromColdStorageTest extends AbstractTestColdStorageOperation {
@@ -76,7 +76,7 @@ public class RequestRetrievalFromColdStorageTest extends AbstractTestColdStorage
     }
 
     @Test
-    public void shouldRequestRetrievalWithReadAccess() throws OperationException, IOException, LoginException {
+    public void shouldRequestRetrievalWithReadAccess() throws OperationException, IOException {
         DocumentModel documentModel = createFileDocument(session, true);
         // first make the move to cold storage
         documentModel = moveContentToColdStorage(session, documentModel);
