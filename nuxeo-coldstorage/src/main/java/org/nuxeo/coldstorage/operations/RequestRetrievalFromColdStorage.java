@@ -37,7 +37,7 @@ import org.nuxeo.ecm.core.api.DocumentModel;
  * will initiate a restoration request, calling the {@link Blob#getStream()} during this process doesn't mean you will
  * get the blob's content.
  *
- * @since 2021.19
+ * @since 2021.0.0
  */
 @Operation(id = RequestRetrievalFromColdStorage.ID, category = Constants.CAT_BLOB, label = "Request retrieval from cold storage", description = "Request a retrieval from cold storage of the content associated with the document.")
 public class RequestRetrievalFromColdStorage {

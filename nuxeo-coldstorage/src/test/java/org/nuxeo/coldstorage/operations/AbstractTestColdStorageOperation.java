@@ -54,7 +54,7 @@ import org.nuxeo.runtime.test.runner.FeaturesRunner;
 import org.nuxeo.runtime.test.runner.TransactionalFeature;
 
 /**
- * @since 2021.19
+ * @since 2021.0.0
  */
 @RunWith(FeaturesRunner.class)
 @Features(ColdStorageFeature.class)

@@ -32,7 +32,7 @@ import org.nuxeo.ecm.platform.thumbnail.ThumbnailConstants;
  * Generate random thumbnail each time is computed. The main purpose is for thumbnail recomputation testing (we don't
  * need to deploy more Nuxeo components than needed)
  *
- * @since 2021.19
+ * @since 2021.0.0
  */
 public class DummyRandomThumbnailFactory extends DummyThumbnailFactory  {
 

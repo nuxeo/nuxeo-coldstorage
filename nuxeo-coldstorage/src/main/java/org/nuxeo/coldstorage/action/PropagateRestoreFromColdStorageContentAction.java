@@ -43,7 +43,7 @@ import org.nuxeo.runtime.stream.StreamProcessorTopology;
  * Bulk action in charge of restoring documents referencing a blob shared by another document that was just restored
  * from cold storage.
  *
- * @since 2021.19
+ * @since 2021.0.0
  */
 public class PropagateRestoreFromColdStorageContentAction implements StreamProcessorTopology {
 

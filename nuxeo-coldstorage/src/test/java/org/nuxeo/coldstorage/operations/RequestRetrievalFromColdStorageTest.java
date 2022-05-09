@@ -53,7 +53,7 @@ import org.nuxeo.runtime.api.login.NuxeoLoginContext;
 import org.nuxeo.runtime.test.runner.Features;
 
 /**
- * @since 2021.19
+ * @since 2021.0.0
  */
 @Features(DummyColdStorageFeature.class)
 public class RequestRetrievalFromColdStorageTest extends AbstractTestColdStorageOperation {
