@@ -79,7 +79,7 @@ import org.nuxeo.runtime.test.runner.FeaturesRunner;
 import org.nuxeo.runtime.test.runner.TransactionalFeature;
 
 /**
- * @since 2021.19
+ * @since 2021.0.0
  */
 @RunWith(FeaturesRunner.class)
 public abstract class AbstractTestColdStorageService {
@@ -266,20 +266,23 @@ public abstract class AbstractTestColdStorageService {
         // move the main content into the cold storage
         DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
         moveAndVerifyContent(session, documentModel.getRef());
+        ManagedBlob expectedColdContent = (ManagedBlob) session.getDocument(documentModel.getRef())
+                                                 .getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY);
 
         // we cannot update the main content as it is already in cold storage
         documentModel.refresh();
         documentModel.setPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY,
-                (Serializable) Blobs.createBlob(FILE_CONTENT));
+                (Serializable) Blobs.createBlob(FILE_CONTENT + "_bis"));
         try {
             session.saveDocument(documentModel);
             fail("Should fail because a main content document in cold storage cannot be updated.");
         } catch (NuxeoException e) {
             assertEquals(SC_FORBIDDEN, e.getStatusCode());
-            assertEquals(
-                    String.format("Cannot edit content of cold storage document %s",
-                            documentModel),
+            assertEquals(String.format("Cannot edit content of cold storage document %s", documentModel),
                     e.getMessage());
+            ManagedBlob actualColdContent = (ManagedBlob) session.getDocument(documentModel.getRef())
+                                                   .getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY);
+            assertEquals(expectedColdContent.getKey(), actualColdContent.getKey());
         }
 
         // but we should be able to update the other properties, even the attachments

@@ -29,7 +29,7 @@ import org.nuxeo.ecm.core.api.NuxeoException;
 import org.nuxeo.ecm.core.blob.ManagedBlob;
 
 /**
- * @since 2021.19
+ * @since 2021.0.0
  */
 public interface ColdStorageService {
 
@@ -46,13 +46,12 @@ public interface ColdStorageService {
      * Return the ColStorage rendition blob for the given {@link DocumentModel}.
      * <p>
      * A rendition blob is returned if found.
-     *
      * @param documentModel the document to render
+     *
      * @return the {@link Blob} object
      * @throws NuxeoException if the rendition doesn't exist.
-     * @since 2021.19
      */
-    Blob getRendition(DocumentModel documentModel, CoreSession session);
+    Blob getRendition(CoreSession session, DocumentModel documentModel);
 
     /**
      * Moves the main content associated with the document of the given {@link DocumentRef} to a cold storage.

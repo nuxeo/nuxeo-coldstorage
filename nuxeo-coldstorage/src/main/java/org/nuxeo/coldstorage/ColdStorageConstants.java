@@ -20,7 +20,7 @@
 package org.nuxeo.coldstorage;
 
 /**
- * @since 2021.19
+ * @since 2021.0.0
  */
 public class ColdStorageConstants {
 
