@@ -48,6 +48,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.LogEvent;
 import org.junit.Test;
 import org.nuxeo.coldstorage.ColdStorageConstants;
+import org.nuxeo.coldstorage.ColdStorageHelper;
 import org.nuxeo.coldstorage.DummyColdStorageFeature;
 import org.nuxeo.coldstorage.action.MoveToColdStorageContentAction;
 import org.nuxeo.coldstorage.blob.providers.DummyBlobProvider;
@@ -302,7 +303,18 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         assertEquals(Boolean.TRUE,
                 documentModel.getPropertyValue(ColdStorageConstants.COLD_STORAGE_BEING_RETRIEVED_PROPERTY));
 
-        assertEquals(Boolean.TRUE, ColdStorageServiceImpl.getBlobStatus(documentModel).isOngoingRestore());
+        assertEquals(Boolean.TRUE, ColdStorageHelper.getBlobStatus(documentModel).isOngoingRestore());
+    }
+
+    @Test
+    public void shouldMoveToColdStorageSameContent() throws IOException {
+        // First doc with given content
+        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
+        moveAndVerifyContent(session, documentModel.getRef());
+
+        // Second doc with same content
+        documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
+        moveAndVerifyContent(session, documentModel.getRef());
     }
 
     protected void waitForRetrieve() throws InterruptedException {

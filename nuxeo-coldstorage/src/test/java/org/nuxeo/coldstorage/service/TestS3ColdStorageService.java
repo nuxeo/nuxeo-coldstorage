@@ -24,9 +24,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
+import java.io.Serializable;
 
+import org.junit.Test;
+import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.coldstorage.S3ColdStorageFeature;
 import org.nuxeo.ecm.core.api.Blob;
+import org.nuxeo.ecm.core.api.Blobs;
+import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.blob.BlobStatus;
 import org.nuxeo.ecm.core.blob.ManagedBlob;
 import org.nuxeo.runtime.test.runner.Features;
@@ -35,6 +40,29 @@ import com.amazonaws.services.s3.model.StorageClass;
 
 @Features(S3ColdStorageFeature.class)
 public class TestS3ColdStorageService extends AbstractTestColdStorageService {
+
+    @Test
+    public void shouldMoveToColdStorageIfBlobAlreadyIs() throws IOException {
+        Blob blob = Blobs.createBlob(FILE_CONTENT);
+        // First doc with given content
+        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, blob);
+        blob = (Blob) documentModel.getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY);
+        moveAndVerifyContent(session, documentModel.getRef());
+
+        // Second doc with same content
+        documentModel = createFileDocument(DEFAULT_DOC_NAME + "_bis", blob);
+        transactionalFeature.nextTransaction();
+        verifyContent(session, documentModel.getRef(), FILE_CONTENT);
+
+        // Third doc with blob edit
+        documentModel = createFileDocument(DEFAULT_DOC_NAME + "_ter", Blobs.createBlob(FILE_CONTENT + "_ter"));
+        documentModel = session.getDocument(documentModel.getRef());
+        assertFalse(documentModel.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME));
+        documentModel.setPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY, (Serializable) blob);
+        session.saveDocument(documentModel);
+        transactionalFeature.nextTransaction();
+        verifyContent(session, documentModel.getRef(), FILE_CONTENT);
+    }
 
     @Override
     protected void verifyColdContent(Blob content) throws IOException {

@@ -125,24 +125,13 @@ public abstract class AbstractTestColdStorageService {
     }
 
     @Test
-    public void shouldMoveToColdStorageSameContent() throws IOException {
-        // First doc with given content
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
-        moveAndVerifyContent(session, documentModel.getRef());
-
-        // Second doc with same content
-        documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
-        moveAndVerifyContent(session, documentModel.getRef());
-    }
-
-    @Test
-    public void shouldFailWithoutRightPermissions() throws IOException {
+    public void shouldFailWithoutRightPermissions() {
         ACE[] aces = { new ACE("john", SecurityConstants.READ, true) };
         DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true, aces);
 
         try {
             try (CloseableCoreSession userSession = coreFeature.openCoreSession("john")) {
-                moveAndVerifyContent(userSession, documentModel.getRef());
+                service.moveToColdStorage(userSession, documentModel.getRef());
             }
             fail("Should fail because the user does not have permissions to move document to cold storage");
         } catch (NuxeoException e) {
@@ -446,7 +435,7 @@ public abstract class AbstractTestColdStorageService {
     protected DocumentModel createFileDocument(String name, Blob blob, ACE... aces) {
         DocumentModel documentModel = session.createDocumentModel("/", name, "File");
         if (blob != null) {
-            documentModel.setPropertyValue("file:content", (Serializable) Blobs.createBlob(FILE_CONTENT));
+            documentModel.setPropertyValue("file:content", (Serializable) blob);
         }
         DocumentModel document = session.createDocument(documentModel);
         if (aces.length > 0) {
