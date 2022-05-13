@@ -34,6 +34,7 @@ import org.nuxeo.coldstorage.service.ColdStorageService;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentModelList;
+import org.nuxeo.ecm.core.api.NuxeoException;
 import org.nuxeo.ecm.core.bulk.action.computation.AbstractBulkComputation;
 import org.nuxeo.lib.stream.computation.Topology;
 import org.nuxeo.runtime.api.Framework;
@@ -74,18 +75,26 @@ public class PropagateMoveToColdStorageContentAction implements StreamProcessorT
 
             ColdStorageService service = Framework.getService(ColdStorageService.class);
 
+            long errorCount = 0;
             for (DocumentModel document : documents) {
-                // Normally it shouldn't be the case
-                if (!document.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME)) {
+                if (document.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME)) {
+                    log.info("The main content is already in cold storage for document: {}", document::getId);
+                    continue;
+                }
+                try {
                     DocumentModel documentModel = service.proceedMoveToColdStorage(session, document.getRef());
                     if (documentModel.isVersion()) {
                         documentModel.putContextData(CoreSession.ALLOW_VERSION_WRITE, true);
                     }
                     session.saveDocument(documentModel);
-                } else {
-                    log.info("The main content is already in cold storage for document: {}", document::getId);
+                } catch (NuxeoException e) {
+                    errorCount++;
+                    delta.inError(String.format("Cannot propagate move to cold storage for document %s: %s", document.getId(),
+                            e.getMessage()));
+                    log.warn("Could not propagate move to cold storage for document: {}", document::getId, () -> e);
                 }
             }
+            delta.setErrorCount(errorCount);
             log.debug("End computing documents of which content has been sent to ColdStorage");
         }
     }
