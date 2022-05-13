@@ -473,12 +473,8 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         String commandId = bulkService.submitTransactional(
                 new BulkCommand.Builder(PropagateMoveToColdStorageContentAction.ACTION_NAME, query, username).build());
 
-        BulkStatus status = bulkService.getStatus(commandId);
-        if (status == null) {
-            log.error("Unable to move documents referencing blob: {} to cold storage", blobDigest);
-        } else {
-            log.debug("Moving documents referencing blob: {}, status: {}", blobDigest, status.getState());
-        }
+        log.debug("Moving documents referencing blob: {}, status: {}", () -> blobDigest,
+                () -> bulkService.getStatus(commandId));
     }
 
     /**
@@ -495,6 +491,8 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         String username = SecurityConstants.SYSTEM_USERNAME;
         String commandId = bulkService.submitTransactional(new BulkCommand.Builder(
                 PropagateRestoreFromColdStorageContentAction.ACTION_NAME, query, username).build());
+        log.debug("Restoring documents referencing blob: {}, status: {}", () -> blobDigest,
+                () -> bulkService.getStatus(commandId));
     }
 
     @Override

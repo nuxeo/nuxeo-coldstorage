@@ -94,24 +94,34 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
     @LogCaptureFeature.FilterWith(ColdStorageActionsLogFilter.class)
     public void shouldBulkMoveToColdStorage() throws IOException {
         List<DocumentModel> docs = new ArrayList<DocumentModel>();
-        for (int i = 0; i < 10; i++) {
+        int nbDocs = 10;
+        for (int i = 0; i < nbDocs; i++) {
             docs.add(createFileDocument(DEFAULT_DOC_NAME, Blobs.createBlob(FILE_CONTENT + i)));
         }
+        // Set legal hold on one of the doc to make it impossible to move to cold storage
+        DocumentRef legalHoldRef = docs.remove(nbDocs / 2).getRef();
+        session.makeRecord(legalHoldRef);
+        session.setLegalHold(legalHoldRef, true, null);
+
         transactionalFeature.nextTransaction();
         String query = "SELECT * FROM File";
 
         BulkService bulkService = Framework.getService(BulkService.class);
         String username = SecurityConstants.SYSTEM_USERNAME;
-        String commandId = bulkService.submit(
+        String commandId = bulkService.submitTransactional(
                 new BulkCommand.Builder(MoveToColdStorageContentAction.ACTION_NAME, query, username).build());
         coreFeature.waitForAsyncCompletion();
 
-        // The BAF in charge of moving the documents should be silent
+        // The BAF in charge of moving the documents should produce a warn for the doc under legal hold
         List<String> caughtEvents = logResult.getCaughtEventMessages();
-        assertTrue(caughtEvents.isEmpty());
+        assertEquals(1, caughtEvents.size());
+        assertEquals(String.format(
+                "Cannot move document %s to cold storage: The document %s is under retention or legal hold and cannot be moved to cold storage",
+                legalHoldRef, legalHoldRef), caughtEvents.get(0));
 
         BulkStatus status = bulkService.getStatus(commandId);
-        assertNotNull(status);
+        assertTrue(status.isCompleted());
+        assertEquals(1, status.getErrorCount());
         for (DocumentModel doc : docs) {
             verifyContent(session, doc.getRef(), FILE_CONTENT);
         }

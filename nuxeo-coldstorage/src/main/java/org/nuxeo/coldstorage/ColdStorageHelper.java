@@ -55,6 +55,8 @@ public class ColdStorageHelper {
     }
 
     public static boolean isDownloadable(BlobStatus blobStatus) {
+        // XXX for now, only use case where storage class != null is cold storage
+        // to be rewritten when more storage class supported
         boolean downloadable = blobStatus.getStorageClass() == null ? blobStatus.isDownloadable()
                 : (blobStatus.isDownloadable() && blobStatus.getDownloadableUntil() != null);
         return downloadable;
