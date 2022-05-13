@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Contributors:
- *     Abdoul BA<aba@nuxeo.com>
+ *     Guillaume RENARD<grenard@nuxeo.com>
  */
 
 package org.nuxeo.coldstorage.events;
