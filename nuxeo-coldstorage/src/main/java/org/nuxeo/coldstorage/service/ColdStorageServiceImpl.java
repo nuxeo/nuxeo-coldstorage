@@ -465,17 +465,13 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         BulkService bulkService = Framework.getService(BulkService.class);
         BulkCommand command = new BulkCommand //
                 .Builder(PropagateMoveToColdStorageContentAction.ACTION_NAME, query) //
-                                                                                   .user(SecurityConstants.SYSTEM_USERNAME)
-                                                                                   .repository(
-                                                                                           session.getRepositoryName())
-                                                                                   .build();
+                                                                                    .user(SecurityConstants.SYSTEM_USERNAME)
+                                                                                    .repository(
+                                                                                            session.getRepositoryName())
+                                                                                    .build();
         String commandId = bulkService.submitTransactional(command);
-        BulkStatus status = bulkService.getStatus(commandId);
-        if (status == null) {
-            log.error("Unable to move documents referencing blob: {} to cold storage", blobDigest);
-        } else {
-            log.debug("Moving documents referencing blob: {}, status: {}", blobDigest, status.getState());
-        }
+        log.debug("Moving documents referencing blob: {}, status: {}", () -> blobDigest,
+                () -> bulkService.getStatus(commandId));
     }
 
     /**
@@ -491,11 +487,13 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         BulkService bulkService = Framework.getService(BulkService.class);
         BulkCommand command = new BulkCommand //
                 .Builder(PropagateRestoreFromColdStorageContentAction.ACTION_NAME, query) //
-                                                                                   .user(SecurityConstants.SYSTEM_USERNAME)
-                                                                                   .repository(
-                                                                                           session.getRepositoryName())
-                                                                                   .build();
+                                                                                         .user(SecurityConstants.SYSTEM_USERNAME)
+                                                                                         .repository(
+                                                                                                 session.getRepositoryName())
+                                                                                         .build();
         String commandId = bulkService.submitTransactional(command);
+        log.debug("Restoring documents referencing blob: {}, status: {}", () -> blobDigest,
+                () -> bulkService.getStatus(commandId));
     }
 
     @Override

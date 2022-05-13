@@ -42,7 +42,6 @@ import org.nuxeo.runtime.stream.StreamProcessorTopology;
 
 /**
  * Bulk move documents to Cold Storage.
- *
  */
 public class MoveToColdStorageContentAction implements StreamProcessorTopology {
 
@@ -71,14 +70,19 @@ public class MoveToColdStorageContentAction implements StreamProcessorTopology {
 
             ColdStorageService service = Framework.getService(ColdStorageService.class);
 
+            long errorCount = 0;
             for (DocumentModel document : documents) {
                 try {
                     service.moveToColdStorage(session, document.getRef());
-                } catch(NuxeoException e) {
-                    log.warn("Document cannot be moved to Cold Storage: {}",e::getMessage);
-                    continue;
+                } catch (NuxeoException e) {
+                    errorCount++;
+                    String message = String.format("Cannot move document %s to cold storage: %s", document.getId(),
+                            e.getMessage());
+                    delta.inError(message);
+                    log.warn(message, e);
                 }
             }
+            delta.setErrorCount(errorCount);
             log.debug("End computing documents to be sent to ColdStorage");
         }
     }
