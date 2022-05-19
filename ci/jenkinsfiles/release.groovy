@@ -26,7 +26,7 @@ library identifier: 'nuxeo-napps-tools@0.0.13', retriever: modernSCM(
 def appName = 'nuxeo-coldstorage'
 def configFile = 'ci/workflow.yaml'
 def defaultContainer = 'maven'
-def nxVersion = '2021.19'
+def nxVersion = '2021.21'
 def referenceBranch = 'lts-2021'
 def podLabel = 'builder-maven-nuxeo-lts-2021'
 
