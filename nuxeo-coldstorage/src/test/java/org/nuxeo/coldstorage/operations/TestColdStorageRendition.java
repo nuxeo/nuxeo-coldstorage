@@ -34,7 +34,8 @@ import javax.inject.Inject;
 
 import org.junit.Test;
 import org.nuxeo.coldstorage.ColdStorageConstants;
-import org.nuxeo.coldstorage.S3ColdStorageFeature;
+import org.nuxeo.coldstorage.ColdStorageFeature;
+import org.nuxeo.coldstorage.S3BlobProviderFeature;
 import org.nuxeo.common.utils.FileUtils;
 import org.nuxeo.ecm.automation.OperationException;
 import org.nuxeo.ecm.core.api.Blob;
@@ -52,7 +53,7 @@ import org.nuxeo.runtime.test.runner.Features;
 /**
  * @since 2021.0.0
  */
-@Features(S3ColdStorageFeature.class)
+@Features({ ColdStorageFeature.class, S3BlobProviderFeature.class})
 public class TestColdStorageRendition extends AbstractTestColdStorageOperation {
 
     @Inject
