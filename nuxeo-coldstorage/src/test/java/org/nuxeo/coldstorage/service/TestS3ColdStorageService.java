@@ -28,7 +28,8 @@ import java.io.Serializable;
 
 import org.junit.Test;
 import org.nuxeo.coldstorage.ColdStorageConstants;
-import org.nuxeo.coldstorage.S3ColdStorageFeature;
+import org.nuxeo.coldstorage.ColdStorageFeature;
+import org.nuxeo.ecm.blob.s3.S3BlobProviderFeature;
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.Blobs;
 import org.nuxeo.ecm.core.api.DocumentModel;
@@ -38,7 +39,7 @@ import org.nuxeo.runtime.test.runner.Features;
 
 import com.amazonaws.services.s3.model.StorageClass;
 
-@Features(S3ColdStorageFeature.class)
+@Features({ ColdStorageFeature.class, S3BlobProviderFeature.class })
 public class TestS3ColdStorageService extends AbstractTestColdStorageService {
 
     @Test
