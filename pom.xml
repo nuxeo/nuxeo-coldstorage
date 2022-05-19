@@ -47,6 +47,26 @@
     </dependencies>
   </dependencyManagement>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- add missing property in parent pom for S3BlobProviderFeature -->
+          <systemPropertyVariables>
+            <nuxeo.test.s3storage.bucket>${nuxeo.test.s3storage.bucket}</nuxeo.test.s3storage.bucket>
+            <nuxeo.test.s3storage.transient.bucket>${nuxeo.test.s3storage.transient.bucket}</nuxeo.test.s3storage.transient.bucket>
+            <nuxeo.test.s3storage.policy.bucket>${nuxeo.test.s3storage.policy.bucket}</nuxeo.test.s3storage.policy.bucket>
+            <nuxeo.test.s3storage.bucket_prefix>${nuxeo.test.s3storage.bucket_prefix}</nuxeo.test.s3storage.bucket_prefix>>
+            <nuxeo.test.s3storage.provider.test.bucket_prefix>${nuxeo.test.s3storage.provider.test.bucket_prefix}</nuxeo.test.s3storage.provider.test.bucket_prefix>
+            <nuxeo.test.s3storage.provider.other.bucket_prefix>${nuxeo.test.s3storage.provider.other.bucket_prefix}</nuxeo.test.s3storage.provider.other.bucket_prefix>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
   <profiles>
     <!-- Profile to alternate build dir -->
     <profile>
