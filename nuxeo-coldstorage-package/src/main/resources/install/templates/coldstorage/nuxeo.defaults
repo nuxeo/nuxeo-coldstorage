@@ -5,7 +5,6 @@ coldstorage.target=.
 
 # Every hour at the 7th minute
 nuxeo.coldstorage.check.retrieve.state.cronExpression=0 7 * ? * * *
-nuxeo.coldstorage.check.storage.state.cronExpression=0 7 * ? * * *
 
 # optional
 nuxeo.coldstorage.numberOfDaysOfAvailability.value.default=1
