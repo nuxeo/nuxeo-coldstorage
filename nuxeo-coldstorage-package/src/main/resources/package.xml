@@ -13,7 +13,7 @@
   <!-- Dependencies on other packages -->
   <dependencies>
     <package>amazon-s3-online-storage</package>
-    <package>nuxeo-10.10-HF58</package>
+    <package>nuxeo-10.10-HF61</package>
     <package>nuxeo-web-ui</package>
   </dependencies>
   <license>Apache 2.0</license>
