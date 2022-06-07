@@ -56,6 +56,14 @@ Here, despite being under the same ecosystem, the contributions use different ap
 mvn test
 ```
 
+A couple of unit test classes are designed to run with a blob provider using a real s3 bucket. In order to run them locally, you must define the following environment variables:
+ - `AWS_ACCESS_KEY_ID`
+ - `AWS_SECRET_KEY`
+ - `AWS_SESSION_TOKEN` (optional depending on your aws credentials type)
+ - `COLDSTORAGE_AWS_REGION`
+ - `COLDSTORAGE_AWS_MAIN_BUCKET_NAME`
+ - `COLDSTORAGE_AWS_BUCKET_PREFIX`
+
 ### Frontend Contribution
 
 #### Unit Tests
