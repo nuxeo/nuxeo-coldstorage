@@ -35,6 +35,7 @@ import javax.inject.Inject;
 import org.junit.runner.RunWith;
 import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.coldstorage.ColdStorageFeature;
+import org.nuxeo.coldstorage.ColdStorageHelper;
 import org.nuxeo.ecm.automation.AutomationService;
 import org.nuxeo.ecm.automation.OperationContext;
 import org.nuxeo.ecm.automation.OperationException;
@@ -47,6 +48,7 @@ import org.nuxeo.ecm.core.api.DocumentModelList;
 import org.nuxeo.ecm.core.api.security.ACE;
 import org.nuxeo.ecm.core.api.security.ACL;
 import org.nuxeo.ecm.core.api.security.ACP;
+import org.nuxeo.ecm.core.blob.ManagedBlob;
 import org.nuxeo.ecm.core.test.CoreFeature;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.Features;
@@ -98,17 +100,10 @@ public abstract class AbstractTestColdStorageOperation {
         // check document
         assertTrue(doc.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME));
 
-        // check blobs
-        Blob fileContent = (Blob) doc.getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY);
+        // check blob
         Blob coldStorageContent = (Blob) doc.getPropertyValue(ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY);
-        assertEquals(DummyThumbnailFactory.DUMMY_THUMBNAIL_CONTENT, fileContent.getString());
         assertNotNull(coldStorageContent);
-        try {
-            coldStorageContent.getString();
-            fail("Cold content should not be available");
-        } catch (IOException e) {
-            // expected
-        }
+        ColdStorageHelper.isInColdStorage((ManagedBlob) coldStorageContent);
     }
 
     protected void checkMoveContent(List<DocumentModel> expectedDocs, List<DocumentModel> actualDocs)
