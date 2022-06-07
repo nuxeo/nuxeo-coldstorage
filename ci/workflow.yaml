@@ -39,7 +39,8 @@ runUtest:
     enable: true
     command: |
       cd nuxeo-coldstorage-web
-      npm install playwright@1.18.1
+      npm install playwright
+      npx playwright install-deps
       npm install
       npm run test
     container: 'playwright'
