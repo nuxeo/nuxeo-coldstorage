@@ -51,6 +51,8 @@ public class CheckAlreadyInColdStorageListener implements EventListener {
 
     private static final Logger log = LogManager.getLogger(CheckAlreadyInColdStorageListener.class);
 
+    public static final String DISABLE_CHECK_ALREADY_IN_COLD_STORAGE_LISTENER = "disableCheckAlreadyInColdStorageListener";
+
     protected ThumbnailHelper thumbnailHelper = new ThumbnailHelper();
 
     @Override
@@ -64,6 +66,10 @@ public class CheckAlreadyInColdStorageListener implements EventListener {
         }
         DocumentEventContext docCtx = (DocumentEventContext) ec;
         DocumentModel doc = docCtx.getSourceDocument();
+        if (Boolean.TRUE.equals(docCtx.getProperty(DISABLE_CHECK_ALREADY_IN_COLD_STORAGE_LISTENER))) {
+            log.trace("Checking the main blob is already in cold storage is disabled for document {}", doc::getId);
+            return;
+        }
         if (doc instanceof DeletedDocumentModel) {
             return;
         }
@@ -85,6 +91,9 @@ public class CheckAlreadyInColdStorageListener implements EventListener {
                 // We need to make sure the thumbnail is available to use it as placeholder of the main blob
                 thumbnailHelper.createThumbnailIfNeeded(session, doc);
                 doc = service.proceedMoveToColdStorage(session, doc.getRef());
+                if (doc.isVersion()) {
+                    doc.putContextData(CoreSession.ALLOW_VERSION_WRITE, true);
+                }
                 session.saveDocument(doc);
             }
         }
