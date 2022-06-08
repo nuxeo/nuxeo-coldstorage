@@ -44,6 +44,7 @@ import static org.nuxeo.coldstorage.ColdStorageConstants.FILE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.GET_DOCUMENTS_TO_CHECK_QUERY;
 import static org.nuxeo.coldstorage.events.CheckAlreadyInColdStorageListener.DISABLE_CHECK_ALREADY_IN_COLD_STORAGE_LISTENER;
 import static org.nuxeo.coldstorage.events.PreventColdStorageUpdateListener.DISABLE_PREVENT_COLD_STORAGE_UPDATE_LISTENER;
+import static org.nuxeo.ecm.core.api.versioning.VersioningService.DISABLE_AUTOMATIC_VERSIONING;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -285,6 +286,7 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         // THUMBNAIL_UPDATED: disabling is needed otherwise as the content is now `null` the thumbnail will be also
         // `null` See CheckBlobUpdateListener#handleEvent
         COLD_STORAGE_DISABLED_RECOMPUTATION_LISTENERS.forEach(name -> documentModel.putContextData(name, true));
+        documentModel.putContextData(DISABLE_AUTOMATIC_VERSIONING, true);
 
         // replace the file content document by the rendition
         documentModel.setPropertyValue(FILE_CONTENT_PROPERTY, (Serializable) renditionBlob);
@@ -351,6 +353,7 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         docResult = CoreInstance.doPrivileged(session, s -> {
             // The retrieval is allowed for users with only READ access.
             // It requires an unrestricted session to update ColdStorage metadata on the document
+            documentModel.putContextData(DISABLE_AUTOMATIC_VERSIONING, true);
             return s.saveDocument(documentModel);
         });
 
@@ -416,6 +419,7 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
 
             // flag the retrieval as restore purpose
             documentModel.setPropertyValue(COLD_STORAGE_TO_BE_RESTORED_PROPERTY, true);
+            documentModel.putContextData(DISABLE_AUTOMATIC_VERSIONING, true);
             documentModel = session.saveDocument(documentModel);
             documentModel = retrieveFromColdStorage(session, documentModel.getRef(), getAvailabilityDuration());
         }
@@ -451,7 +455,7 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         // Disable main and ColdStorage storage contents check otherwise, the restore action won't be allowed
         documentModel.putContextData(DISABLE_PREVENT_COLD_STORAGE_UPDATE_LISTENER, true);
         documentModel.putContextData(DISABLE_CHECK_ALREADY_IN_COLD_STORAGE_LISTENER, true);
-
+        documentModel.putContextData(DISABLE_AUTOMATIC_VERSIONING, true);
         documentModel = session.saveDocument(documentModel);
 
         // Submit Bulk action to update documents referencing the same blob
