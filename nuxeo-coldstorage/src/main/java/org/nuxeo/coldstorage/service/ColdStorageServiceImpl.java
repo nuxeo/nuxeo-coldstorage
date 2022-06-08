@@ -43,6 +43,7 @@ import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_TO_BE_REST
 import static org.nuxeo.coldstorage.ColdStorageConstants.FILE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.GET_DOCUMENTS_TO_CHECK_QUERY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.WRITE_COLD_STORAGE;
+import static org.nuxeo.coldstorage.events.CheckAlreadyInColdStorageListener.DISABLE_CHECK_ALREADY_IN_COLD_STORAGE_LISTENER;
 import static org.nuxeo.coldstorage.events.PreventColdStorageUpdateListener.DISABLE_PREVENT_COLD_STORAGE_UPDATE_LISTENER;
 
 import java.io.IOException;
@@ -443,6 +444,7 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         documentModel.setPropertyValue(FILE_CONTENT_PROPERTY, (Serializable) coldContent);
         // Disable main and ColdStorage storage contents check otherwise, the restore action won't be allowed
         documentModel.putContextData(DISABLE_PREVENT_COLD_STORAGE_UPDATE_LISTENER, true);
+        documentModel.putContextData(DISABLE_CHECK_ALREADY_IN_COLD_STORAGE_LISTENER, true);
 
         documentModel = session.saveDocument(documentModel);
 
