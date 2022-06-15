@@ -118,6 +118,7 @@ pipeline {
               git config credential.helper store
               git clone -b $CROWDIN_TOOL_VERSION \
                 https://$USERNAME:$PASSWORD@github.com/nuxeo/tools-nuxeo-crowdin.git $CROWDIN_TOOL_FOLDER
+              python -m pip install pip==9.0.3
               python -m pip install --user -r $CROWDIN_TOOL_FOLDER/requirements.txt
               chmod +x $CROWDIN_TOOL_FOLDER/jenkins/*.sh
             '''
