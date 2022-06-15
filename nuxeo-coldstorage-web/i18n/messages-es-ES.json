@@ -5,7 +5,7 @@
   "activity.coldStorageDownload": "descargó el documento en frío",
   "documentContentView.infobar.storedInColdStorage": "Esta es una versión preliminar del archivo. El archivo original se puede solicitar haciendo clic en la acción \"recuperar archivo\".",
   "documentContentView.infobar.beingRetrieved": "Esta es una versión preliminar del archivo. Se ha solicitado la recuperación del archivo original. Se enviará una notificación por correo electrónico cuando el archivo original esté disponible.",
-  "documentContentView.infobar.toBeRestored": "Restauración de archivo de almacenamiento en frío en progreso. Volver a cargar el documento en breve.",
+  "documentContentView.infobar.toBeRestored": "File restoration from cold storage in progress. Reload document in a short while.",
   "documentContentView.infobar.retrieved": "Esta es una versión preliminar del archivo. Puede descargar el archivo original recuperado temporalmente hasta {0}.",
   "documentContentView.moveToColdStorage.ask.confirmation": "¿Enviar el contenido del documento al almacenamiento en frío?",
   "documentContentView.moveToColdStorage.cancel": "Cancelar",

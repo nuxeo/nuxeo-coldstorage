@@ -5,7 +5,7 @@
   "activity.coldStorageDownload": "laddade ned det kalla dokumentet",
   "documentContentView.infobar.storedInColdStorage": "Detta är en förhandsgranskad version av filen. Originalfilen kan beställas genom att klicka på åtgärden \"hämta fil\".",
   "documentContentView.infobar.beingRetrieved": "Detta är en förhandsgranskad version av filen. En hämtning av originalfilen har begärts. Ett e-postmeddelande kommer att skickas när originalfilen är tillgänglig.",
-  "documentContentView.infobar.toBeRestored": "Återställning av filer från kall lagring pågår. Ladda om dokument inom kort.\n",
+  "documentContentView.infobar.toBeRestored": "File restoration from cold storage in progress. Reload document in a short while.",
   "documentContentView.infobar.retrieved": "Detta är en förhandsgranskad version av filen. Du kan ladda ner den tillfälligt hämtade originalfilen fram till {0}.",
   "documentContentView.moveToColdStorage.ask.confirmation": "Skicka dokumentinnehållet till kallagring?",
   "documentContentView.moveToColdStorage.cancel": "Avbryt",
