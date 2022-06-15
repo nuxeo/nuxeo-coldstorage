@@ -5,7 +5,7 @@
   "activity.coldStorageDownload": "heeft het koude document gedownload",
   "documentContentView.infobar.storedInColdStorage": "Dit is een voorbeeldversie van het bestand. Het originele bestand kan worden opgevraagd door te klikken op de actie \"bestand opvragen\".",
   "documentContentView.infobar.beingRetrieved": "Dit is een voorbeeldversie van het bestand. Er is verzocht om het originele bestand op te halen. Er zal een e-mail worden verstuurd wanneer het originele bestand beschikbaar is.",
-  "documentContentView.infobar.toBeRestored": "File restoration from cold storage in progress. Reload document in a short while.",
+  "documentContentView.infobar.toBeRestored": "Bestandsherstel vanuit cold-opslag bezig. Herlaad document in een korte tijd.",
   "documentContentView.infobar.retrieved": "Dit is een voorbeeldversie van het bestand. U kunt het tijdelijk opgehaalde originele bestand downloaden tot {0}.",
   "documentContentView.moveToColdStorage.ask.confirmation": "Documentinhoud verzenden naar cold-opslag?",
   "documentContentView.moveToColdStorage.cancel": "Annuleren",

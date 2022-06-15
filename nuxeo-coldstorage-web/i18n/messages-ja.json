@@ -5,7 +5,7 @@
   "activity.coldStorageDownload": "コールドドキュメントをダウンロードしました",
   "documentContentView.infobar.storedInColdStorage": "これはファイルのプレビューバージョンです。元のファイルは、「ファイルを取得アクション」をクリックしてリクエストできます。",
   "documentContentView.infobar.beingRetrieved": "これはファイルのプレビューです。元のファイルの取得がリクエストされています。元のファイルが利用可能な場合は、メール通知が送信されます。",
-  "documentContentView.infobar.toBeRestored": "File restoration from cold storage in progress. Reload document in a short while.",
+  "documentContentView.infobar.toBeRestored": "ファイルをコールドストレージから復元中です。しばらくしてからドキュメントを再読み込みしてください。",
   "documentContentView.infobar.retrieved": "これはファイルのプレビューバージョンです。一時的に取得した元のファイルは {0} までダウンロードできます",
   "documentContentView.moveToColdStorage.ask.confirmation": "ファイルをコールドストレージに送信しますか？",
   "documentContentView.moveToColdStorage.cancel": "キャンセル",
