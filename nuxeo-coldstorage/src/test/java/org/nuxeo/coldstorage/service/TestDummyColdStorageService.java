@@ -93,7 +93,7 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         List<DocumentModel> docs = new ArrayList<DocumentModel>();
         int nbDocs = 10;
         for (int i = 0; i < nbDocs; i++) {
-            docs.add(createFileDocument(DEFAULT_DOC_NAME, Blobs.createBlob(FILE_CONTENT + i)));
+            docs.add(createFileDocument(DEFAULT_DOC_NAME + i, Blobs.createBlob(FILE_CONTENT + i)));
         }
         // Set legal hold on one of the doc to make it impossible to move to cold storage
         DocumentRef legalHoldRef = docs.remove(nbDocs / 2).getRef();
