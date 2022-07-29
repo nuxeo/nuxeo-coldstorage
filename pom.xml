@@ -10,7 +10,7 @@
   <groupId>org.nuxeo.coldstorage</groupId>
   <artifactId>nuxeo-coldstorage-parent</artifactId>
   <name>Nuxeo Cold Storage Parent</name>
-  <version>10.0.1-SNAPSHOT</version>
+  <version>10.0.1-rc.2</version>
   <packaging>pom</packaging>
   <description>Nuxeo Cold Storage allows the cold storage of document content. This can be needed for archiving,
     compliance, etc.
