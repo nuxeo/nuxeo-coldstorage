@@ -1,5 +1,5 @@
 [![Build Status](https://jenkins.napps.dev.nuxeo.com/buildStatus/icon?job=nuxeo%2Fnuxeo-coldstorage%2Flts-2021)](https://jenkins.napps.dev.nuxeo.com/job/nuxeo/job/nuxeo-coldstorage/job/lts-2021/)
-[![Preview Link](https://img.shields.io/badge/preview-available-blue)](http://preview-coldstorage-lts-2021.napps.dev.nuxeo.com/)
+[![Preview Link](https://img.shields.io/badge/preview-available-blue)](https://preview-nuxeo-coldstorage-lts-2021.napps.dev.nuxeo.com/)
 
 # Nuxeo Cold Storage
 
