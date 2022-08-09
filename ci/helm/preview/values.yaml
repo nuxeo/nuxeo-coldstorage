@@ -60,6 +60,7 @@ nuxeo:
         failureThreshold: 5
     customParams: |-
       # AWS
+      nuxeo.core.binarymanager=org.nuxeo.ecm.blob.s3.S3BlobProvider
       nuxeo.aws.accessKeyId=${env:AWS_ACCESS_KEY}
       nuxeo.aws.secretKey=${env:AWS_ACCESS_SECRET}
       nuxeo.aws.region=${env:AWS_REGION}

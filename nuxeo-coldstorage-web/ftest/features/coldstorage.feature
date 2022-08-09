@@ -101,6 +101,7 @@ Feature: Cold Storage
     When I click the Restore file from cold storage action button
     Then I can see the "Restore" confirmation dialog
     When I click the confirm button in the "Restore" confirmation dialog
+    Then I can see the file is being retrieved
 
   Scenario: User with WriteColdStorage permission can Retrieve file from cold storage
     Given I login as "Jack"
@@ -115,3 +116,4 @@ Feature: Cold Storage
     When I click the Retrieve file from cold storage button
     Then I can see the "Retrieve" confirmation dialog
     When I click the confirm button in the "Retrieve" confirmation dialog
+    Then I can see the file is being retrieved
