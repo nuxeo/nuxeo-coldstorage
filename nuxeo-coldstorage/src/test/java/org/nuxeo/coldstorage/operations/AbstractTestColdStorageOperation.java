@@ -114,7 +114,7 @@ public abstract class AbstractTestColdStorageOperation {
     }
 
     protected DocumentModel createFileDocument(CoreSession session, boolean withBlobContent, ACE... aces) {
-        DocumentModel documentModel = session.createDocumentModel("/", "MyFile", "File");
+        DocumentModel documentModel = session.createDocumentModel("/", "MyFile" + UUID.randomUUID().toString(), "File");
         if (withBlobContent) {
             Blob blob = Blobs.createBlob(FILE_CONTENT);
             blob.setDigest(UUID.randomUUID().toString());
