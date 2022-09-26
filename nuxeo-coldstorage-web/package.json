@@ -38,7 +38,8 @@
     "@polymer/paper-button": "^3.0.0",
     "@polymer/paper-icon-button": "^3.0.0",
     "@polymer/polymer": "3.3.1",
-    "nuxeo": "^3.18.0"
+    "nuxeo": "^3.18.0",
+    "playwright": "^1.26.0"
   },
   "husky": {
     "hooks": {
