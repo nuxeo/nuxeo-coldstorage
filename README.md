@@ -29,6 +29,22 @@ mvn clean install
 
 This will build all the modules except _ci_ and generate the correspondent artifacts: _`.jar`_ files for the contributions, and a _`.zip_ file for the package.
 
+## DB configuration
+
+The Cold Storage addon periodically checks the documents on which a retrieve has been requested. This scan is scheduled [every hour](https://github.com/nuxeo/nuxeo-coldstorage/blob/10.10/nuxeo-coldstorage-package/src/main/resources/install/templates/coldstorage/nuxeo.defaults#L7) by default.
+
+This check is done with the following query:
+```
+SELECT * FROM Document WHERE ecm:mixinType = 'ColdStorage' AND coldstorage:beingRetrieved = 1
+```
+It is highly recommended to create an index on the `coldstorage:beingRetrieved` property to optimize the execution of this query. In case of an existing very large repository where an index creation could take too long, consider creating a partial index. For example, on MongoDB:
+```
+db.default.createIndex(
+   { "coldstorage:beingRetrieved": 1 },
+   { partialFilterExpression: { "coldstorage:beingRetrieved": true } }
+)
+```
+
 ### Frontend Contribution
 
 `nuxeo-coldstorage-web` module is also generating a _`.jar`_ file containing all the artifacts needed for an integration with Nuxeo's ecosystem.
