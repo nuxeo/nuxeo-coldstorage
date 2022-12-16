@@ -44,11 +44,11 @@ Create the following db indexes for an optimal functioning of the addon:
  );
 
  db.default.createIndex(
-    { "file:content/digest": 1 }
+    { "content.digest": 1 }
  );
 
  db.default.createIndex(
-    { "coldstorage:coldContent/digest": 1 }
+    { "coldstorage:coldContent.digest": 1 }
  );
  ```
 
