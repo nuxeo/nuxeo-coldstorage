@@ -1,7 +1,0 @@
-dependencies:
-- host: github.com
-  owner: nuxeo
-  repo: nuxeo-napps-tools
-  url: https://github.com/nuxeo/nuxeo-napps-tools
-  version: 0.0.14
-  versionURL: ""

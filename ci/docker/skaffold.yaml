@@ -1,4 +1,4 @@
-# (C) Copyright 2020 Nuxeo (http://nuxeo.com/) and others.
+# (C) Copyright 2020-2023 Nuxeo (http://nuxeo.com/) and others.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,19 +18,19 @@ build:
     envTemplate:
       template: "{{.VERSION}}"
   artifacts:
-    - image: "$DOCKER_REGISTRY/nuxeo/nuxeo-coldstorage"
+    - image: "$DOCKER_REGISTRY/nuxeo/nuxeo-coldstorage-ftests"
       context: ci/docker
       kaniko:
         useNewRun: true
         singleSnapshot: true
-        snapshotMode: "time"
+        snapshot-mode: "time"
         buildArgs:
-          BASE_IMAGE: "{{.NUXEO_BASE_IMAGE}}"
+          NUXEO_VERSION: "{{.NUXEO_VERSION}}"
           BUILD_TAG: "{{.BUILD_TAG}}"
           SCM_REF: "{{.GIT_COMMIT}}"
           VERSION: "{{.VERSION}}"
   cluster:
-    namespace: napps
+    namespace: platform
     dockerConfig:
       secretName: jenkins-docker-cfg
     resources:
@@ -43,5 +43,5 @@ build:
     tolerations:
       - key: team
         operator: "Equal"
-        value: napps
+        value: platform
         effect: "NoSchedule"

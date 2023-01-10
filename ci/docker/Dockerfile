@@ -1,20 +1,21 @@
-ARG BASE_IMAGE=docker-private.packages.nuxeo.com/nuxeo/nuxeo:2021.x
+ARG NUXEO_VERSION=2021
 
-FROM ${BASE_IMAGE}
+FROM docker-private.packages.nuxeo.com/nuxeo/nuxeo:${NUXEO_VERSION}
 
-ARG BUILD_TAG
-ARG SCM_REF
-ARG VERSION
+ARG BUILD_TAG=unknown
+ARG SCM_REF=unknown
+ARG VERSION=unknown
 
 LABEL org.nuxeo.build-tag=$BUILD_TAG
 LABEL org.nuxeo.scm-ref=$SCM_REF
-LABEL org.nuxeo.version=$VERSION
+LABEL org.nuxeo.coldstorage.version=$VERSION
 
 USER root
 # install RPM Fusion free repository
-RUN yum -y localinstall --nogpgcheck https://mirrors.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm
-# install ffmpeg and ImageMagick packages
-RUN yum -y install ffmpeg ImageMagick
+RUN yum -y localinstall --nogpgcheck https://mirrors.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm \
+    # install ffmpeg package
+    && yum -y install ffmpeg \
+    && yum clean all
 USER 900
 
-COPY --chown=900:0 nuxeo-coldstorage-package-*.zip /packages/
+COPY --chown=900:0 target/nuxeo-coldstorage-package-$VERSION.zip /packages/
