@@ -1,0 +1,33 @@
+image:
+  tag: "13.6.0-debian-10-r60"
+initdbScripts:
+  db-init.sql: |
+    CREATE ROLE nuxeo WITH PASSWORD 'nuxeo' LOGIN;
+    CREATE DATABASE nuxeo ENCODING 'UTF8' OWNER nuxeo;
+resources:
+  requests:
+    cpu: "1"
+    memory: "2Gi"
+  limits:
+    cpu: "2"
+    memory: "4Gi"
+primary:
+  labels:
+    {{- if (env "BRANCH_NAME") }}
+    branch: {{ env "BRANCH_NAME" | quote }}
+    {{- end }}
+    resource: statefulset
+    team: platform
+  podLabels:
+    {{- if (env "BRANCH_NAME") }}
+    branch: {{ env "BRANCH_NAME" | quote }}
+    {{- end }}
+    resource: pod
+    team: platform
+  tolerations:
+    - key: team
+      operator: Equal
+      value: platform
+      effect: NoSchedule
+  nodeSelector:
+    team: platform

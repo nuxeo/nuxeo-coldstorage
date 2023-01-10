@@ -21,10 +21,18 @@ limitations under the License.
     <os family="windows"/>
   </condition>
 
-  <!-- set npm script names based on OS family -->
-  <condition property="lint.script" value="win-lint" else="lint">
-    <os family="windows"/>
-  </condition>
+  <target name="enforce-node-version" description="Check that NodeJS is in the correct version" unless="skipEnforcer">
+    <exec executable="node" failonerror="true" outputproperty="node-version">
+      <arg value="--version" />
+    </exec>
+    <fail message="NodeJS version must be 14">
+      <condition>
+        <not>
+          <contains string="${node-version}" substring="v14" />
+        </not>
+      </condition>
+    </fail>
+  </target>
 
   <target name="clean" description="Clean npm dependencies">
     <delete dir="node_modules" />
@@ -36,8 +44,16 @@ limitations under the License.
     </exec>
   </target>
 
-  <target name="build" depends="install" unless="skipBuild">
+  <target name="lint" description="Lint the web module" unless="skipLint">
+    <npm-run script="lint" />
+  </target>
+
+  <target name="build" description="Build the web module" unless="skipBuild">
     <npm-run script="build" />
+  </target>
+
+  <target name="test" description="Test the web module" unless="skipTests">
+    <npm-run script="test" />
   </target>
 
   <macrodef name="npm-run">

@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.nuxeo.coldstorage</groupId>
     <artifactId>nuxeo-coldstorage-parent</artifactId>
-    <version>2021.0.1-SNAPSHOT</version>
+    <version>2021.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>nuxeo-coldstorage-package</artifactId>
@@ -15,6 +15,13 @@
     <dependency>
       <groupId>org.nuxeo.coldstorage</groupId>
       <artifactId>nuxeo-coldstorage</artifactId>
+      <exclusions>
+        <!-- exclude this artifact that is brought by the amazon-s3-online-storage package -->
+        <exclusion>
+          <groupId>org.nuxeo.ecm.core</groupId>
+          <artifactId>nuxeo-core-binarymanager-s3</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.nuxeo.coldstorage</groupId>

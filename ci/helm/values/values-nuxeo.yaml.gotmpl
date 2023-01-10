@@ -1,0 +1,43 @@
+{{- $localDomain := printf "%s.svc.cluster.local" (requiredEnv "NAMESPACE") -}}
+image:
+  repository: {{ printf "%s/nuxeo/nuxeo-coldstorage-ftests" (requiredEnv "DOCKER_REGISTRY") }}
+  tag: {{ requiredEnv "VERSION" | quote }}
+  pullSecrets:
+  - name: kubernetes-docker-cfg
+podLabels:
+  {{- if (env "BRANCH_NAME") }}
+  branch: {{ env "BRANCH_NAME" | quote }}
+  {{- end }}
+  team: platform
+  resource: pod
+service:
+  labels:
+    {{- if (env "BRANCH_NAME") }}
+    branch: {{ env "BRANCH_NAME" | quote }}
+    {{- end }}
+    team: platform
+    resource: service
+amazonS3:
+  enabled: true
+  accessKeyId: {{ requiredEnv "AWS_ACCESS_KEY_ID" }}
+  secretAccessKey: {{ requiredEnv "AWS_SECRET_ACCESS_KEY" }}
+  region: {{ requiredEnv "AWS_REGION" }}
+  bucket: {{ requiredEnv "AWS_BUCKET" }}
+  bucketPrefix: {{ requiredEnv "AWS_BUCKET_PREFIX" }}
+mongodb:
+  enabled: true
+  host: {{ printf "mongodb.%s" $localDomain }}
+packages: nuxeo-web-ui amazon-s3-online-storage /packages/nuxeo-coldstorage-package-*.zip
+customEnvs:
+- name: NUXEO_CLID
+  valueFrom:
+    secretKeyRef:
+      name: instance-clid
+      key: instance.clid
+tolerations:
+- effect: NoSchedule
+  key: team
+  operator: Equal
+  value: platform
+nodeSelector:
+  team: platform
