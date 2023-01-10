@@ -10,15 +10,11 @@
   <groupId>org.nuxeo.coldstorage</groupId>
   <artifactId>nuxeo-coldstorage-parent</artifactId>
   <name>Nuxeo Cold Storage Parent</name>
-  <version>10.0.1-SNAPSHOT</version>
+  <version>10.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <description>Nuxeo Cold Storage allows the cold storage of document content. This can be needed for archiving,
     compliance, etc.
   </description>
-
-  <properties>
-    <nuxeo.distribution.version>10.10</nuxeo.distribution.version>
-  </properties>
 
   <modules>
     <module>nuxeo-coldstorage</module>
@@ -68,16 +64,21 @@
   </build>
 
   <profiles>
-    <!-- Profile to alternate build dir -->
+    <!--
+      Used to build for a custom environment:
+        - in an alternative build directory
+        - loading some backend-specific system properties
+      This is required for running unit tests in parallel.
+    -->
     <profile>
-      <id>alternateBuildDir</id>
+      <id>customEnvironment</id>
       <activation>
         <property>
-          <name>alt.build.dir</name>
+          <name>custom.environment</name>
         </property>
       </activation>
       <build>
-        <directory>target-${alt.build.dir}</directory>
+        <directory>target-${custom.environment}</directory>
         <plugins>
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
@@ -90,7 +91,7 @@
                 </goals>
                 <configuration>
                   <files>
-                    <file>${HOME}/nuxeo-test-vcs-${alt.build.dir}.properties</file>
+                    <file>${user.home}/nuxeo-test-${custom.environment}.properties</file>
                   </files>
                 </configuration>
               </execution>

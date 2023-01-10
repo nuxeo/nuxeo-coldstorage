@@ -110,8 +110,8 @@ express or implied. See the License for the specific language governing permissi
           return 'toBeRestored';
         }
         if (
-          document.properties['coldstorage:downloadableUntil']
-      && new Date(document.properties['coldstorage:downloadableUntil']) >= new Date()
+          document.properties['coldstorage:downloadableUntil'] &&
+          new Date(document.properties['coldstorage:downloadableUntil']) >= new Date()
         ) {
           return 'retrieved';
         }

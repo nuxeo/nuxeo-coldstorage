@@ -13,7 +13,9 @@ express or implied. See the License for the specific language governing permissi
 -->
 <dom-module id="nuxeo-move-contents-to-coldstorage-button">
   <template>
-    <style include="nuxeo-action-button-styles nuxeo-styles"></style>
+    <style include="nuxeo-action-button-styles nuxeo-styles">
+      <!-- https://github.com/Polymer/tools/issues/408 -->
+    </style>
     <nuxeo-operation id="opMove" op="Document.MoveToColdStorage"></nuxeo-operation>
     <nuxeo-connection id="nxcon" user="{{currentUser}}"></nuxeo-connection>
 
@@ -76,10 +78,10 @@ express or implied. See the License for the specific language governing permissi
 
       _canMoveDocument(doc) {
         return (
-          (this._hasAdministrationPermissions(this.currentUser) || this.hasPermission(doc, 'WriteColdStorage'))
-      && !this.isUnderRetentionOrLegalHold(doc)
-      && !this.hasFacet(doc, 'ColdStorage')
-      && this.hasContent(doc)
+          (this._hasAdministrationPermissions(this.currentUser) || this.hasPermission(doc, 'WriteColdStorage')) &&
+          !this.isUnderRetentionOrLegalHold(doc) &&
+          !this.hasFacet(doc, 'ColdStorage') &&
+          this.hasContent(doc)
         );
       }
 
@@ -110,9 +112,10 @@ express or implied. See the License for the specific language governing permissi
             );
           })
           .catch((error) => {
-            const message = error.response.status === 412
-              ? 'documentContentView.moveToColdStorage.preview.unavailable'
-              : 'moveDocumentsContentsToColdStorage.error';
+            const message =
+              error.response.status === 412
+                ? 'documentContentView.moveToColdStorage.preview.unavailable'
+                : 'moveDocumentsContentsToColdStorage.error';
             this.dispatchEvent(
               new CustomEvent('notify', {
                 composed: true,
