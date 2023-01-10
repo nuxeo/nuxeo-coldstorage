@@ -1,11 +1,10 @@
-[![Build Status](https://jenkins.napps.dev.nuxeo.com/buildStatus/icon?job=nuxeo%2Fnuxeo-coldstorage%2F10.10)](https://jenkins.napps.dev.nuxeo.com/job/nuxeo/job/nuxeo-coldstorage/job/10.10/)
-[![Preview Link](https://img.shields.io/badge/preview-available-blue)](https://preview-nuxeo-coldstorage-10-10.napps.dev.nuxeo.com/)
+[![Build Status](https://jenkins.platform.dev.nuxeo.com/buildStatus/icon?job=coldstorage%2Fnuxeo-coldstorage%2F10.10)](https://jenkins.platform.dev.nuxeo.com/job/coldstorage/job/nuxeo-coldstorage/job/10.10/)
 
 # Nuxeo Cold Storage
 
 The Nuxeo Cold Storage addon allows the storage of the document main content in a cold storage. This can be needed for archiving, compliance, etc.
 
-For more details around functionalities, requirements, installation and usage please consider this addon [official documentation](TBD).
+For more details around functionalities, requirements, installation and usage please consider this addon [official documentation](https://doc.nuxeo.com/nxdoc/nuxeo-coldstorage/).
 
 ## Context
 Nuxeo Cold Storage is an addon that can be plugged to Nuxeo.
@@ -144,9 +143,7 @@ Continuous Integration & Continuous Deployment(and Delivery) are an important pa
 Nuxeo Cold Storage integrates [Jenkins pipelines](https://jenkins.napps.dev.nuxeo.com/job/nuxeo/job/nuxeo-coldstorage/) for each maintenance branch, for _master_ (fast track) and also for each opened PR.
 
 The following features are available:
-- Possibility of having a dedicated preview environment for a PR by using the tag GitHub PR tag `preview`
-- Each PR merge to _master_ branch will generate a "release candidate" package
-- A preview aligned on _master_ branch code is available
+- Each PR merge to _10.10_ branch will generate a "release candidate" package
 
 ### Localization Management
 

@@ -14,7 +14,9 @@ express or implied. See the License for the specific language governing permissi
 
 <dom-module id="nuxeo-move-content-to-coldstorage-button">
   <template>
-    <style include="nuxeo-action-button-styles nuxeo-styles"></style>
+    <style include="nuxeo-action-button-styles nuxeo-styles">
+      <!-- https://github.com/Polymer/tools/issues/408 -->
+    </style>
     <nuxeo-operation id="opMove" op="Document.MoveToColdStorage" input="[[document.uid]]"></nuxeo-operation>
     <nuxeo-connection id="nxcon" user="{{currentUser}}"></nuxeo-connection>
 
@@ -74,11 +76,11 @@ express or implied. See the License for the specific language governing permissi
 
       _isAvailable(document, currentUser) {
         return (
-          !this.hasFacet(document, 'ColdStorage')
-      && !this.isUnderRetentionOrLegalHold(document)
-      && (this._hasAdministrationPermissions(currentUser) || this.hasPermission(document, 'WriteColdStorage'))
-      && this.hasContent(document)
-      && this._isRenditionAvailable(document)
+          !this.hasFacet(document, 'ColdStorage') &&
+          !this.isUnderRetentionOrLegalHold(document) &&
+          (this._hasAdministrationPermissions(currentUser) || this.hasPermission(document, 'WriteColdStorage')) &&
+          this.hasContent(document) &&
+          this._isRenditionAvailable(document)
         );
       }
 
@@ -112,9 +114,10 @@ express or implied. See the License for the specific language governing permissi
             );
           })
           .catch((error) => {
-            const message = error.response.status === 412
-              ? 'documentContentView.moveToColdStorage.preview.unavailable'
-              : 'documentContentView.moveToColdStorage.error';
+            const message =
+              error.response.status === 412
+                ? 'documentContentView.moveToColdStorage.preview.unavailable'
+                : 'documentContentView.moveToColdStorage.error';
             this.dispatchEvent(
               new CustomEvent('notify', {
                 composed: true,

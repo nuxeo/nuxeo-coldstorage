@@ -7,13 +7,13 @@
   <home-page>https://doc.nuxeo.com/coldstorage/</home-page>
   <vendor>Nuxeo</vendor>
   <platforms>
-    <platform>server-@DISTRIB_VERSION@</platform>
-    <platform>server-@DISTRIB_VERSION@-HF*</platform>
+    <platform>server-10.10</platform>
+    <platform>server-10.10-HF*</platform>
   </platforms>
   <!-- Dependencies on other packages -->
   <dependencies>
     <package>amazon-s3-online-storage</package>
-    <package>nuxeo-10.10-HF61</package>
+    <package>nuxeo-@DISTRIB_VERSION@</package>
     <package>nuxeo-web-ui</package>
   </dependencies>
   <license>Apache 2.0</license>

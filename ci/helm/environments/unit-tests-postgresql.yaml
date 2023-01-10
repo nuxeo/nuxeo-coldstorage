@@ -1,0 +1,6 @@
+nuxeo:
+  enabled: false
+mongodb:
+  enabled: false
+postgresql:
+  enabled: true

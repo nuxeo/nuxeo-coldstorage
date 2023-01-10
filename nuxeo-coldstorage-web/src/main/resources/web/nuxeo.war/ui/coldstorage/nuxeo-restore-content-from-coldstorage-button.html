@@ -14,7 +14,9 @@ express or implied. See the License for the specific language governing permissi
 
 <dom-module id="nuxeo-restore-content-from-coldstorage-button">
   <template>
-    <style include="nuxeo-action-button-styles nuxeo-styles"></style>
+    <style include="nuxeo-action-button-styles nuxeo-styles">
+      <!-- https://github.com/Polymer/tools/issues/408 -->
+    </style>
     <nuxeo-operation id="opRestore" op="Document.RestoreFromColdStorage" input="[[document.uid]]"></nuxeo-operation>
     <nuxeo-connection id="nxcon" user="{{currentUser}}"></nuxeo-connection>
 
@@ -74,10 +76,10 @@ express or implied. See the License for the specific language governing permissi
 
       _isAvailable(document, currentUser) {
         return (
-          this.hasFacet(document, 'ColdStorage')
-      && !document.properties['coldstorage:beingRetrieved']
-      && (this._hasAdministrationPermissions(currentUser) || this.hasPermission(document, 'WriteColdStorage'))
-      && this.hasContent(document)
+          this.hasFacet(document, 'ColdStorage') &&
+          !document.properties['coldstorage:beingRetrieved'] &&
+          (this._hasAdministrationPermissions(currentUser) || this.hasPermission(document, 'WriteColdStorage')) &&
+          this.hasContent(document)
         );
       }
 

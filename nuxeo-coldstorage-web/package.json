@@ -17,7 +17,7 @@
     "minimist": "^1.2.5",
     "nuxeo-cli": "^1.9.1",
     "polymer-cli": "^1.9.11",
-    "prettier": "2.0.5"
+    "prettier": "2.1.2"
   },
   "husky": {
     "hooks": {
@@ -39,8 +39,6 @@
     "format:eslint": "eslint --ext .js,.mjs,.html . --fix",
     "format:polymer": "polymer lint --fix",
     "format:prettier": "prettier \"**/*.{js,mjs,html}\" --write",
-    "test": "web-test-runner",
-    "test:watch": "web-test-runner --watch",
     "ftest": "nuxeo-web-ui-ftest --features='./ftest/features/*.feature' --stepDefinitions='ftest/features/step_definitions' --screenshots --report --headless",
     "ftest:watch": "nuxeo-web-ui-ftest --features='./ftest/features/*.feature' --stepDefinitions='ftest/features/step_definitions' --debug --tags=@watch"
   }

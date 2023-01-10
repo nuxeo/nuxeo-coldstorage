@@ -14,7 +14,9 @@ express or implied. See the License for the specific language governing permissi
 
 <dom-module id="nuxeo-retrieve-content-from-coldstorage-button">
   <template>
-    <style include="nuxeo-action-button-styles nuxeo-styles"></style>
+    <style include="nuxeo-action-button-styles nuxeo-styles">
+      <!-- https://github.com/Polymer/tools/issues/408 -->
+    </style>
     <nuxeo-operation id="opRetrieve" op="Document.RequestRetrievalFromColdStorage" input="[[document.uid]]">
     </nuxeo-operation>
 
@@ -74,13 +76,13 @@ express or implied. See the License for the specific language governing permissi
 
       _isAvailable(document) {
         return (
-          this.hasFacet(document, 'ColdStorage')
-      && !document.properties['coldstorage:beingRetrieved']
-      && this.hasContent(document)
-      // Don't show the retrieve btn if the file is retrieved and the rendition
-      // still available to download
-      && (document.properties['coldstorage:downloadableUntil'] === null
-        || new Date(document.properties['coldstorage:downloadableUntil']) < new Date())
+          this.hasFacet(document, 'ColdStorage') &&
+          !document.properties['coldstorage:beingRetrieved'] &&
+          this.hasContent(document) &&
+          // Don't show the retrieve btn if the file is retrieved and the rendition
+          // still available to download
+          (document.properties['coldstorage:downloadableUntil'] === null ||
+            new Date(document.properties['coldstorage:downloadableUntil']) < new Date())
         );
       }
 
