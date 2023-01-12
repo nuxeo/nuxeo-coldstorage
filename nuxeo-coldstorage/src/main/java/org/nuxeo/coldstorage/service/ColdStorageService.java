@@ -116,6 +116,12 @@ public interface ColdStorageService {
     /**
      * Internal use.
      */
+    DocumentModel proceedRestoreMainContent(CoreSession session, DocumentModel documentModel, boolean notify,
+            boolean propagate);
+
+    /**
+     * Internal use.
+     */
     void checkDocToBeRetrieved(CoreSession session);
 
     /**
