@@ -153,9 +153,9 @@ The following features are available:
 
 ### Localization Management
 
-Nuxeo Cold Storage, as well as Nuxeo Web UI, handles multilingual content. In order to manage all that in an effective way and integration with [Crowdin](https://crowdin.com/) is used.
+Nuxeo Cold Storage manages multilingual content with a [Crowdin](https://crowdin.com/) integration.
 
-This integration is also handled under our CI/CD context with [a dedicated pipeline](https://jenkins.napps.dev.nuxeo.com/job/nuxeo/job/crowdin/job/nuxeo-coldstorage/) benefiting from automatic translations and correspondent commits.
+The [Crowdin](.github/workflows/crowdin.yml) GitHub Actions workflow handles automatic translations and related pull requests.
 
 # About Nuxeo
 
