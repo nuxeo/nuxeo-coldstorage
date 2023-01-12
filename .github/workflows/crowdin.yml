@@ -12,7 +12,10 @@ on:
     branches: ["lts-2023", "lts-2021"]
     paths:
       - 'nuxeo-coldstorage-web/i18n/messages.json'
-  
+
+  pull_request:
+    branches: [ "lts-2021" ]
+
 jobs:
   crowdin:
     runs-on: ubuntu-latest
