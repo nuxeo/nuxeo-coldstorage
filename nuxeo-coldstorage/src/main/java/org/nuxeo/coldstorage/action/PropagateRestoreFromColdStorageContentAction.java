@@ -81,7 +81,7 @@ public class PropagateRestoreFromColdStorageContentAction implements StreamProce
                     continue;
                 }
                 try {
-                    DocumentModel documentModel = service.proceedRestoreMainContent(session, document, false);
+                    DocumentModel documentModel = service.proceedRestoreMainContent(session, document, false, false);
                     if (documentModel.isVersion()) {
                         documentModel.putContextData(CoreSession.ALLOW_VERSION_WRITE, true);
                     }

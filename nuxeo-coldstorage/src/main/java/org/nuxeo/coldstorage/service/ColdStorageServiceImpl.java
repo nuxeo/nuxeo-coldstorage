@@ -424,6 +424,12 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
 
     @Override
     public DocumentModel proceedRestoreMainContent(CoreSession session, DocumentModel documentModel, boolean notify) {
+        return proceedRestoreMainContent(session, documentModel, notify, true);
+    }
+
+    @Override
+    public DocumentModel proceedRestoreMainContent(CoreSession session, DocumentModel documentModel, boolean notify,
+            boolean propagate) {
         Blob coldContent = (Blob) documentModel.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
         try {
             String key = getContentBlobKey(coldContent);
@@ -452,8 +458,10 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         documentModel.putContextData(DISABLE_AUTOMATIC_VERSIONING, true);
         documentModel = session.saveDocument(documentModel);
 
-        // Submit Bulk action to update documents referencing the same blob
-        propagateRestoreFromColdStorage(session, coldContent.getDigest());
+        if (propagate) {
+            // Submit Bulk action to update documents referencing the same blob
+            propagateRestoreFromColdStorage(session, coldContent.getDigest());
+        }
 
         // Send notification
         if (notify) {
