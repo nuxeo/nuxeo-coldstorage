@@ -1,0 +1,48 @@
+# Workflow that syncronizes translations from Crowdin
+name: Crowdin
+
+on:
+  # Check for updates every day
+  schedule:
+    # Everyday at 01:12
+    - cron: '12 1 * * *'
+
+  # Sync when a commit is done on the reference branches
+  push:
+    branches: ["lts-2021"]
+    paths:
+      - 'nuxeo-coldstorage-web/i18n/messages.json'
+
+jobs:
+  crowdin:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Crowdin Action
+        uses: crowdin/github-action@1.5.2
+        with:
+          # Tokens
+          project_id: ${{ secrets.CROWDIN_PROJECT_ID }}
+          token: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+
+          # Load external configuration file (to support translation rename)
+          config: crowdin-conf.yml
+
+          # Upload sources for translation
+          upload_sources: true
+
+          # Auto-approve reference sentences we are pushing (english)
+          auto_approve_imported: true
+
+          # Name of the branch where to merge the translations
+          localization_branch_name: crowdin-translations-update
+          create_pull_request: true
+
+          # Automatically download all the new translations
+          download_translations: true
+
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
