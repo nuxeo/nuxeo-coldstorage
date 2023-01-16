@@ -26,7 +26,7 @@ bin
 .factorypath
 
 # build artifacts
-target/
+target*/
 coverage/
 node_modules/
 nashorn_code_cache/
@@ -34,3 +34,7 @@ chromedriver.log
 *.log
 *.pyc
 package-lock.json
+
+# Helm charts
+**/*.tgz
+**/*.lock
