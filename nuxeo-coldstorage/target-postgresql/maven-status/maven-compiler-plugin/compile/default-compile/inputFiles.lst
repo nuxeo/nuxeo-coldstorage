@@ -1,0 +1,16 @@
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/main/java/org/nuxeo/coldstorage/action/MoveToColdStorageContentAction.java
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/main/java/org/nuxeo/coldstorage/service/ColdStorageServiceImpl.java
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/main/java/org/nuxeo/coldstorage/ColdStorageHelper.java
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/main/java/org/nuxeo/coldstorage/action/PropagateMoveToColdStorageContentAction.java
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/main/java/org/nuxeo/coldstorage/events/CheckAlreadyInColdStorageListener.java
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/main/java/org/nuxeo/coldstorage/events/PreventColdStorageUpdateListener.java
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/main/java/org/nuxeo/coldstorage/action/CheckColdStorageAvailabilityAction.java
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/main/java/org/nuxeo/coldstorage/ColdStorageRenditionDescriptor.java
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/main/java/org/nuxeo/coldstorage/operations/RequestRetrievalFromColdStorage.java
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/main/java/org/nuxeo/coldstorage/action/PropagateRestoreFromColdStorageContentAction.java
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/main/java/org/nuxeo/coldstorage/events/DownloadColdDocumentListener.java
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/main/java/org/nuxeo/coldstorage/service/ColdStorageService.java
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/main/java/org/nuxeo/coldstorage/operations/MoveToColdStorage.java
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/main/java/org/nuxeo/coldstorage/events/CheckColdStorageContentAvailabilityListener.java
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/main/java/org/nuxeo/coldstorage/operations/RestoreFromColdStorage.java
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/main/java/org/nuxeo/coldstorage/ColdStorageConstants.java

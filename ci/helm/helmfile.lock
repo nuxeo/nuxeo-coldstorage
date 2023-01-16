@@ -1,0 +1,13 @@
+version: 0.146.0
+dependencies:
+- name: mongodb
+  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
+  version: 7.14.2
+- name: nuxeo
+  repository: https://chartmuseum.platform.dev.nuxeo.com/
+  version: 3.0.13
+- name: postgresql
+  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
+  version: 10.16.2
+digest: sha256:464fcbaa795274ac34a96c0f6e459229acbcb1b7b2daf2bba4a13a972614adc4
+generated: "2023-01-16T16:17:23.890830326Z"

@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<component name="org.nuxeo.coldstorage.types">
+
+  <require>org.nuxeo.ecm.core.CoreExtensions</require>
+
+  <extension target="org.nuxeo.ecm.core.schema.TypeService" point="schema">
+    <schema name="coldstorage" prefix="coldstorage" src="schemas/coldstorage.xsd" />
+
+    <property schema="file" name="content/digest" indexOrder="ascending" />
+    <property schema="coldstorage" name="beingRetrieved" indexOrder="ascending" />
+    <property schema="coldstorage" name="coldContent/digest" indexOrder="ascending" />
+  </extension>
+
+  <extension target="org.nuxeo.ecm.core.schema.TypeService"
+             point="doctype">
+    <facet name="ColdStorage">
+      <schema name="coldstorage" />
+    </facet>
+  </extension>
+
+</component>

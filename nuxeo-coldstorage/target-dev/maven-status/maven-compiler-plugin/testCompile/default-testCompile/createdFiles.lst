@@ -1,0 +1,12 @@
+org/nuxeo/coldstorage/ColdStorageFeature.class
+org/nuxeo/coldstorage/operations/AbstractTestColdStorageOperation.class
+org/nuxeo/coldstorage/service/TestDummyColdStorageService$ColdStorageActionsLogFilter.class
+org/nuxeo/coldstorage/operations/TestColdStorageRendition.class
+org/nuxeo/coldstorage/service/TestS3ColdStorageService.class
+org/nuxeo/coldstorage/operations/RestoreFromColdStorageTest.class
+org/nuxeo/coldstorage/DummyColdStorageFeature.class
+org/nuxeo/coldstorage/operations/RequestRetrievalFromColdStorageTest.class
+org/nuxeo/coldstorage/thumbnail/DummyRandomThumbnailFactory.class
+org/nuxeo/coldstorage/service/AbstractTestColdStorageService.class
+org/nuxeo/coldstorage/service/TestDummyColdStorageService.class
+org/nuxeo/coldstorage/operations/MoveToColdStorageTest.class

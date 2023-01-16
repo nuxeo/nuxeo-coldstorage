@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: org.nuxeo.coldstorage.service.TestS3ColdStorageService
+-------------------------------------------------------------------------------
+Tests run: 22, Failures: 0, Errors: 0, Skipped: 2, Time elapsed: 28.517 s - in org.nuxeo.coldstorage.service.TestS3ColdStorageService

@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: org.nuxeo.coldstorage.operations.RequestRetrievalFromColdStorageTest
+-------------------------------------------------------------------------------
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.992 s - in org.nuxeo.coldstorage.operations.RequestRetrievalFromColdStorageTest

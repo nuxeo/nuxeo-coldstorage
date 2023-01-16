@@ -1,0 +1,11 @@
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/test/java/org/nuxeo/coldstorage/operations/MoveToColdStorageTest.java
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/test/java/org/nuxeo/coldstorage/service/TestS3ColdStorageService.java
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/test/java/org/nuxeo/coldstorage/operations/RestoreFromColdStorageTest.java
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/test/java/org/nuxeo/coldstorage/operations/AbstractTestColdStorageOperation.java
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/test/java/org/nuxeo/coldstorage/service/AbstractTestColdStorageService.java
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/test/java/org/nuxeo/coldstorage/ColdStorageFeature.java
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/test/java/org/nuxeo/coldstorage/thumbnail/DummyRandomThumbnailFactory.java
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/test/java/org/nuxeo/coldstorage/DummyColdStorageFeature.java
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/test/java/org/nuxeo/coldstorage/operations/RequestRetrievalFromColdStorageTest.java
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/test/java/org/nuxeo/coldstorage/operations/TestColdStorageRendition.java
+/home/jenkins/workspace/orage_nuxeo-coldstorage_lts-2021/nuxeo-coldstorage/src/test/java/org/nuxeo/coldstorage/service/TestDummyColdStorageService.java

@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<component
+  name="org.nuxeo.coldstorage.bulk.test.contrib">
+
+  <require>org.nuxeo.coldstorage.bulk.contrib</require>
+  <extension target="org.nuxeo.ecm.core.bulk" point="actions">
+    <!-- set batch size to 2 for test purpose in order to create race concurrency
+      and allow to detect documents are not queued many times -->
+    <action name="propagateMoveToColdStorage" inputStream="bulk/propagateMoveToColdStorage"
+      bucketSize="100" batchSize="2" httpEnabled="false" />
+    <action name="propagateRestoreFromColdStorage" inputStream="bulk/propagateRestoreFromColdStorage"
+      bucketSize="100" batchSize="2" httpEnabled="false" />
+  </extension>
+
+</component>

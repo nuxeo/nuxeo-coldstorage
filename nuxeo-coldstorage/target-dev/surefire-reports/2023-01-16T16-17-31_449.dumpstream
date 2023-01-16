@@ -1,0 +1,18 @@
+# Created at 2023-01-16T16:17:31.986
+Picked up JAVA_TOOL_OPTIONS: -Dsun.zip.disableMemoryMapping=true -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90
+
+# Created at 2023-01-16T16:17:44.100
+WARNING: An illegal reflective access operation has occurred
+
+# Created at 2023-01-16T16:17:44.100
+WARNING: Illegal reflective access using Lookup on net.openhft.chronicle.core.Jvm (file:/root/.mvnrepository/net/openhft/chronicle-core/2.20.21/chronicle-core-2.20.21.jar) to class java.lang.reflect.AccessibleObject
+
+# Created at 2023-01-16T16:17:44.100
+WARNING: Please consider reporting this to the maintainers of net.openhft.chronicle.core.Jvm
+
+# Created at 2023-01-16T16:17:44.148
+WARNING: Use --illegal-access=warn to enable warnings of further illegal reflective access operations
+
+# Created at 2023-01-16T16:17:44.149
+WARNING: All illegal access operations will be denied in a future release
+

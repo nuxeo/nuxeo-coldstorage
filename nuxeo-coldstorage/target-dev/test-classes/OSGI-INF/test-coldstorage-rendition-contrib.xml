@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<component name="org.nuxeo.coldstorage.test.rendition.contrib">
+
+    <extension target="org.nuxeo.coldstorage.service.ColdStorageService"  point="coldStorageRendition" >
+        <coldStorageRendition name="defaultRendition" renditionName="thumbnail" />
+        <coldStorageRendition name="testRendition" docType="Picture" facet="Picture" renditionName="Test" />
+    </extension>
+
+</component>
