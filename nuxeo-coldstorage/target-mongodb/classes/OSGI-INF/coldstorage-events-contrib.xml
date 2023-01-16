@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<component name="org.nuxeo.coldstorage.events.contrib">
+
+  <extension target="org.nuxeo.ecm.core.scheduler.SchedulerService" point="schedule">
+    <schedule id="checkAvailabilityOfBlobsBeingRetrieved">
+      <cronExpression>${nuxeo.coldstorage.check.retrieve.state.cronExpression}</cronExpression>
+      <event>checkColdStorageContentAvailability</event>
+    </schedule>
+  </extension>
+
+  <extension target="org.nuxeo.ecm.core.event.EventServiceComponent" point="listener">
+    <listener name="checkColdStorageContentAvailability" async="true"
+              class="org.nuxeo.coldstorage.events.CheckColdStorageContentAvailabilityListener">
+      <event>checkColdStorageContentAvailability</event>
+    </listener>
+    <listener name="preventColdStorageUpdateListener" priority="0"
+              class="org.nuxeo.coldstorage.events.PreventColdStorageUpdateListener">
+      <event>beforeDocumentModification</event>
+    </listener>
+    <!-- StreamAuditEventListener has a priority of 500, less allows to be evaluated earlier -->
+    <listener name="downloadColdDocumentListener" priority="400"
+              class="org.nuxeo.coldstorage.events.DownloadColdDocumentListener">
+      <event>download</event>
+    </listener>
+    <!-- UpdateThumbnailListener has a priority of 999, more allows to be evaluated later -->
+    <listener name="checkAlreadyInColdStorageListener" priority="900"
+      class="org.nuxeo.coldstorage.events.CheckAlreadyInColdStorageListener">
+      <event>documentModified</event>
+      <event>documentCreated</event>
+    </listener>
+  </extension>
+
+  <extension
+          target="org.nuxeo.ecm.platform.ec.notification.service.NotificationService" point="notifications">
+    <notification name="ColdStorageContentAvailable" channel="email" availableIn="*"
+                  subject="Archive content available on '${docTitle}'" template="coldStorageContentAvailable"
+                  label="label.document.download">
+      <event name="coldStorageContentAvailable" />
+    </notification>
+    <notification name="ColdStorageContentRestored" channel="email" availableIn="*"
+                  subject="Main content '${docTitle}' restored" template="coldStorageContentRestored"
+                  label="label.document.download">
+      <event name="coldStorageContentRestored" />
+    </notification>
+  </extension>
+
+  <extension target="org.nuxeo.ecm.platform.ec.notification.service.NotificationService" point="templates">
+    <template name="coldStorageContentAvailable" src="templates/coldStorageContentAvailable.ftl" />
+    <template name="coldStorageContentRestored" src="templates/coldStorageContentRestored.ftl" />
+  </extension>
+
+</component>

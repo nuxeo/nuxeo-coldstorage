@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<component name="org.nuxeo.coldstorage.service.ColdStorageService">
+
+    <require>org.nuxeo.ecm.platform.rendition.service.RenditionService</require>
+
+    <implementation class="org.nuxeo.coldstorage.service.ColdStorageServiceImpl" />
+
+    <service>
+        <provide interface="org.nuxeo.coldstorage.service.ColdStorageService" />
+    </service>
+
+    <extension-point name="coldStorageRendition">
+        <documentation>
+            @author Abdoul BA (aba@nuxeo.com)
+            This extension provides renditions according to the type, facet and default one.
+            <code>
+                <coldStorageRendition name="defaultRendition" renditionName="Thumbnail" />
+                <coldStorageRendition name="pictureRendition" docType="Picture" facet="Picture" renditionName="Small" />
+            </code>
+        </documentation>
+        <object class="org.nuxeo.coldstorage.ColdStorageRenditionDescriptor" />
+    </extension-point>
+
+</component>
