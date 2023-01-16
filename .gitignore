@@ -26,7 +26,7 @@ bin
 .factorypath
 
 # build artifacts
-target/
+target*/
 coverage/
 node_modules/
 nashorn_code_cache/
@@ -35,5 +35,8 @@ chromedriver.log
 *.pyc
 package-lock.json
 bower_components/
-ci/napps-test-coldstorage-policy.json
 doc.txt
+
+# Helm charts
+**/*.tgz
+**/*.lock
