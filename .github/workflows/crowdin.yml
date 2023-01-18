@@ -40,6 +40,7 @@ jobs:
           # Name of the branch where to merge the translations
           localization_branch_name: crowdin-translations-update
           create_pull_request: true
+          pull_request_reviewers: 'manonlumeau'
 
           # Automatically download all the new translations
           download_translations: true
