@@ -23,7 +23,7 @@
   "documentContentView.restoreFromColdStorage.description": "Questo annullerà l'azione di invio al cold storage sul documento.",
   "documentContentView.restoreFromColdStorage.label": "Recuperare da cold storage",
   "documentContentView.restoreFromColdStorage.tooltip": "Recuperare da cold storage",
-  "documentContentView.restoreFromColdStorage.success": "Iniziare a recuperare il contenuto dei documenti dal cold storage",
+  "documentContentView.restoreFromColdStorage.success": "Iniziare a recuperare il contenuto dei documenti dal cold storage.",
   "documentContentView.restoreFromColdStorage.error": "Errore nel ripristino del file da cold storage.",
   "documentContentView.retrieveFromColdStorage.confirm": "Conferma",
   "documentContentView.retrieveFromColdStorage.cancel": "Annulla",

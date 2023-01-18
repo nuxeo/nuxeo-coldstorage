@@ -23,7 +23,7 @@
   "documentContentView.restoreFromColdStorage.description": "Cette action annulera l'envoi vers le stockage à froid du document.",
   "documentContentView.restoreFromColdStorage.label": "Restaurer à partir du stockage à froid",
   "documentContentView.restoreFromColdStorage.tooltip": "Restaurer à partir du stockage à froid",
-  "documentContentView.restoreFromColdStorage.success": "Restauration du contenu du document à partir du stockage à froid",
+  "documentContentView.restoreFromColdStorage.success": "Restauration du contenu du document à partir du stockage à froid.",
   "documentContentView.restoreFromColdStorage.error": "Erreur lors de la restauration du document à partir du stockage à froid.",
   "documentContentView.retrieveFromColdStorage.confirm": "Confirmer",
   "documentContentView.retrieveFromColdStorage.cancel": "Annuler",
