@@ -149,8 +149,6 @@ The following features are available:
 
 Nuxeo Cold Storage manages multilingual content with a [Crowdin](https://crowdin.com/) integration.
 
-The [Crowdin](.github/workflows/crowdin.yml) GitHub Actions workflow handles automatic translations and related pull requests.
-
 # About Nuxeo
 
 The [Nuxeo Platform](http://www.nuxeo.com/products/content-management-platform/) is an open source customizable and extensible content management platform for building business applications. It provides the foundation for developing [document management](http://www.nuxeo.com/solutions/document-management/), [digital asset management](http://www.nuxeo.com/solutions/digital-asset-management/), [case management application](http://www.nuxeo.com/solutions/case-management/) and [knowledge management](http://www.nuxeo.com/solutions/advanced-knowledge-base/). You can easily add features using ready-to-use addons or by extending the platform using its extension point system.
