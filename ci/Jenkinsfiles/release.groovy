@@ -23,7 +23,7 @@ library identifier: "platform-ci-shared-library@v0.0.14"
 
 pipeline {
   agent {
-    label 'jenkins-nuxeo-package-lts-2021'
+    label 'jenkins-nuxeo-package-lts-2023'
   }
   options {
     buildDiscarder(logRotator(daysToKeepStr: '60', numToKeepStr: '60', artifactNumToKeepStr: '5'))
@@ -33,7 +33,7 @@ pipeline {
   environment {
     BRANCH_NAME = "${params.BRANCH}"
     BUILD_VERSION = "${params.BUILD_VERSION}"
-    JIRA_NUXEO_ADDON_MOVING_VERSION = 'coldstorage-2021.x'
+    JIRA_NUXEO_ADDON_MOVING_VERSION = 'coldstorage-2023.x'
     VERSION = "${nxUtils.getMajorDotMinorVersion(version: env.BUILD_VERSION)}"
   }
   stages {

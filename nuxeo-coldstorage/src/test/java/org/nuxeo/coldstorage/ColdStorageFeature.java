@@ -19,7 +19,7 @@
 
 package org.nuxeo.coldstorage;
 
-import org.nuxeo.ecm.core.test.CoreFeature;
+import org.nuxeo.ecm.platform.picture.core.ImagingFeature;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.Features;
 import org.nuxeo.runtime.test.runner.LogCaptureFeature;
@@ -28,15 +28,10 @@ import org.nuxeo.runtime.test.runner.RunnerFeature;
 /**
  * @since 2021.0.0
  */
-@Features({CoreFeature.class, LogCaptureFeature.class})
+@Features({ImagingFeature.class, LogCaptureFeature.class})
 @Deploy("org.nuxeo.ecm.platform.notification")
-@Deploy("org.nuxeo.ecm.automation.core")
 @Deploy("org.nuxeo.ecm.core.management")
-@Deploy("org.nuxeo.ecm.platform.picture.core")
 @Deploy("org.nuxeo.ecm.platform.video")
-@Deploy("org.nuxeo.ecm.platform.commandline.executor")
-@Deploy("org.nuxeo.ecm.actions")
-@Deploy("org.nuxeo.ecm.platform.tag")
 @Deploy("org.nuxeo.ecm.platform.convert")
 @Deploy("org.nuxeo.ecm.platform.thumbnail")
 @Deploy("org.nuxeo.ecm.platform.rendition.core")

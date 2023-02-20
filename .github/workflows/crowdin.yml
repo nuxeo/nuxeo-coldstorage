@@ -9,7 +9,7 @@ on:
 
   # Sync when a commit is done on the reference branches
   push:
-    branches: ["lts-2021"]
+    branches: ["lts-2023"]
     paths:
       - 'nuxeo-coldstorage-web/i18n/messages.json'
 

@@ -1,4 +1,4 @@
-[![Build Status](https://jenkins.platform.dev.nuxeo.com/buildStatus/icon?job=coldstorage%2Fnuxeo-coldstorage%2Flts-2021)](https://jenkins.platform.dev.nuxeo.com/job/coldstorage/job/nuxeo-coldstorage/job/lts-2021/)
+[![Build Status](https://jenkins.platform.dev.nuxeo.com/buildStatus/icon?job=coldstorage%2Fnuxeo-coldstorage%2Flts-2023)](https://jenkins.platform.dev.nuxeo.com/job/coldstorage/job/nuxeo-coldstorage/job/lts-2023/)
 
 # Nuxeo Cold Storage
 
@@ -149,7 +149,7 @@ Continuous Integration & Continuous Deployment(and Delivery) are an important pa
 Nuxeo Cold Storage integrates [Jenkins pipelines](https://jenkins.platform.dev.nuxeo.com/job/coldstorage/job/nuxeo-coldstorage/) for each maintenance branch, for _LTS_ (fast track) and also for each opened PR.
 
 The following features are available:
-- Each PR merge to _lts-2021_ branch will generate a "release candidate" package
+- Each PR merge to _10.10_/_lts-2021_/_lts-2023_ branches will generate a "release candidate" package
 
 ### Localization Management
 
