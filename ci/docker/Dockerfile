@@ -6,8 +6,8 @@ ARG BUILD_TAG=unknown
 ARG SCM_REF=unknown
 ARG VERSION=unknown
 
-LABEL org.nuxeo.build-tag=$BUILD_TAG
-LABEL org.nuxeo.scm-ref=$SCM_REF
+LABEL org.nuxeo.coldstorage.build-tag=$BUILD_TAG
+LABEL org.nuxeo.coldstorage.scm-ref=$SCM_REF
 LABEL org.nuxeo.coldstorage.version=$VERSION
 
 USER root
