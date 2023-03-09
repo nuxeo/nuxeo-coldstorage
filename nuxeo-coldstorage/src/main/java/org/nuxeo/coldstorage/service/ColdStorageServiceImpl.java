@@ -474,7 +474,9 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
     }
 
     public void propagateMoveToColdStorage(CoreSession session, String blobDigest) {
-        String query = String.format("SELECT * FROM Document WHERE file:content/digest = '%s'", blobDigest);
+        String query = String.format(
+                "SELECT * FROM Document WHERE ecm:mixinType <> '%s' AND file:content/digest = '%s'",
+                COLD_STORAGE_FACET_NAME, blobDigest);
 
         BulkService bulkService = Framework.getService(BulkService.class);
         BulkCommand command = new BulkCommand //
