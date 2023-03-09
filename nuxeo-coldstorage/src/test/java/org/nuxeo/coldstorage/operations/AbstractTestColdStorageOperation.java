@@ -22,7 +22,6 @@ package org.nuxeo.coldstorage.operations;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -39,7 +38,6 @@ import org.nuxeo.coldstorage.ColdStorageHelper;
 import org.nuxeo.ecm.automation.AutomationService;
 import org.nuxeo.ecm.automation.OperationContext;
 import org.nuxeo.ecm.automation.OperationException;
-import org.nuxeo.ecm.core.DummyThumbnailFactory;
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.Blobs;
 import org.nuxeo.ecm.core.api.CoreSession;
@@ -117,7 +115,11 @@ public abstract class AbstractTestColdStorageOperation {
     }
 
     protected DocumentModel createFileDocument(CoreSession session, boolean withBlobContent, ACE... aces) {
-        DocumentModel documentModel = session.createDocumentModel("/", "MyFile", "File");
+        return this.createFileDocument(session, "MyFile", withBlobContent, aces);
+    }
+
+    protected DocumentModel createFileDocument(CoreSession session, String name, boolean withBlobContent, ACE... aces) {
+        DocumentModel documentModel = session.createDocumentModel("/", name, "File");
         if (withBlobContent) {
             Blob blob = Blobs.createBlob(FILE_CONTENT);
             blob.setDigest(UUID.randomUUID().toString());
