@@ -109,17 +109,17 @@ public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
                 new ACE("linda", SecurityConstants.WRITE, true), //
                 new ACE("linda", SecurityConstants.WRITE_COLD_STORAGE, true) };
 
-        List<DocumentModel> documents = List.of(createFileDocument(session, true, aces), //
-                createFileDocument(session, true, aces), //
-                createFileDocument(session, true, aces));
+        List<DocumentModel> documents = List.of(createFileDocument(session, "MyFile1", true, aces), //
+                createFileDocument(session, "MyFile2", true, aces), //
+                createFileDocument(session, "MyFile3", true, aces));
 
         CoreSession userSession = CoreInstance.getCoreSession(session.getRepositoryName(), "linda");
         moveContentToColdStorage(userSession, documents);
 
         // with Administrator
-        documents = List.of(createFileDocument(session, true), //
-                createFileDocument(session, true), //
-                createFileDocument(session, true));
+        documents = List.of(createFileDocument(session, "MyFile4", true), //
+                createFileDocument(session, "MyFile5", true), //
+                createFileDocument(session, "MyFile6", true));
 
         moveContentToColdStorage(session, documents);
     }
