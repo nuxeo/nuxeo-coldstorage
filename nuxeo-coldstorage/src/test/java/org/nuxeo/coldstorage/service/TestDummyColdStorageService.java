@@ -93,10 +93,11 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
     @Test
     @LogCaptureFeature.FilterWith(ColdStorageActionsLogFilter.class)
     public void shouldBulkMoveToColdStorage() throws IOException {
+        final String fileContent = FILE_CONTENT + System.currentTimeMillis();
         List<DocumentModel> docs = new ArrayList<DocumentModel>();
         int nbDocs = 10;
         for (int i = 0; i < nbDocs; i++) {
-            docs.add(createFileDocument(DEFAULT_DOC_NAME + i, Blobs.createBlob(FILE_CONTENT + i)));
+            docs.add(createFileDocument(DEFAULT_DOC_NAME + i, fileContent + i));
         }
         // Set legal hold on one of the doc to make it impossible to move to cold storage
         DocumentRef legalHoldRef = docs.remove(nbDocs / 2).getRef();
@@ -123,7 +124,7 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         assertTrue(status.isCompleted());
         assertEquals(1, status.getErrorCount());
         for (DocumentModel doc : docs) {
-            verifyContent(session, doc.getRef(), FILE_CONTENT);
+            verifyContent(session, doc.getRef(), fileContent);
         }
     }
 
@@ -162,9 +163,10 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
     public void shouldMoveManyDocsWithSameBlobToColdStorage() throws IOException, InterruptedException {
         // with regular user with "WriteColdStorage" permission
         // Let's create 2 lists of documents all sharing the same blob
-        Blob blob1 = Blobs.createBlob(FILE_CONTENT);
+        final String fileContent = FILE_CONTENT + System.currentTimeMillis();
+        Blob blob1 = Blobs.createBlob(fileContent);
         blob1.setDigest(UUID.randomUUID().toString());
-        Blob blob2 = Blobs.createBlob(FILE_CONTENT + FILE_CONTENT);
+        Blob blob2 = Blobs.createBlob(fileContent + fileContent);
         blob2.setDigest(UUID.randomUUID().toString());
         List<DocumentModel> list1 = createSameBlobFileDocuments(DEFAULT_DOC_NAME + "1", 10, blob1, "john", READ, WRITE,
                 WRITE_COLD_STORAGE);
@@ -183,10 +185,10 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
 
         // Moving the 2 first document to cold storage should moved all the other ones
         for (DocumentModel doc : list1) {
-            verifyContent(userSession, doc.getRef(), FILE_CONTENT);
+            verifyContent(userSession, doc.getRef(), fileContent);
         }
         for (DocumentModel doc : list2) {
-            verifyContent(userSession, doc.getRef(), FILE_CONTENT + FILE_CONTENT);
+            verifyContent(userSession, doc.getRef(), fileContent + fileContent);
         }
 
         // Restore only the 2 first doc
@@ -197,10 +199,10 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         // Restoring the first document to cold storage should restore all the other ones
         coreFeature.waitForAsyncCompletion();
         for (DocumentModel doc : list1) {
-            verifyRestore(doc.getRef(), FILE_CONTENT);
+            verifyRestore(doc.getRef(), fileContent);
         }
         for (DocumentModel doc : list2) {
-            verifyRestore(doc.getRef(), FILE_CONTENT + FILE_CONTENT);
+            verifyRestore(doc.getRef(), fileContent + fileContent);
         }
         // The BAF in charge of moving and restoring the other documents should be silent
         List<String> caughtEvents = logResult.getCaughtEventMessages();
@@ -219,15 +221,16 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
     @Test
     public void shouldMoveToColdStorageAfterRestore() throws IOException, InterruptedException {
         // with regular user with "WriteColdStorage" permission
+        final String blobContent = FILE_CONTENT + System.currentTimeMillis();
         ACE[] aces = { new ACE("john", SecurityConstants.READ, true), //
                 new ACE("john", SecurityConstants.WRITE, true), //
                 new ACE("john", SecurityConstants.WRITE_COLD_STORAGE, true) };
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true, aces);
+        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, blobContent, aces);
 
         CoreSession userSession = CoreInstance.getCoreSession(documentModel.getRepositoryName(), "john");
         documentModel = moveAndRestore(documentModel);
         waitForRetrieve();
-        documentModel = verifyRestore(documentModel.getRef(), FILE_CONTENT);
+        documentModel = verifyRestore(documentModel.getRef(), blobContent);
         moveAndVerifyContent(userSession, documentModel.getRef());
     }
 
@@ -292,10 +295,11 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
 
     @Test
     public void shouldMakeRestoreImmediately() throws IOException, InterruptedException {
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
+        final String fileContent = FILE_CONTENT + System.currentTimeMillis();
+        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, fileContent);
         documentModel = moveAndRestore(documentModel);
         waitForRetrieve();
-        verifyRestore(documentModel.getRef(), FILE_CONTENT);
+        verifyRestore(documentModel.getRef(), fileContent);
     }
 
     @Test

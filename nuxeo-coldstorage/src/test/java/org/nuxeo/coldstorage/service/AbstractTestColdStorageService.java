@@ -257,7 +257,7 @@ public abstract class AbstractTestColdStorageService {
         // we cannot update the main content as it is already in cold storage
         documentModel.refresh();
         documentModel.setPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY,
-                (Serializable) Blobs.createBlob(FILE_CONTENT + "_bis"));
+                (Serializable) Blobs.createBlob(FILE_CONTENT + System.currentTimeMillis() + "_bis"));
         try {
             session.saveDocument(documentModel);
             fail("Should fail because a main content document in cold storage cannot be updated.");
@@ -325,7 +325,7 @@ public abstract class AbstractTestColdStorageService {
     @Deploy("org.nuxeo.coldstorage.test:OSGI-INF/test-thumbnail-recomputation-contrib.xml")
     public void shouldNotRecomputeThumbnail() throws IOException {
         DocumentModel documentModel = session.createDocumentModel("/", DEFAULT_DOC_NAME, "MyCustomFile");
-        documentModel.setPropertyValue("file:content", (Serializable) Blobs.createBlob(FILE_CONTENT));
+        documentModel.setPropertyValue("file:content", (Serializable) Blobs.createBlob(FILE_CONTENT + System.currentTimeMillis()));
         documentModel = session.createDocument(documentModel);
         documentModel = session.saveDocument(documentModel);
         coreFeature.waitForAsyncCompletion();
@@ -366,9 +366,10 @@ public abstract class AbstractTestColdStorageService {
         assumeTrue("Waiting for NXP-30931", !coreFeature.getStorageConfiguration().isVCS());
 
         // Create a doc with 'foo' text as main content
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
+        final String fileContent = FILE_CONTENT + System.currentTimeMillis(); 
+        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, fileContent);
         transactionalFeature.nextTransaction();
-        DocumentModelList res = session.query("SELECT * FROM Document WHERE ecm:fulltext = 'foo'");
+        DocumentModelList res = session.query(String.format("SELECT * FROM Document WHERE ecm:fulltext = '%s'", fileContent));
         assertEquals(1, res.size());
 
         documentModel = service.moveToColdStorage(session, documentModel.getRef());
@@ -377,7 +378,7 @@ public abstract class AbstractTestColdStorageService {
         coreFeature.getStorageConfiguration().waitForFulltextIndexing();
 
         // Assert binary text has not been erased after doc sent to cold storage
-        res = session.query("SELECT * FROM Document WHERE ecm:fulltext = 'foo'");
+        res = session.query(String.format("SELECT * FROM Document WHERE ecm:fulltext = '%s'", fileContent));
         assertEquals(1, res.size());
     }
 
@@ -391,7 +392,7 @@ public abstract class AbstractTestColdStorageService {
     protected DocumentModel moveAndVerifyContent(CoreSession session, DocumentRef ref) throws IOException {
         DocumentModel documentModel = service.moveToColdStorage(session, ref);
         transactionalFeature.nextTransaction();
-        return verifyContent(session, documentModel.getRef(), FILE_CONTENT);
+        return verifyContent(session, documentModel.getRef(), FILE_CONTENT + System.currentTimeMillis());
     }
 
     protected DocumentModel verifyContent(CoreSession session, DocumentRef documentRef, String expectedContent)
@@ -422,13 +423,13 @@ public abstract class AbstractTestColdStorageService {
     }
 
     protected DocumentModel createFileDocument(String name, boolean addBlobContent, ACE... aces) {
-        return createFileDocument(name, addBlobContent ? Blobs.createBlob(FILE_CONTENT) : null, aces);
+        return createFileDocument(name, addBlobContent ? FILE_CONTENT + System.currentTimeMillis() : null, aces);
     }
 
-    protected DocumentModel createFileDocument(String name, Blob blob, ACE... aces) {
+    protected DocumentModel createFileDocument(String name, String content, ACE... aces) {
         DocumentModel documentModel = session.createDocumentModel("/", name, "File");
-        if (blob != null) {
-            documentModel.setPropertyValue("file:content", (Serializable) blob);
+        if (content != null) {
+            documentModel.setPropertyValue("file:content", (Serializable) Blobs.createBlob(content));
         }
         DocumentModel document = session.createDocument(documentModel);
         if (aces.length > 0) {
