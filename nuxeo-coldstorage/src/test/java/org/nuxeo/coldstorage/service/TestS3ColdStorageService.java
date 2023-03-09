@@ -44,25 +44,26 @@ public class TestS3ColdStorageService extends AbstractTestColdStorageService {
 
     @Test
     public void shouldMoveToColdStorageIfBlobAlreadyIs() throws IOException {
-        Blob blob = Blobs.createBlob(FILE_CONTENT);
+        final String fileContent = FILE_CONTENT + System.currentTimeMillis();
+        Blob blob = Blobs.createBlob(fileContent);
         // First doc with given content
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, blob);
+        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, fileContent);
         blob = (Blob) documentModel.getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY);
         moveAndVerifyContent(session, documentModel.getRef());
 
         // Second doc with same content
-        documentModel = createFileDocument(DEFAULT_DOC_NAME + "_bis", blob);
+        documentModel = createFileDocument(DEFAULT_DOC_NAME + "_bis", fileContent);
         transactionalFeature.nextTransaction();
-        verifyContent(session, documentModel.getRef(), FILE_CONTENT);
+        verifyContent(session, documentModel.getRef(), fileContent);
 
         // Third doc with blob edit
-        documentModel = createFileDocument(DEFAULT_DOC_NAME + "_ter", Blobs.createBlob(FILE_CONTENT + "_ter"));
+        documentModel = createFileDocument(DEFAULT_DOC_NAME + "_ter", fileContent + "_ter");
         documentModel = session.getDocument(documentModel.getRef());
         assertFalse(documentModel.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME));
         documentModel.setPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY, (Serializable) blob);
         session.saveDocument(documentModel);
         transactionalFeature.nextTransaction();
-        verifyContent(session, documentModel.getRef(), FILE_CONTENT);
+        verifyContent(session, documentModel.getRef(), fileContent);
     }
 
     @Override
