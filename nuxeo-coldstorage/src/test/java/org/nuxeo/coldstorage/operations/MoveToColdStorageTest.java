@@ -129,12 +129,12 @@ public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
 
     @Test
     public void shouldFailMoveDocsToColdStorage() throws OperationException, IOException {
-        DocumentModel underLegalHold = createFileDocument(session, true);
+        DocumentModel underLegalHold = createFileDocument(session, "MyFile1", true);
         session.makeRecord(underLegalHold.getRef());
         session.setLegalHold(underLegalHold.getRef(), true, "any comment");
-        List<DocumentModel> documents = Arrays.asList(createFileDocument(session, true), //
+        List<DocumentModel> documents = Arrays.asList(createFileDocument(session, "MyFile2", true), //
                 underLegalHold, //
-                createFileDocument(session, true));
+                createFileDocument(session, "MyFile3", true));
         transactionalFeature.nextTransaction();
         try {
             moveContentToColdStorage(session, documents);
