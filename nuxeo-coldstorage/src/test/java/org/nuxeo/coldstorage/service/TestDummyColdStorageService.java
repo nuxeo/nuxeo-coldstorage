@@ -130,7 +130,7 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         assertTrue(status.isCompleted());
         assertEquals(1, status.getErrorCount());
         for (DocumentModel doc : docs) {
-            verifyContent(session, doc.getRef(), fileContent);
+            assertSentToColdStorage(session, doc.getRef());
         }
     }
 
@@ -190,10 +190,10 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
 
         // Moving the 2 first document to cold storage should moved all the other ones
         for (DocumentModel doc : list1) {
-            verifyContent(userSession, doc.getRef(), fileContent);
+            assertSentToColdStorage(userSession, doc.getRef());
         }
         for (DocumentModel doc : list2) {
-            verifyContent(userSession, doc.getRef(), fileContent + fileContent);
+            assertSentToColdStorage(userSession, doc.getRef());
         }
 
         // Restore only the 2 first doc
@@ -204,10 +204,10 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         // Restoring the first document to cold storage should restore all the other ones
         coreFeature.waitForAsyncCompletion();
         for (DocumentModel doc : list1) {
-            verifyRestore(doc.getRef(), fileContent);
+            assertRestoredFromColdStorage(doc.getRef(), fileContent);
         }
         for (DocumentModel doc : list2) {
-            verifyRestore(doc.getRef(), fileContent + fileContent);
+            assertRestoredFromColdStorage(doc.getRef(), fileContent + fileContent);
         }
         // The BAF in charge of moving and restoring the other documents should be silent
         List<String> caughtEvents = logResult.getCaughtEventMessages();
@@ -235,7 +235,7 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         CoreSession userSession = CoreInstance.getCoreSession(documentModel.getRepositoryName(), "john");
         documentModel = moveAndRestore(documentModel);
         waitForRetrieve();
-        documentModel = verifyRestore(documentModel.getRef(), blobContent);
+        documentModel = assertRestoredFromColdStorage(documentModel.getRef(), blobContent);
         moveAndVerifyContent(userSession, documentModel.getRef());
     }
 
@@ -302,7 +302,7 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, fileContent);
         documentModel = moveAndRestore(documentModel);
         waitForRetrieve();
-        verifyRestore(documentModel.getRef(), fileContent);
+        assertRestoredFromColdStorage(documentModel.getRef(), fileContent);
     }
 
     @Test
