@@ -32,8 +32,11 @@ import static org.junit.Assume.assumeTrue;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_BEING_RETRIEVED_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_FACET_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_TO_BE_RESTORED_PROPERTY;
+import static org.nuxeo.coldstorage.ColdStorageConstants.FILE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.events.PreventColdStorageUpdateListener.DISABLE_PREVENT_COLD_STORAGE_UPDATE_LISTENER;
+import static org.nuxeo.ecm.platform.thumbnail.ThumbnailConstants.DISABLE_THUMBNAIL_COMPUTATION;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -73,7 +76,6 @@ import org.nuxeo.ecm.core.blob.SimpleManagedBlob;
 import org.nuxeo.ecm.core.io.download.DownloadService;
 import org.nuxeo.ecm.core.test.CoreFeature;
 import org.nuxeo.ecm.core.test.StorageConfiguration;
-import org.nuxeo.ecm.platform.thumbnail.ThumbnailConstants;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.FeaturesRunner;
 import org.nuxeo.runtime.test.runner.TransactionalFeature;
@@ -212,8 +214,7 @@ public abstract class AbstractTestColdStorageService {
         // request a retrieval from the cold storage
         documentModel = service.retrieveFromColdStorage(session, documentModel.getRef(), RESTORE_DURATION);
 
-        assertEquals(Boolean.TRUE,
-                documentModel.getPropertyValue(ColdStorageConstants.COLD_STORAGE_BEING_RETRIEVED_PROPERTY));
+        assertEquals(Boolean.TRUE, documentModel.getPropertyValue(COLD_STORAGE_BEING_RETRIEVED_PROPERTY));
     }
 
     @Test
@@ -303,7 +304,7 @@ public abstract class AbstractTestColdStorageService {
 
         // we cannot update the main content as it is already in cold storage
         documentModel.refresh();
-        documentModel.removeFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME);
+        documentModel.removeFacet(COLD_STORAGE_FACET_NAME);
         try {
             session.saveDocument(documentModel);
             fail("Should fail because a main content document in cold storage cannot be updated.");
@@ -349,10 +350,10 @@ public abstract class AbstractTestColdStorageService {
         assertEquals(originalThumbnail.getKey(), thumbnailUpdateOne.getKey());
 
         // Emulate the case where the content is updated
-        documentModel.setPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY, (Serializable) thumbnailUpdateOne);
+        documentModel.setPropertyValue(FILE_CONTENT_PROPERTY, (Serializable) thumbnailUpdateOne);
 
         // shouldn't recompute the thumbnail
-        documentModel.putContextData(ThumbnailConstants.DISABLE_THUMBNAIL_COMPUTATION, true);
+        documentModel.putContextData(DISABLE_THUMBNAIL_COMPUTATION, true);
 
         // Only for tests purposes
         documentModel.putContextData(DISABLE_PREVENT_COLD_STORAGE_UPDATE_LISTENER, true);
@@ -467,8 +468,7 @@ public abstract class AbstractTestColdStorageService {
 
     protected BlobStatus getColdContentStatus(DocumentRef documentRef) throws IOException {
         ManagedBlob coldContent = (ManagedBlob) session.getDocument(documentRef)
-                                                       .getPropertyValue(
-                                                               ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY);
+                                                       .getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
 
         return getStatus(coldContent);
     }
