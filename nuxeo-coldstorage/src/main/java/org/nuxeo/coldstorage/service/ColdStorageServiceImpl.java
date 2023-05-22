@@ -47,6 +47,7 @@ import static org.nuxeo.coldstorage.ColdStorageConstants.FILE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.GET_DOCUMENTS_TO_CHECK_QUERY;
 import static org.nuxeo.coldstorage.events.CheckAlreadyInColdStorageListener.DISABLE_CHECK_ALREADY_IN_COLD_STORAGE_LISTENER;
 import static org.nuxeo.coldstorage.events.PreventColdStorageUpdateListener.DISABLE_PREVENT_COLD_STORAGE_UPDATE_LISTENER;
+import static org.nuxeo.ecm.core.api.CoreSession.ALLOW_VERSION_WRITE;
 import static org.nuxeo.ecm.core.api.versioning.VersioningService.DISABLE_AUTOMATIC_VERSIONING;
 
 import java.io.IOException;
@@ -439,6 +440,9 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
     public DocumentModel proceedRestoreMainContent(CoreSession session, DocumentModel documentModel, boolean notify,
             boolean propagate) {
         Blob coldContent = (Blob) documentModel.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
+        if (coldContent == null) {
+            throw new NuxeoException(String.format("Cold content is null for document: %s", documentModel.getId()));
+        }
         try {
             String key = getContentBlobKey(coldContent);
             BlobUpdateContext updateContext = new BlobUpdateContext(key).withColdStorageClass(false);
@@ -456,6 +460,9 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
 
         // Disable main and ColdStorage storage contents check otherwise, the restore action won't be allowed
         documentModel.putContextData(DISABLE_PREVENT_COLD_STORAGE_UPDATE_LISTENER, true);
+        if (documentModel.isVersion()) {
+            documentModel.putContextData(ALLOW_VERSION_WRITE, true);
+        }
         documentModel = session.saveDocument(documentModel);
         documentModel.removeFacet(COLD_STORAGE_FACET_NAME);
 
@@ -464,6 +471,9 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         documentModel.putContextData(DISABLE_PREVENT_COLD_STORAGE_UPDATE_LISTENER, true);
         documentModel.putContextData(DISABLE_CHECK_ALREADY_IN_COLD_STORAGE_LISTENER, true);
         documentModel.putContextData(DISABLE_AUTOMATIC_VERSIONING, true);
+        if (documentModel.isVersion()) {
+            documentModel.putContextData(ALLOW_VERSION_WRITE, true);
+        }
         documentModel = session.saveDocument(documentModel);
 
         if (propagate) {
