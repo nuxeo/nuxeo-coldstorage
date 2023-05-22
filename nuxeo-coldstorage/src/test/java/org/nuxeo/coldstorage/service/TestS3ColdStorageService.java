@@ -54,7 +54,7 @@ public class TestS3ColdStorageService extends AbstractTestColdStorageService {
         // Second doc with same content
         documentModel = createFileDocument(DEFAULT_DOC_NAME + "_bis", fileContent);
         transactionalFeature.nextTransaction();
-        verifyContent(session, documentModel.getRef(), fileContent);
+        assertSentToColdStorage(session, documentModel.getRef());
 
         // Third doc with blob edit
         documentModel = createFileDocument(DEFAULT_DOC_NAME + "_ter", fileContent + "_ter");
@@ -63,7 +63,7 @@ public class TestS3ColdStorageService extends AbstractTestColdStorageService {
         documentModel.setPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY, (Serializable) blob);
         session.saveDocument(documentModel);
         transactionalFeature.nextTransaction();
-        verifyContent(session, documentModel.getRef(), fileContent);
+        assertSentToColdStorage(session, documentModel.getRef());
     }
 
     @Override
