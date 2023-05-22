@@ -70,6 +70,7 @@ import org.nuxeo.ecm.core.api.event.CoreEventConstants;
 import org.nuxeo.ecm.core.api.security.ACE;
 import org.nuxeo.ecm.core.api.security.SecurityConstants;
 import org.nuxeo.ecm.core.blob.BlobStatus;
+import org.nuxeo.ecm.core.blob.BlobUpdateContext;
 import org.nuxeo.ecm.core.blob.ManagedBlob;
 import org.nuxeo.ecm.core.bulk.BulkService;
 import org.nuxeo.ecm.core.bulk.message.BulkCommand;
@@ -330,6 +331,48 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         // Second doc with same content
         documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
         moveAndVerifyContent(session, documentModel.getRef());
+    }
+
+    // NXP-31874
+    @Test
+    public void shouldRestoreOnRetrieveIfBlobAlreadyRestored() throws IOException {
+        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
+
+        // move the blob to cold storage
+        documentModel = service.moveToColdStorage(session, documentModel.getRef());
+
+        // Let's mock a document sent to ColdStorage but somehow its blob has been restored independently
+        ManagedBlob coldContent = (ManagedBlob) documentModel.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
+        DummyBlobProvider blobProvider = (DummyBlobProvider) blobManager.getBlobProvider(coldContent.getProviderId());
+        String key = ColdStorageServiceImpl.getContentBlobKey(coldContent);
+        BlobUpdateContext updateContext = new BlobUpdateContext(key).withColdStorageClass(false);
+        blobProvider.updateBlob(updateContext);
+
+        // request a retrieval from the cold storage
+        service.retrieveFromColdStorage(session, documentModel.getRef(), RESTORE_DURATION);
+
+        // The nuxeo document has been restored automagically instead
+        verifyRestore(documentModel.getRef(), FILE_CONTENT);
+    }
+
+    // NXP-31874
+    @Test
+    public void shouldRestoreOnRestoreIfBlobAlreadyRestored() throws IOException {
+        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
+
+        // move the blob to cold storage
+        documentModel = service.moveToColdStorage(session, documentModel.getRef());
+
+        // Let's mock a document sent to ColdStorage but somehow its blob has been restored independently
+        ManagedBlob coldContent = (ManagedBlob) documentModel.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
+        DummyBlobProvider blobProvider = (DummyBlobProvider) blobManager.getBlobProvider(coldContent.getProviderId());
+        String key = ColdStorageServiceImpl.getContentBlobKey(coldContent);
+        BlobUpdateContext updateContext = new BlobUpdateContext(key).withColdStorageClass(false);
+        blobProvider.updateBlob(updateContext);
+
+        // request a restore from the cold storage
+        service.restoreFromColdStorage(session, documentModel.getRef());
+        verifyRestore(documentModel.getRef(), FILE_CONTENT);
     }
 
     // NXP-31865
