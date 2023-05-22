@@ -211,7 +211,7 @@ public abstract class AbstractTestColdStorageService {
         assertEquals(Boolean.TRUE,
                 documentModel.getPropertyValue(ColdStorageConstants.COLD_STORAGE_BEING_RETRIEVED_PROPERTY));
     }
-
+    
     @Test
     public void shouldFailRequestRetrievalBeingRetrieved() {
         DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
