@@ -32,9 +32,11 @@ import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_DO
 import static org.nuxeo.coldstorage.ColdStorageConstants.WRITE_COLD_STORAGE;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_DOWNLOAD_EVENT_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY;
+import static org.nuxeo.coldstorage.ColdStorageConstants.FILE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.GET_DOCUMENTS_TO_CHECK_QUERY;
 import static org.nuxeo.ecm.core.api.security.SecurityConstants.READ;
 import static org.nuxeo.ecm.core.api.security.SecurityConstants.WRITE;
+import static org.nuxeo.ecm.core.api.versioning.VersioningService.VERSIONING_OPTION;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -63,6 +65,7 @@ import org.nuxeo.ecm.core.api.Blobs;
 import org.nuxeo.ecm.core.api.CloseableCoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentRef;
+import org.nuxeo.ecm.core.api.VersioningOption;
 import org.nuxeo.ecm.core.api.event.CoreEventConstants;
 import org.nuxeo.ecm.core.api.security.ACE;
 import org.nuxeo.ecm.core.api.security.SecurityConstants;
@@ -327,6 +330,40 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         // Second doc with same content
         documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
         moveAndVerifyContent(session, documentModel.getRef());
+    }
+
+    // NXP-31865
+    @Test
+    public void shouldMoveAndRestoreVersionsWithSameColdStorageContent() throws InterruptedException, IOException {
+        DocumentModel documentModel = session.createDocumentModel("/", "FileWithVersions", "File");
+        String content = FILE_CONTENT;
+        Blob blob = Blobs.createBlob(content);
+        blob.setDigest(UUID.randomUUID().toString());
+        documentModel.setPropertyValue(FILE_CONTENT_PROPERTY, (Serializable) blob);
+        documentModel = session.createDocument(documentModel);
+        documentModel.putContextData(VERSIONING_OPTION, VersioningOption.valueOf("MINOR"));
+        documentModel = session.saveDocument(documentModel);
+
+        List<DocumentModel> versions = session.getVersions(documentModel.getRef());
+        assertEquals(1, versions.size());
+        DocumentModel version = versions.get(0);
+
+        transactionalFeature.nextTransaction();
+
+        // first make the move to cold storage
+        documentModel = service.moveToColdStorage(session, documentModel.getRef());
+
+        coreFeature.waitForAsyncCompletion();
+
+        verifyContent(session, documentModel.getRef(), FILE_CONTENT);
+        verifyContent(session, version.getRef(), FILE_CONTENT);
+
+        documentModel = service.restoreFromColdStorage(session, documentModel.getRef());
+
+        waitForRetrieve();
+        verifyRestore(documentModel.getRef(), FILE_CONTENT);
+        coreFeature.waitForAsyncCompletion();
+        verifyRestore(version.getRef(), FILE_CONTENT);
     }
 
     protected void waitForRetrieve() throws InterruptedException {

@@ -336,74 +336,8 @@ public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
         assertEquals(0, documents.size());
 
         // Check the ColdStorage content for each version
-        query = String.format(
-                "SELECT * FROM Document WHERE  ecm:isVersion = 1 AND ecm:versionVersionableId = '%s' "
-                        + "AND coldstorage:coldContent/digest = '%s'",
-                documentModel.getId(), blobDigest);
-        documents = session.query(query);
-        assertNotEquals(0, documents.size());
-        checkMoveContents(documentModel, documents);
-    }
-
-    @Test
-    public void shouldMoveVersionsWithSameColdStorageContent() throws IOException, OperationException {
-        DocumentModel documentModel = session.createDocumentModel("/", "MyFile1", "File");
-        Blob initialBlob = Blobs.createBlob("Initial Blob");
-        initialBlob.setDigest(UUID.randomUUID().toString());
-        documentModel.setPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY, (Serializable) initialBlob);
-        session.createDocument(documentModel);
-        documentModel.putContextData(VersioningService.VERSIONING_OPTION, VersioningOption.valueOf("MINOR"));
-        documentModel = session.saveDocument(documentModel);
-
-        transactionalFeature.nextTransaction();
-
-        // Update the blob content
-        Blob updatedBlob = Blobs.createBlob(FILE_CONTENT);
-        updatedBlob.setDigest(UUID.randomUUID().toString());
-        documentModel.setPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY, (Serializable) updatedBlob);
-        documentModel.putContextData(VersioningService.VERSIONING_OPTION, VersioningOption.valueOf("MINOR"));
-        documentModel = session.saveDocument(documentModel);
-
-        transactionalFeature.nextTransaction();
-
-        // Update the document title
-        documentModel.setPropertyValue("dc:title", "AAA");
-        documentModel.putContextData(VersioningService.VERSIONING_OPTION, VersioningOption.valueOf("MINOR"));
-        documentModel = session.saveDocument(documentModel);
-
-        transactionalFeature.nextTransaction();
-
-        String blobDigest = ((Blob) documentModel.getPropertyValue(
-                ColdStorageConstants.FILE_CONTENT_PROPERTY)).getDigest();
-
-        // Check if we have the expected number of versions
-        String query = String.format(
-                "SELECT * FROM Document WHERE  ecm:isVersion = 1 AND ecm:versionVersionableId = '%s'",
-                documentModel.getId());
-        List<DocumentModel> documents = session.query(query);
-        assertEquals(3, documents.size());
-
-        query = String.format(
-                "SELECT * FROM Document WHERE  ecm:isVersion = 1 "
-                        + "AND ecm:versionVersionableId = '%s' AND file:content/digest = '%s'",
-                documentModel.getId(), blobDigest);
-        documents = session.query(query);
-        assertEquals(2, documents.size());
-
-        // first make the move to cold storage
-        documentModel = moveContentToColdStorage(session, documentModel);
-
-        coreFeature.waitForAsyncCompletion();
-
-        // Check if all the versions have been moved to ColdStorage
-        documents = session.query(query);
-        assertEquals(0, documents.size());
-
-        // Check the ColdStorage content for each version
-        query = String.format(
-                "SELECT * FROM Document WHERE  ecm:isVersion = 1 AND ecm:versionVersionableId = '%s' "
-                        + "AND coldstorage:coldContent/digest = '%s'",
-                documentModel.getId(), blobDigest);
+        query = String.format("SELECT * FROM Document WHERE  ecm:isVersion = 1 AND ecm:versionVersionableId = '%s' "
+                + "AND coldstorage:coldContent/digest = '%s'", documentModel.getId(), blobDigest);
         documents = session.query(query);
         assertNotEquals(0, documents.size());
         checkMoveContents(documentModel, documents);
