@@ -256,7 +256,8 @@ public abstract class AbstractTestColdStorageService {
         DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
         moveAndVerifyContent(session, documentModel.getRef());
         ManagedBlob expectedColdContent = (ManagedBlob) session.getDocument(documentModel.getRef())
-                                                 .getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY);
+                                                               .getPropertyValue(
+                                                                       ColdStorageConstants.FILE_CONTENT_PROPERTY);
 
         // we cannot update the main content as it is already in cold storage
         documentModel.refresh();
@@ -270,7 +271,8 @@ public abstract class AbstractTestColdStorageService {
             assertEquals(String.format("Cannot edit content of cold storage document %s", documentModel),
                     e.getMessage());
             ManagedBlob actualColdContent = (ManagedBlob) session.getDocument(documentModel.getRef())
-                                                   .getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY);
+                                                                 .getPropertyValue(
+                                                                         ColdStorageConstants.FILE_CONTENT_PROPERTY);
             assertEquals(expectedColdContent.getKey(), actualColdContent.getKey());
         }
 
@@ -307,9 +309,7 @@ public abstract class AbstractTestColdStorageService {
             fail("Should fail because a main content document in cold storage cannot be updated.");
         } catch (NuxeoException e) {
             assertEquals(SC_FORBIDDEN, e.getStatusCode());
-            assertEquals(
-                    String.format("Cannot remove cold storage facet from document %s",
-                            documentModel),
+            assertEquals(String.format("Cannot remove cold storage facet from document %s", documentModel),
                     e.getMessage());
         }
     }
