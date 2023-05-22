@@ -323,7 +323,21 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         BlobStatus blobStatus = ColdStorageHelper.getBlobStatus(documentModel);
         Function<DocumentModel, Boolean> doNotify;
         DocumentModel docResult = null;
+        Blob coldContent = (Blob) documentModel.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
+        String key = getContentBlobKey(coldContent);
         if (ColdStorageHelper.isDownloadable(blobStatus)) {
+            Instant downloadableUntil = blobStatus.getDownloadableUntil();
+            if (downloadableUntil == null) {
+                // Blob is restored but the doc is not, maybe restore propagation is in progress
+                // Let's restore the doc in a consistent state
+                log.warn(
+                        "Cold content blob: {} of document: {} is already restored. Restoring the Nuxeo document instead of retrieving.",
+                        key, documentRef);
+                DocumentModel restored = proceedRestoreMainContent(session, documentModel, false, false);
+                // Fire event for audit purpose
+                fireEvent(restored, restored.getCoreSession(), COLD_STORAGE_CONTENT_TO_RESTORE_EVENT_NAME);
+                return restored;
+            }
             documentModel.setPropertyValue(COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL,
                     Date.from(blobStatus.getDownloadableUntil()));
             doNotify = doc -> false;
@@ -332,8 +346,6 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
             doNotify = doc -> true;
         } else {
             try {
-                Blob coldContent = (Blob) documentModel.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
-                String key = getContentBlobKey(coldContent);
                 BlobUpdateContext updateContext = new BlobUpdateContext(key).withRestoreForDuration(restoreDuration);
                 Framework.getService(BlobManager.class).getBlobProvider(coldContent).updateBlob(updateContext);
             } catch (IOException e) {
