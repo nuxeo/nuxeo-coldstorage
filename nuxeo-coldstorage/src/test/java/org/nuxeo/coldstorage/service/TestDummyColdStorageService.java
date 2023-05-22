@@ -23,8 +23,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_BEING_RETRIEVED_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CHECK_CONTENT_AVAILABILITY_EVENT_NAME;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_ARCHIVE_LOCATION_MAIL_TEMPLATE_KEY;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_UNTIL_MAIL_TEMPLATE_KEY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_DOWNLOAD_EVENT_NAME;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY;
+import static org.nuxeo.coldstorage.ColdStorageConstants.GET_DOCUMENTS_TO_CHECK_QUERY;
 import static org.nuxeo.ecm.core.api.security.SecurityConstants.READ;
 import static org.nuxeo.ecm.core.api.security.SecurityConstants.WRITE;
 import static org.nuxeo.ecm.core.api.security.SecurityConstants.WRITE_COLD_STORAGE;
@@ -49,7 +56,6 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.LogEvent;
 import org.junit.Test;
-import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.coldstorage.ColdStorageHelper;
 import org.nuxeo.coldstorage.DummyColdStorageFeature;
 import org.nuxeo.coldstorage.action.MoveToColdStorageContentAction;
@@ -139,10 +145,10 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
                                                              .withDownloadableUntil(downloadableUntil);
         addColdStorageContentBlobStatus(doc.getRef(), coldContentStatusOfFile);
         try (CapturingEventListener listener = new CapturingEventListener(DownloadService.EVENT_NAME,
-                ColdStorageConstants.COLD_STORAGE_CONTENT_DOWNLOAD_EVENT_NAME)) {
+                COLD_STORAGE_CONTENT_DOWNLOAD_EVENT_NAME)) {
             // let's mimic a download
             Map<String, Serializable> map = new HashMap<>();
-            map.put("blobXPath", ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY);
+            map.put("blobXPath", COLD_STORAGE_CONTENT_PROPERTY);
             DocumentEventContext ctx = new DocumentEventContext(session, session.getPrincipal(), doc);
             ctx.setProperty(CoreEventConstants.REPOSITORY_NAME, doc.getRepositoryName());
             ctx.setProperty("extendedInfos", (Serializable) map);
@@ -152,8 +158,7 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
             // and assert it is cancelled and a cold storage download event is fired instead
             assertEquals(2, listener.streamCapturedEvents().count());
             assertTrue(listener.findFirstCapturedEvent(DownloadService.EVENT_NAME).get().isCanceled());
-            assertTrue(listener.findFirstCapturedEvent(ColdStorageConstants.COLD_STORAGE_CONTENT_DOWNLOAD_EVENT_NAME)
-                               .isPresent());
+            assertTrue(listener.findFirstCapturedEvent(COLD_STORAGE_CONTENT_DOWNLOAD_EVENT_NAME).isPresent());
         }
     }
 
@@ -242,7 +247,7 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         DocumentRef docRef3 = moveAndRequestRetrievalFromColdStorage(DEFAULT_DOC_NAME + "3").getRef();
         transactionalFeature.nextTransaction();
 
-        List<DocumentModel> beingRetrievedDocs = session.query(ColdStorageConstants.GET_DOCUMENTS_TO_CHECK_QUERY);
+        List<DocumentModel> beingRetrievedDocs = session.query(GET_DOCUMENTS_TO_CHECK_QUERY);
         assertEquals(3, beingRetrievedDocs.size());
 
         Thread.sleep(DummyBlobProvider.RESTORE_DELAY_MILLISECONDS + 200);
@@ -253,22 +258,21 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         BlobStatus coldContentStatusOfFile3 = new BlobStatus().withDownloadable(false).withOngoingRestore(false);
         addColdStorageContentBlobStatus(docRef3, coldContentStatusOfFile3);
         coreFeature.waitForAsyncCompletion();
-        beingRetrievedDocs = session.query(ColdStorageConstants.GET_DOCUMENTS_TO_CHECK_QUERY);
+        beingRetrievedDocs = session.query(GET_DOCUMENTS_TO_CHECK_QUERY);
         assertEquals(3, beingRetrievedDocs.size());
 
-        try (CapturingEventListener listener = new CapturingEventListener(
-                ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME)) {
+        try (CapturingEventListener listener = new CapturingEventListener(COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME)) {
             service.checkDocToBeRetrieved(session);
             coreFeature.waitForAsyncCompletion();
 
-            beingRetrievedDocs = session.query(ColdStorageConstants.GET_DOCUMENTS_TO_CHECK_QUERY);
+            beingRetrievedDocs = session.query(GET_DOCUMENTS_TO_CHECK_QUERY);
             assertEquals(1, beingRetrievedDocs.size());
             assertEquals(docRef2, beingRetrievedDocs.get(0).getRef());
 
             DocumentModel doc1 = session.getDocument(docRef1);
             String serverUrl = NotificationServiceHelper.getNotificationService().getServerUrlPrefix();
             String expectedDownloadUrl = serverUrl + downloadService.getDownloadUrl(session.getRepositoryName(),
-                    doc1.getId(), ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY, null, null);
+                    doc1.getId(), COLD_STORAGE_CONTENT_PROPERTY, null, null);
             Serializable du = doc1.getPropertyValue(COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL);
             assertNotNull(du);
             Date downloadableUntil = ((Calendar) session.getDocument(
@@ -283,11 +287,10 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
 
                 assertEquals(String.format("An unexpected deadline for cold storage of document: %s", doc1), //
                         expectedDownloadableUntilInstant.toString(),
-                        properties.get(ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_UNTIL_MAIL_TEMPLATE_KEY));
+                        properties.get(COLD_STORAGE_CONTENT_AVAILABLE_UNTIL_MAIL_TEMPLATE_KEY));
 
                 assertEquals(String.format("An unexpected downloadable url for document: %s", doc1), //
-                        expectedDownloadUrl,
-                        properties.get(ColdStorageConstants.COLD_STORAGE_CONTENT_ARCHIVE_LOCATION_MAIL_TEMPLATE_KEY));
+                        expectedDownloadUrl, properties.get(COLD_STORAGE_CONTENT_ARCHIVE_LOCATION_MAIL_TEMPLATE_KEY));
             });
         }
 
@@ -315,8 +318,7 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         transactionalFeature.nextTransaction();
         documentModel.refresh();
 
-        assertEquals(Boolean.TRUE,
-                documentModel.getPropertyValue(ColdStorageConstants.COLD_STORAGE_BEING_RETRIEVED_PROPERTY));
+        assertEquals(Boolean.TRUE, documentModel.getPropertyValue(COLD_STORAGE_BEING_RETRIEVED_PROPERTY));
 
         assertEquals(Boolean.TRUE, ColdStorageHelper.getBlobStatus(documentModel).isOngoingRestore());
     }
@@ -342,8 +344,7 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
 
     protected void addColdStorageContentBlobStatus(DocumentRef documentRef, BlobStatus blobStatus) {
         ManagedBlob coldContent = (ManagedBlob) session.getDocument(documentRef)
-                                                       .getPropertyValue(
-                                                               ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY);
+                                                       .getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
 
         DummyBlobProvider blobProvider = (DummyBlobProvider) blobManager.getBlobProvider(coldContent.getProviderId());
         blobProvider.addStatus(coldContent, blobStatus);
