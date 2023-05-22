@@ -38,8 +38,11 @@ import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_RE
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_TO_RESTORE_EVENT_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_TO_RETRIEVE_EVENT_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_FACET_NAME;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_NUMBER_OF_DAYS_OF_AVAILABILITY_PROPERTY_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_THUMBNAIL_PREVIEW_REQUIRED_PROPERTY_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_TO_BE_RESTORED_PROPERTY;
+import static org.nuxeo.coldstorage.ColdStorageConstants.EVENT_CATEGORY;
+import static org.nuxeo.coldstorage.ColdStorageConstants.EVENT_CATEGORY_LABEL;
 import static org.nuxeo.coldstorage.ColdStorageConstants.FILE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.GET_DOCUMENTS_TO_CHECK_QUERY;
 import static org.nuxeo.coldstorage.events.CheckAlreadyInColdStorageListener.DISABLE_CHECK_ALREADY_IN_COLD_STORAGE_LISTENER;
@@ -60,7 +63,6 @@ import java.util.function.Function;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.coldstorage.ColdStorageHelper;
 import org.nuxeo.coldstorage.ColdStorageRenditionDescriptor;
 import org.nuxeo.coldstorage.action.CheckColdStorageAvailabilityAction;
@@ -159,10 +161,10 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
                 return;
             }
             try (Session dirSession = directoryService.getDirectory("eventCategories").getSession()) {
-                if (!dirSession.hasEntry(ColdStorageConstants.EVENT_CATEGORY)) {
+                if (!dirSession.hasEntry(EVENT_CATEGORY)) {
                     Map<String, Object> entry = new HashMap<>();
-                    entry.put("id", ColdStorageConstants.EVENT_CATEGORY);
-                    entry.put("label", ColdStorageConstants.EVENT_CATEGORY_LABEL);
+                    entry.put("id", EVENT_CATEGORY);
+                    entry.put("label", EVENT_CATEGORY_LABEL);
                     entry.put("obsolete", 0);
                     entry.put("ordering", 5);
                     dirSession.createEntry(entry);
@@ -555,7 +557,7 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
                 String fileName = ((Blob) doc.getProperty(COLD_STORAGE_CONTENT_PROPERTY).getValue()).getFilename();
                 String serverUrl = NotificationServiceHelper.getNotificationService().getServerUrlPrefix();
                 String downloadUrl = serverUrl + downloadService.getDownloadUrl(session.getRepositoryName(),
-                        doc.getId(), ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY, fileName, null);
+                        doc.getId(), COLD_STORAGE_CONTENT_PROPERTY, fileName, null);
                 ctx.getProperties().put(COLD_STORAGE_CONTENT_ARCHIVE_LOCATION_MAIL_TEMPLATE_KEY, downloadUrl);
                 eventService.fireEvent(ctx.newEvent(COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME));
             }
@@ -581,8 +583,7 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
 
     @Override
     public Duration getAvailabilityDuration() {
-        String value = Framework.getProperty(
-                ColdStorageConstants.COLD_STORAGE_NUMBER_OF_DAYS_OF_AVAILABILITY_PROPERTY_NAME, "1");
+        String value = Framework.getProperty(COLD_STORAGE_NUMBER_OF_DAYS_OF_AVAILABILITY_PROPERTY_NAME, "1");
         return Duration.ofDays(Integer.parseInt(value));
     }
 
@@ -590,7 +591,7 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         EventService eventService = Framework.getService(EventService.class);
         DocumentEventContext ctx = new DocumentEventContext(session, session.getPrincipal(), doc);
         ctx.setProperty(CoreEventConstants.REPOSITORY_NAME, session.getRepositoryName());
-        ctx.setProperty("category", ColdStorageConstants.EVENT_CATEGORY);
+        ctx.setProperty("category", EVENT_CATEGORY);
         Event event = ctx.newEvent(eventName);
         eventService.fireEvent(event);
     }
