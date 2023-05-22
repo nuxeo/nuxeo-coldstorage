@@ -81,11 +81,7 @@ public class PropagateRestoreFromColdStorageContentAction implements StreamProce
                     continue;
                 }
                 try {
-                    DocumentModel documentModel = service.proceedRestoreMainContent(session, document, false, false);
-                    if (documentModel.isVersion()) {
-                        documentModel.putContextData(CoreSession.ALLOW_VERSION_WRITE, true);
-                    }
-                    session.saveDocument(documentModel);
+                    service.proceedRestoreMainContent(session, document, false, false);
                 } catch (NuxeoException e) {
                     errorCount++;
                     delta.inError(String.format("Cannot propagate restore from cold storage for document %s: %s", document.getId(),
