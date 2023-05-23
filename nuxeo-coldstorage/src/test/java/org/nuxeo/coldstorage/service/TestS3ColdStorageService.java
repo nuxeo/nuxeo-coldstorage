@@ -22,6 +22,8 @@ package org.nuxeo.coldstorage.service;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -33,8 +35,11 @@ import org.nuxeo.ecm.blob.s3.S3BlobProviderFeature;
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.Blobs;
 import org.nuxeo.ecm.core.api.DocumentModel;
+import org.nuxeo.ecm.core.blob.BlobManager;
+import org.nuxeo.ecm.core.blob.BlobProvider;
 import org.nuxeo.ecm.core.blob.BlobStatus;
 import org.nuxeo.ecm.core.blob.ManagedBlob;
+import org.nuxeo.runtime.api.Framework;
 import org.nuxeo.runtime.test.runner.Features;
 
 import com.amazonaws.services.s3.model.StorageClass;
@@ -64,6 +69,29 @@ public class TestS3ColdStorageService extends AbstractTestColdStorageService {
         session.saveDocument(documentModel);
         transactionalFeature.nextTransaction();
         assertSentToColdStorage(session, documentModel.getRef());
+    }
+
+    @Test
+    public void shouldGCColdStorageDocumentBlob() throws IOException {
+        assumeTrue("MongoDB feature only", coreFeature.getStorageConfiguration().isDBS());
+        final String CONTENT = "hello world";
+        DocumentModel doc = session.createDocumentModel("/", "doc", "File");
+        doc.setPropertyValue("file:content", (Serializable) Blobs.createBlob(CONTENT));
+        doc = session.createDocument(doc);
+        session.saveDocument(doc);
+
+        moveAndVerifyContent(session, doc.getRef());
+
+        ManagedBlob blob = (ManagedBlob) doc.getPropertyValue("file:content");
+        BlobProvider blobProvider = Framework.getService(BlobManager.class).getBlobProvider(blob.getProviderId());
+        // Assert blob does exist
+        assertNotNull(blobProvider.getFile(blob));
+
+        session.removeDocument(doc.getRef());
+        coreFeature.waitForAsyncCompletion();
+
+        // Assert blob does not exist anymore
+        assertNull(blobProvider.getFile(blob));
     }
 
     @Override
