@@ -74,6 +74,7 @@ import org.nuxeo.ecm.core.api.CoreInstance;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentRef;
+import org.nuxeo.ecm.core.api.DocumentSecurityException;
 import org.nuxeo.ecm.core.api.NuxeoException;
 import org.nuxeo.ecm.core.api.NuxeoPrincipal;
 import org.nuxeo.ecm.core.api.event.CoreEventConstants;
@@ -238,22 +239,21 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         if (session.isUnderRetentionOrLegalHold(documentRef)) {
             log.debug("The document {} is under retention or legal hold and cannot be moved to cold storage",
                     () -> documentRef);
-            throw new NuxeoException(String.format(
+            throw new DocumentSecurityException(String.format(
                     "The document %s is under retention or legal hold and cannot be moved to cold storage",
-                    documentRef), SC_FORBIDDEN);
+                    documentRef));
         }
         if (!session.hasPermission(documentRef, SecurityConstants.WRITE_COLD_STORAGE)) {
-            log.debug("The user {} does not have the right permissions to move the content of document {}",
-                    session::getPrincipal, () -> documentModel);
-            throw new NuxeoException(String.format("The document: %s cannot be moved to cold storage", documentRef),
-                    SC_FORBIDDEN);
+            log.debug("User: {} is not authorized to move doc: {} to cold storage", session::getPrincipal,
+                    () -> documentModel);
+            throw new DocumentSecurityException(String.format(
+                    "User: %s is not authorized to move doc: %s to cold storage", session.getPrincipal(), documentRef));
         }
 
         if (documentModel.hasFacet(COLD_STORAGE_FACET_NAME)
                 && documentModel.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY) != null) {
-            throw new NuxeoException(
-                    String.format("The main content for document: %s is already in cold storage.", documentModel),
-                    SC_CONFLICT);
+            log.info("The main content for document: {} is already in cold storage.", documentModel::getId);
+            return documentModel;
         }
 
         Serializable mainContent = documentModel.getPropertyValue(FILE_CONTENT_PROPERTY);
