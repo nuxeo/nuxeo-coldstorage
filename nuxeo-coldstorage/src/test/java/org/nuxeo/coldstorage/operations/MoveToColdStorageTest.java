@@ -21,7 +21,6 @@
 
 package org.nuxeo.coldstorage.operations;
 
-import static javax.servlet.http.HttpServletResponse.SC_CONFLICT;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import static javax.servlet.http.HttpServletResponse.SC_PRECONDITION_FAILED;
@@ -151,17 +150,12 @@ public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
     }
 
     @Test
-    public void shouldFailMoveAlreadyInColdStorage() throws OperationException, IOException {
+    public void shouldNotFailMoveAlreadyInColdStorage() throws OperationException, IOException {
         DocumentModel documentModel = createFileDocument(session, true);
         // make a move
         moveContentToColdStorage(session, documentModel);
-        try {
-            // try to make a second move
-            moveContentToColdStorage(session, documentModel);
-            fail("Should fail because the content is already in cold storage");
-        } catch (NuxeoException e) {
-            assertEquals(SC_CONFLICT, e.getStatusCode());
-        }
+        // make a 2nd move
+        moveContentToColdStorage(session, documentModel);
     }
 
     @Test
