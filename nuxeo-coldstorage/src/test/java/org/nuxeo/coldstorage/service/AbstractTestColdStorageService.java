@@ -19,7 +19,6 @@
 
 package org.nuxeo.coldstorage.service;
 
-import static javax.servlet.http.HttpServletResponse.SC_CONFLICT;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import static org.junit.Assert.assertEquals;
@@ -137,21 +136,14 @@ public abstract class AbstractTestColdStorageService {
     }
 
     @Test
-    public void shouldFailMoveAlreadyInColdStorage() {
+    public void shouldNotFailMoveAlreadyInColdStorage() {
         DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
 
         // move for the first time
         documentModel = service.moveToColdStorage(session, documentModel.getRef());
 
         // try to make another move
-        try {
-            service.moveToColdStorage(session, documentModel.getRef());
-            fail("Should fail because the content is already in cold storage");
-        } catch (NuxeoException e) {
-            assertEquals(SC_CONFLICT, e.getStatusCode());
-            assertEquals(String.format("The main content for document: %s is already in cold storage.", documentModel),
-                    e.getMessage());
-        }
+        service.moveToColdStorage(session, documentModel.getRef());
     }
 
     @Test
