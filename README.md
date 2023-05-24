@@ -78,13 +78,12 @@ Here, despite being under the same ecosystem, the contributions use different ap
 mvn test
 ```
 
-A couple of unit test classes are designed to run with a blob provider using a real s3 bucket. In order to run them locally, you must define the following environment variables:
- - `AWS_ACCESS_KEY_ID`
- - `AWS_SECRET_KEY`
- - `AWS_SESSION_TOKEN` (optional depending on your aws credentials type)
- - `COLDSTORAGE_AWS_REGION`
- - `COLDSTORAGE_AWS_MAIN_BUCKET_NAME`
- - `COLDSTORAGE_AWS_BUCKET_PREFIX`
+A couple of unit test classes are designed to run with a blob provider using a real s3 bucket. In order to run them locally, you must define the following system properties:
+ - `nuxeo.s3storage.awsid` : your AWS_ACCESS_KEY_ID
+ - `nuxeo.s3storage.awssecret` : your AWS_SECRET_ACCESS_KEY
+ - `nuxeo.test.s3storage.awstoken` : optional depending on your aws credentials type
+ - `nuxeo.test.s3storage.region`: your AWS_REGION
+ - `nuxeo.s3storage.bucket` : the name of the S3 bucket
 
 ### Frontend Contribution
 
