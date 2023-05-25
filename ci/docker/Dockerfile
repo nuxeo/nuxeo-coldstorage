@@ -1,4 +1,4 @@
-ARG NUXEO_VERSION=10.10-HF61
+ARG NUXEO_VERSION=10.10-HF72
 
 FROM docker-private.packages.nuxeo.com/nuxeo/nuxeo:${NUXEO_VERSION}
 
