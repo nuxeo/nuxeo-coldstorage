@@ -34,6 +34,7 @@ Create the following db indexes for an optimal functioning of the addon:
  - `coldstorage:beingRetrieved`
  - `coldstorage:coldContent/digest`
  - `file:content/digest`
+ - `ecm:mixinTypes`
 
  Typically on MongoDB:
  ```
@@ -49,6 +50,10 @@ Create the following db indexes for an optimal functioning of the addon:
  db.default.createIndex(
     { "coldstorage:coldContent.digest": 1 }
  );
+
+ db.default.createIndex(
+   { "ecm:mixinTypes": 1 }
+);
  ```
 
 ## Configuration properties
