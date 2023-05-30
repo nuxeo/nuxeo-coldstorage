@@ -29,6 +29,7 @@
     </streamProcessor>
     <streamProcessor name="checkColdStorageAvailability" logConfig="bulk"
       class="org.nuxeo.coldstorage.action.CheckColdStorageAvailabilityAction"
+      defaultScroller="${nuxeo.bulk.action.checkColdStorageAvailability.scroller:=default}"
       defaultConcurrency="${nuxeo.bulk.action.checkColdStorageAvailability.defaultConcurrency:=2}"
       defaultPartitions="${nuxeo.bulk.action.checkColdStorageAvailability.defaultPartitions:=4}">
       <policy name="default" maxRetries="3" delay="1s" maxDelay="10s" continueOnFailure="true" />
