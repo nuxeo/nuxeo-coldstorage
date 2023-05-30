@@ -51,6 +51,13 @@ Create the following db indexes for an optimal functioning of the addon:
  );
  ```
 
+## Configuration properties
+
+ - `nuxeo.coldstorage.check.retrieve.state.cronExpression` :  cron expression to define the frequency of the execution of the process to check if a document has been retrieved. Default value is `0 7 * ? * * *` i.e. every hour at the 7th minute.
+ - `nuxeo.bulk.action.checkColdStorageAvailability.scroller` : scroller implementation to be used to query documents being retrieved. `elastic` value can be set to relieve the regular back-end.
+ - `nuxeo.coldstorage.numberOfDaysOfAvailability.value.default` : number of days a document remains available once it has been retrieved. Default value is `1`.
+ - `nuxeo.coldstorage.thumbnailPreviewRequired` : is a thumbnail required to be used as a place holder to send a document to Cold Storage. Default value is `true`.
+
 ### Frontend Contribution
 
 `nuxeo-coldstorage-web` module is also generating a _`.jar`_ file containing all the artifacts needed for an integration with Nuxeo's ecosystem.
