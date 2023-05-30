@@ -191,6 +191,20 @@ suite('Cold Storage', () => {
         expect(isElementVisible(button)).to.be.false;
       });
 
+      test('Should not visible when at least one of the documents is a version', async () => {
+        documents[0].isVersion = true;
+        button = await fixture(
+          html`
+            <nuxeo-move-contents-to-coldstorage-button
+              .documents=${documents}
+            ></nuxeo-move-contents-to-coldstorage-button>
+          `,
+        );
+
+        await flush();
+        expect(isElementVisible(button)).to.be.false;
+      });
+
       test(
         "Should not visible when at least one of the documents selected doesn't have " +
           '"WriteColdStorage" permission',

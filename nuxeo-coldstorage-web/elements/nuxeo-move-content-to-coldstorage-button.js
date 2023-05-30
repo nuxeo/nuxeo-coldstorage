@@ -93,6 +93,7 @@ class MoveToColdStorage extends mixinBehaviors([FiltersBehavior, FormatBehavior]
 
   _isAvailable(document, currentUser) {
     return (
+      !this.isVersion(document) &&
       !this.isUnderRetentionOrLegalHold(document) &&
       !this.hasFacet(document, 'ColdStorage') &&
       (this.hasAdministrationPermissions(currentUser) || this.hasPermission(document, 'WriteColdStorage')) &&
