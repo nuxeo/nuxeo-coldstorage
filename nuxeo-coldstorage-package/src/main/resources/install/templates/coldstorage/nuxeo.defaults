@@ -9,3 +9,4 @@ nuxeo.coldstorage.check.retrieve.state.cronExpression=0 7 * ? * * *
 # optional
 nuxeo.coldstorage.numberOfDaysOfAvailability.value.default=1
 nuxeo.coldstorage.thumbnailPreviewRequired=true
+nuxeo.bulk.action.checkColdStorageAvailability.scroller=default
