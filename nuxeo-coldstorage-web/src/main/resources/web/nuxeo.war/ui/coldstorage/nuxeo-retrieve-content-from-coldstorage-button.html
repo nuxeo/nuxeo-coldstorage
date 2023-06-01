@@ -1,4 +1,4 @@
-<!-- 
+<!--
 (C) Copyright Nuxeo Corp. (http://nuxeo.com/) Licensed under the Apache License, Version 2.0 (the "License"); you
 may not use this file except in compliance with the License. You may obtain a copy of the License at
 http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software
@@ -9,7 +9,7 @@ express or implied. See the License for the specific language governing permissi
 <!--
 `nuxeo-move-content-to-coldstorage-button`
 @group Nuxeo UI
-@element nuxeo-move-content-to-coldstorage-button 
+@element nuxeo-move-content-to-coldstorage-button
 -->
 
 <dom-module id="nuxeo-retrieve-content-from-coldstorage-button">
@@ -76,6 +76,7 @@ express or implied. See the License for the specific language governing permissi
 
       _isAvailable(document) {
         return (
+          !this.isVersion(document) &&
           this.hasFacet(document, 'ColdStorage') &&
           !document.properties['coldstorage:beingRetrieved'] &&
           this.hasContent(document) &&
