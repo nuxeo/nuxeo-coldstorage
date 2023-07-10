@@ -352,8 +352,6 @@ public abstract class AbstractTestColdStorageService {
     public void shouldNotRecomputeFullText() {
         StorageConfiguration storageConfiguration = coreFeature.getStorageConfiguration();
         assumeTrue("fulltext search not supported", storageConfiguration.supportsFulltextSearch());
-        // XXX following line to be removed when https://jira.nuxeo.com/browse/NXP-30931 done
-        assumeTrue("Waiting for NXP-30931", !coreFeature.getStorageConfiguration().isVCS());
 
         // Create a doc with 'foo' text as main content
         final String fileContent = FILE_CONTENT + System.currentTimeMillis();
