@@ -72,9 +72,11 @@ import org.nuxeo.ecm.core.api.VersioningOption;
 import org.nuxeo.ecm.core.api.event.CoreEventConstants;
 import org.nuxeo.ecm.core.api.security.ACE;
 import org.nuxeo.ecm.core.api.security.SecurityConstants;
+import org.nuxeo.ecm.core.api.thumbnail.ThumbnailAdapter;
 import org.nuxeo.ecm.core.blob.BlobStatus;
 import org.nuxeo.ecm.core.blob.BlobUpdateContext;
 import org.nuxeo.ecm.core.blob.ManagedBlob;
+import org.nuxeo.ecm.core.blob.SimpleManagedBlob;
 import org.nuxeo.ecm.core.bulk.BulkService;
 import org.nuxeo.ecm.core.bulk.message.BulkCommand;
 import org.nuxeo.ecm.core.bulk.message.BulkStatus;
@@ -307,6 +309,30 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         documentModel = moveAndRestore(documentModel);
         waitForRetrieve();
         assertRestoredFromColdStorage(documentModel.getRef(), fileContent);
+    }
+
+    @Test
+    @Deploy("org.nuxeo.coldstorage.test:OSGI-INF/test-thumbnail-recomputation-contrib.xml")
+    public void shouldNotRecomputeThumbnailOnMoveAndRestore() throws IOException, InterruptedException {
+        final String fileContent = FILE_CONTENT + System.currentTimeMillis();
+        DocumentModel documentModel = session.createDocumentModel("/", DEFAULT_DOC_NAME, "MyCustomFile");
+        documentModel.setPropertyValue("file:content", (Serializable) Blobs.createBlob(fileContent));
+        documentModel = session.createDocument(documentModel);
+        documentModel = session.saveDocument(documentModel);
+        coreFeature.waitForAsyncCompletion();
+
+        SimpleManagedBlob originalThumbnail = (SimpleManagedBlob) documentModel.getAdapter(ThumbnailAdapter.class)
+                                                                               .getThumbnail(session);
+        assertNotNull(originalThumbnail);
+
+        documentModel = service.moveToColdStorage(session, documentModel.getRef());
+        documentModel = service.restoreFromColdStorage(session, documentModel.getRef());
+        waitForRetrieve();
+        assertRestoredFromColdStorage(documentModel.getRef(), fileContent);
+        SimpleManagedBlob restoredThumbnail = (SimpleManagedBlob) documentModel.getAdapter(ThumbnailAdapter.class)
+                                                                               .getThumbnail(session);
+        // DummyRandomThumbnailFactory used in test generates different thumbnails each time it is called
+        assertEquals(originalThumbnail.getKey(), restoredThumbnail.getKey());
     }
 
     @Test

@@ -482,6 +482,10 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         // Disable main and ColdStorage storage contents check otherwise, the restore action won't be allowed
         documentModel.putContextData(DISABLE_PREVENT_COLD_STORAGE_UPDATE_LISTENER, true);
         documentModel.putContextData(DISABLE_CHECK_ALREADY_IN_COLD_STORAGE_LISTENER, true);
+        // Disable recompute listeners
+        for (String listener : COLD_STORAGE_DISABLED_RECOMPUTATION_LISTENERS) {
+            documentModel.putContextData(listener, true);
+        }
         documentModel.putContextData(DISABLE_AUTOMATIC_VERSIONING, true);
         if (documentModel.isVersion()) {
             documentModel.putContextData(ALLOW_VERSION_WRITE, true);
