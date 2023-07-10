@@ -78,6 +78,7 @@ import org.nuxeo.ecm.core.api.DocumentSecurityException;
 import org.nuxeo.ecm.core.api.NuxeoException;
 import org.nuxeo.ecm.core.api.NuxeoPrincipal;
 import org.nuxeo.ecm.core.api.event.CoreEventConstants;
+import org.nuxeo.ecm.core.api.impl.DownloadBlobGuard;
 import org.nuxeo.ecm.core.api.security.SecurityConstants;
 import org.nuxeo.ecm.core.blob.BlobManager;
 import org.nuxeo.ecm.core.blob.BlobStatus;
@@ -486,6 +487,8 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         for (String listener : COLD_STORAGE_DISABLED_RECOMPUTATION_LISTENERS) {
             documentModel.putContextData(listener, true);
         }
+        // Disable fulltext reindex
+        DownloadBlobGuard.enable();
         documentModel.putContextData(DISABLE_AUTOMATIC_VERSIONING, true);
         if (documentModel.isVersion()) {
             documentModel.putContextData(ALLOW_VERSION_WRITE, true);
