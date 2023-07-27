@@ -11,19 +11,13 @@ resources:
     cpu: "2"
     memory: "2Gi"
 labels:
-  {{- if (env "BRANCH_NAME") }}
-  branch: {{ env "BRANCH_NAME" | quote }}
-  {{- end }}
-  resource: statefulset
-  team: platform
-  usage: utests
+  {{ tpl (readFile "labels.yaml.gotmpl") . | nindent 2 }}
+  dev.nuxeo.com/app: mongodb
+  dev.nuxeo.com/resource: statefulset
 podLabels:
-  {{- if (env "BRANCH_NAME") }}
-  branch: {{ env "BRANCH_NAME" | quote }}
-  {{- end }}
-  resource: pod
-  team: platform
-  usage: utests
+  {{ tpl (readFile "labels.yaml.gotmpl") . | nindent 2 }}
+  dev.nuxeo.com/app: pod
+  dev.nuxeo.com/resource: statefulset
 persistence:
   enabled: false
 tolerations:
