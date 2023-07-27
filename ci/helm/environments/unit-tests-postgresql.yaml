@@ -1,6 +1,11 @@
+# enabled conditions
 nuxeo:
   enabled: false
 mongodb:
   enabled: false
 postgresql:
   enabled: true
+
+# values definition
+labels:
+  usage: utests

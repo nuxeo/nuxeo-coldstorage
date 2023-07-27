@@ -16,7 +16,7 @@
 * Contributors:
 *     Kevin Leturc <kevin.leturc@hyland.com>
 */
-library identifier: "platform-ci-shared-library@v0.0.14"
+library identifier: "platform-ci-shared-library@v0.0.25"
 
 Closure buildUnitTestStage(env) {
   return {
@@ -74,7 +74,7 @@ pipeline {
       steps {
         container('maven') {
           script {
-            nxK8s.setPodLabel()
+            nxK8s.setPodLabels()
           }
         }
       }

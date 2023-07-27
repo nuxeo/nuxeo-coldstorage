@@ -13,17 +13,13 @@ resources:
     memory: "4Gi"
 primary:
   labels:
-    {{- if (env "BRANCH_NAME") }}
-    branch: {{ env "BRANCH_NAME" | quote }}
-    {{- end }}
-    resource: statefulset
-    team: platform
+    {{ tpl (readFile "labels.yaml.gotmpl") . | nindent 4 }}
+    dev.nuxeo.com/app: postgresql
+    dev.nuxeo.com/resource: statefulset
   podLabels:
-    {{- if (env "BRANCH_NAME") }}
-    branch: {{ env "BRANCH_NAME" | quote }}
-    {{- end }}
-    resource: pod
-    team: platform
+    {{ tpl (readFile "labels.yaml.gotmpl") . | nindent 4 }}
+    dev.nuxeo.com/app: postgresql
+    dev.nuxeo.com/resource: pod
   tolerations:
     - key: team
       operator: Equal

@@ -5,18 +5,14 @@ image:
   pullSecrets:
   - name: kubernetes-docker-cfg
 podLabels:
-  {{- if (env "BRANCH_NAME") }}
-  branch: {{ env "BRANCH_NAME" | quote }}
-  {{- end }}
-  team: platform
-  resource: pod
+  {{ tpl (readFile "labels.yaml.gotmpl") . | nindent 2 }}
+  dev.nuxeo.com/app: nuxeo
+  dev.nuxeo.com/resource: pod
 service:
   labels:
-    {{- if (env "BRANCH_NAME") }}
-    branch: {{ env "BRANCH_NAME" | quote }}
-    {{- end }}
-    team: platform
-    resource: service
+    {{ tpl (readFile "labels.yaml.gotmpl") . | nindent 4 }}
+    dev.nuxeo.com/app: nuxeo
+    dev.nuxeo.com/resource: service
 amazonS3:
   enabled: true
   accessKeyId: {{ requiredEnv "AWS_ACCESS_KEY_ID" }}
