@@ -20,6 +20,7 @@
 package org.nuxeo.coldstorage.service;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -299,7 +300,40 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
                         expectedDownloadUrl, properties.get(COLD_STORAGE_CONTENT_ARCHIVE_LOCATION_MAIL_TEMPLATE_KEY));
             });
         }
+    }
 
+    // NXP-32003
+    @Test
+    public void shouldCheckAvailabilityOnVersion() throws InterruptedException {
+        DocumentModel documentModel = session.createDocumentModel("/", "DocWithVersion", "File");
+        String content = FILE_CONTENT + System.currentTimeMillis();
+        Blob blob = Blobs.createBlob(content);
+        blob.setDigest(UUID.randomUUID().toString());
+        documentModel.setPropertyValue(FILE_CONTENT_PROPERTY, (Serializable) blob);
+        documentModel = session.createDocument(documentModel);
+        documentModel.putContextData(VERSIONING_OPTION, VersioningOption.valueOf("MINOR"));
+        documentModel = session.saveDocument(documentModel);
+        documentModel = service.moveToColdStorage(session, documentModel.getRef());
+        transactionalFeature.nextTransaction();
+        DocumentModel version = session.getVersions(documentModel.getRef()).get(0);
+
+        // Retrieve the version
+        version = service.retrieveFromColdStorage(session, version.getRef(), RESTORE_DURATION);
+        transactionalFeature.nextTransaction();
+        List<DocumentModel> beingRetrievedDocs = session.query(GET_DOCUMENTS_TO_CHECK_QUERY);
+        assertEquals(1, beingRetrievedDocs.size());
+        // make as if doc is no longer retrieved because retrieval time expired
+        BlobStatus versionBlobStatus = new BlobStatus().withDownloadable(false).withOngoingRestore(false);
+        addColdStorageContentBlobStatus(version.getRef(), versionBlobStatus);
+        assertFalse(service.checkIsRetrieved(session, version));
+
+        // Retrieve the version again
+        version = service.retrieveFromColdStorage(session, version.getRef(), RESTORE_DURATION);
+        transactionalFeature.nextTransaction();
+        beingRetrievedDocs = session.query(GET_DOCUMENTS_TO_CHECK_QUERY);
+        assertEquals(1, beingRetrievedDocs.size());
+        Thread.sleep(DummyBlobProvider.RESTORE_DELAY_MILLISECONDS + 200);
+        assertTrue(service.checkIsRetrieved(session, version));
     }
 
     @Test
