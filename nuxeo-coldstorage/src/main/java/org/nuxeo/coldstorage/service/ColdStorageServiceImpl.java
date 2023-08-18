@@ -370,6 +370,9 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
             // The retrieval is allowed for users with only READ access.
             // It requires an unrestricted session to update ColdStorage metadata on the document
             documentModel.putContextData(DISABLE_AUTOMATIC_VERSIONING, true);
+            if (documentModel.isVersion()) {
+                documentModel.putContextData(ALLOW_VERSION_WRITE, true);
+            }
             return s.saveDocument(documentModel);
         });
 
@@ -580,6 +583,9 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
                        .put(COLD_STORAGE_CONTENT_AVAILABLE_UNTIL_MAIL_TEMPLATE_KEY, downloadableUntil.toString());
                     doc.setPropertyValue(COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL, Date.from(downloadableUntil));
                 }
+                if (doc.isVersion()) {
+                    doc.putContextData(ALLOW_VERSION_WRITE, true);
+                }
                 doc = session.saveDocument(doc);
                 EventService eventService = Framework.getService(EventService.class);
                 DownloadService downloadService = Framework.getService(DownloadService.class);
@@ -596,6 +602,9 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
             // Let's flag it as not being retrieved
             log.debug("Document {} is flagged as being retrieved but not its blob", doc::getPath);
             doc.setPropertyValue(COLD_STORAGE_BEING_RETRIEVED_PROPERTY, false);
+            if (doc.isVersion()) {
+                doc.putContextData(ALLOW_VERSION_WRITE, true);
+            }
             doc = session.saveDocument(doc);
         }
         return false;
