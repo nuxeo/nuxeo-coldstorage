@@ -1,8 +1,8 @@
+import path from 'path';
 import { terser } from 'rollup-plugin-terser';
 import copy from 'rollup-plugin-copy';
 import minifyHTML from 'rollup-plugin-minify-html-literals';
 import resolve from '@rollup/plugin-node-resolve';
-import path from 'path';
 
 // Replace imports by an export of existing globals in Web UI
 // https://github.com/nuxeo/nuxeo-web-ui/blob/master/index.js#L7
