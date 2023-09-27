@@ -163,6 +163,8 @@ pipeline {
             }
           }
           nxWithGitHubStatus(context: 'ftests') {
+            echo "Functional tests are disabled (https://jira.nuxeo.com/browse/WEBUI-1260 and https://jira.nuxeo.com/browse/WEBUI-1252)"
+            /*
             script {
               def testNamespace = "${CURRENT_NAMESPACE}-coldstorage-${BRANCH_NAME}-${BUILD_NUMBER}-ftests".replaceAll('\\.', '-').toLowerCase()
               def nuxeoParentVersion = readMavenPom().getParent().getVersion()
@@ -177,6 +179,7 @@ pipeline {
                 }
               }
             }
+            */
           }
         }
       }
