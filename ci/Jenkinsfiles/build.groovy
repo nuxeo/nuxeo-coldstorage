@@ -119,7 +119,7 @@ pipeline {
               nxWithGitHubStatus(context: 'utests/frontend') {
                 dir('nuxeo-coldstorage-web') {
                   sh 'npm install --no-save playwright'
-                  sh 'npx playwright install-deps'
+                  sh 'npx playwright install --with-deps'
                   sh 'npm run test'
                 }
               }
