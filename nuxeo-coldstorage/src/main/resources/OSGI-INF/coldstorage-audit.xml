@@ -2,7 +2,9 @@
   <extension target="org.nuxeo.ecm.platform.audit.service.NXAuditEventsService" point="event">
     <event name="coldStorageContentMoved" />
     <event name="coldStorageContentToRetrieve" />
+    <event name="coldStorageContentAvailable" />
     <event name="coldStorageContentToRestore" />
+    <event name="coldStorageContentRestored" />
     <event name="coldStorageDownload" />
   </extension>
 </component>
