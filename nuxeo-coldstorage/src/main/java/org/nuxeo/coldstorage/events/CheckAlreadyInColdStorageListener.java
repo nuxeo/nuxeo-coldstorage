@@ -43,7 +43,7 @@ import org.nuxeo.runtime.api.Framework;
 
 /**
  * Listener on documentModified and documentCreated event to check if new document references a blob already in Cold
- * Storage.
+ * Storage or if the creation/modification of the document forced a restore from Cold Storage of the blob.
  *
  * @since 2021.0.0
  */
@@ -84,10 +84,11 @@ public class CheckAlreadyInColdStorageListener implements EventListener {
         }
         Blob blob = (Blob) doc.getPropertyValue(FILE_CONTENT_PROPERTY);
         if (blob != null && blob instanceof ManagedBlob) {
+            ColdStorageService service = Framework.getService(ColdStorageService.class);
+            CoreSession session = docCtx.getCoreSession();
             if (ColdStorageHelper.isInColdStorage((ManagedBlob) blob)) {
-                log.debug("Main blob is already in cold storage, need to update document accordingly.");
-                ColdStorageService service = Framework.getService(ColdStorageService.class);
-                CoreSession session = docCtx.getCoreSession();
+                log.debug("Main blob: {} is already in cold storage, need to update document: {} accordingly",
+                        blob::getDigest, doc::getId);
                 // We need to make sure the thumbnail is available to use it as placeholder of the main blob
                 thumbnailHelper.createThumbnailIfNeeded(session, doc);
                 doc = service.proceedMoveToColdStorage(session, doc.getRef());
@@ -95,6 +96,14 @@ public class CheckAlreadyInColdStorageListener implements EventListener {
                     doc.putContextData(CoreSession.ALLOW_VERSION_WRITE, true);
                 }
                 session.saveDocument(doc);
+            } else {
+                // If the blob was already in Cold Storage state, the creation of this document has overwritten the blob
+                // and it will now have the default storage class.
+                // Let's propagate a restore to update other documents referencing this blob accordingly if needed
+                log.debug(
+                        "Main blob: {} is not in cold storage for document: {}, let's propagate a restore in case the doc creation/update restored it",
+                        blob::getDigest, doc::getId);
+                service.propagateRestoreFromColdStorage(session, blob.getDigest());
             }
         }
     }

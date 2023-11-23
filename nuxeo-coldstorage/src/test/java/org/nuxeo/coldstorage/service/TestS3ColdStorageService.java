@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import org.junit.Test;
-import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.coldstorage.ColdStorageFeature;
 import org.nuxeo.ecm.blob.s3.S3BlobProviderFeature;
 import org.nuxeo.ecm.core.api.Blob;
@@ -48,27 +47,18 @@ import com.amazonaws.services.s3.model.StorageClass;
 public class TestS3ColdStorageService extends AbstractTestColdStorageService {
 
     @Test
-    public void shouldMoveToColdStorageIfBlobAlreadyIs() throws IOException {
+    public void shouldRestoreFromColdStorageWhenReuploaded() throws IOException {
         final String fileContent = FILE_CONTENT + System.currentTimeMillis();
-        Blob blob = Blobs.createBlob(fileContent);
-        // First doc with given content
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, fileContent);
-        blob = (Blob) documentModel.getPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY);
-        moveAndVerifyContent(session, documentModel.getRef());
-
-        // Second doc with same content
-        documentModel = createFileDocument(DEFAULT_DOC_NAME + "_bis", fileContent);
+        // Create a 1st doc with given content
+        DocumentModel documentModel1 = createFileDocument(DEFAULT_DOC_NAME, fileContent);
         transactionalFeature.nextTransaction();
-        assertSentToColdStorage(session, documentModel.getRef());
+        moveAndVerifyContent(session, documentModel1.getRef());
 
-        // Third doc with blob edit
-        documentModel = createFileDocument(DEFAULT_DOC_NAME + "_ter", fileContent + "_ter");
-        documentModel = session.getDocument(documentModel.getRef());
-        assertFalse(documentModel.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME));
-        documentModel.setPropertyValue(ColdStorageConstants.FILE_CONTENT_PROPERTY, (Serializable) blob);
-        session.saveDocument(documentModel);
+        // Creating  a 2nd doc with same content will trigger an immediate restore
+        DocumentModel documentModel2 = createFileDocument(DEFAULT_DOC_NAME + "_bis", fileContent);
         transactionalFeature.nextTransaction();
-        assertSentToColdStorage(session, documentModel.getRef());
+        assertRestoredFromColdStorage(documentModel2.getRef(), fileContent);
+        assertRestoredFromColdStorage(documentModel1.getRef(), fileContent);
     }
 
     @Test
