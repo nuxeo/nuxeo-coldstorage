@@ -65,10 +65,10 @@ public class RestoreFromColdStorageTest extends AbstractTestColdStorageOperation
     @Test
     public void shouldFailBeingRestored() throws IOException, OperationException, InterruptedException {
         DocumentModel documentModel = createFileDocument(session, true);
+        transactionalFeature.nextTransaction();
 
         // first make the move to cold storage
         moveContentToColdStorage(session, documentModel);
-        transactionalFeature.nextTransaction();
         documentModel.refresh();
         restoreContentFromColdStorage(documentModel);
         // request a retrieval for a second time
@@ -152,7 +152,7 @@ public class RestoreFromColdStorageTest extends AbstractTestColdStorageOperation
         EventService eventService = Framework.getService(EventService.class);
         EventContextImpl ctx = new EventContextImpl();
         eventService.fireEvent(ctx.newEvent(COLD_STORAGE_CHECK_CONTENT_AVAILABILITY_EVENT_NAME));
-        coreFeature.waitForAsyncCompletion();
+        transactionalFeature.nextTransaction();
     }
 
     protected void checkRestoreContent(DocumentModel documentModel) throws IOException {

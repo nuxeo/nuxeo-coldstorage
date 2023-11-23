@@ -201,12 +201,12 @@ public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
     @Deploy("org.nuxeo.ecm.platform.types")
     public void shouldNotRecomputeThumbnail() throws IOException, OperationException {
         DocumentModel documentModel = createFileDocument(session, true);
+        transactionalFeature.nextTransaction();
         Blob originalThumbnail = thumbnailService.getThumbnail(documentModel, session);
         assertNotNull(originalThumbnail);
 
         moveContentToColdStorage(session, documentModel);
 
-        transactionalFeature.nextTransaction();
         documentModel.refresh();
 
         Blob thumbnailUpdateOne = thumbnailService.getThumbnail(documentModel, session);
@@ -217,9 +217,9 @@ public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
     @Test
     public void shouldNotReplaceColdStorageContent() throws IOException, OperationException {
         DocumentModel documentModel = createFileDocument(session, true);
+        transactionalFeature.nextTransaction();
         moveContentToColdStorage(session, documentModel);
 
-        transactionalFeature.nextTransaction();
         documentModel.refresh();
 
         try {
@@ -236,9 +236,9 @@ public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
     @Test
     public void shouldNotDeleteColdStorageFacet() throws IOException, OperationException {
         DocumentModel documentModel = createFileDocument(session, true);
+        transactionalFeature.nextTransaction();
         moveContentToColdStorage(session, documentModel);
 
-        transactionalFeature.nextTransaction();
         documentModel.refresh();
 
         try {

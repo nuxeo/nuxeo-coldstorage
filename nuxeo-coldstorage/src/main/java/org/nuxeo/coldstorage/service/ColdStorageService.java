@@ -46,8 +46,8 @@ public interface ColdStorageService {
      * Return the ColStorage rendition blob for the given {@link DocumentModel}.
      * <p>
      * A rendition blob is returned if found.
-     * @param documentModel the document to render
      *
+     * @param documentModel the document to render
      * @return the {@link Blob} object
      * @throws NuxeoException if the rendition doesn't exist.
      */
@@ -128,5 +128,12 @@ public interface ColdStorageService {
      * Internal use.
      */
     DocumentModel proceedMoveToColdStorage(CoreSession session, DocumentRef documentRef);
+
+    /**
+     * Internal use.
+     *
+     * @since 2023.2
+     */
+    void propagateRestoreFromColdStorage(CoreSession session, String blobDigest);
 
 }
