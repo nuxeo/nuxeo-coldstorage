@@ -1,7 +1,7 @@
-import { When, Then, Before } from '@cucumber/cucumber';
 import Nuxeo from 'nuxeo';
+import { When, Then, Before } from '@cucumber/cucumber';
 
-Before(function () {
+Before(() => {
   // We want to delete left over binaries in cold storage states else tests will fail
   const nuxeo = new Nuxeo({
     auth: { method: 'basic', username: 'Administrator', password: 'Administrator' },
@@ -10,107 +10,143 @@ Before(function () {
   nuxeo.request('management/binaries/orphaned').delete();
 });
 
-When('I click the Send file to cold storage action button', function () {
-  this.ui.browser.clickDocumentActionMenu('nuxeo-move-content-to-coldstorage-button');
+When('I click the Send file to cold storage action button', async function () {
+  const browser = await this.ui.browser;
+  await browser.clickDocumentActionMenu('nuxeo-move-content-to-coldstorage-button');
 });
 
-When('I click the Restore file from cold storage action button', function () {
-  this.ui.browser.clickDocumentActionMenu('nuxeo-restore-content-from-coldstorage-button');
+When('I click the Restore file from cold storage action button', async function () {
+  const browser = await this.ui.browser;
+  await browser.clickDocumentActionMenu('nuxeo-restore-content-from-coldstorage-button');
 });
 
-When('I can see the {string} confirmation dialog', function (dialogType) {
+When('I can see the {string} confirmation dialog', async function (dialogType) {
   let dialog;
+  const browser = await this.ui.browser;
   if (dialogType === 'Send') {
-    dialog = this.ui.browser.el.element('nuxeo-dialog#contentToMoveDialog');
+    dialog = await browser.el.element('nuxeo-dialog#contentToMoveDialog');
   } else if (dialogType === 'Restore') {
-    dialog = this.ui.browser.el.element('nuxeo-dialog#contentToRestoreDialog');
-  } else dialog = this.ui.browser.el.element('nuxeo-dialog#contentFromRetrieveDialog');
-  dialog.waitForVisible();
+    dialog = await browser.el.element('nuxeo-dialog#contentToRestoreDialog');
+  } else {
+    dialog = await browser.el.element('nuxeo-dialog#contentFromRetrieveDialog');
+  }
+  await dialog.waitForVisible();
 });
 
-When('I click the {word} button in the {string} confirmation dialog', function (btn, dialogType) {
-  let dialog;
+When('I click the {word} button in the {string} confirmation dialog', async function (btn, dialogType) {
+  const browser = await this.ui.browser;
+  let dialogElement;
   if (dialogType === 'Send') {
-    dialog = this.ui.browser.el.element('nuxeo-dialog#contentToMoveDialog');
+    dialogElement = await browser.el.element('nuxeo-dialog#contentToMoveDialog');
   } else if (dialogType === 'Restore') {
-    dialog = this.ui.browser.el.element('nuxeo-dialog#contentToRestoreDialog');
-  } else dialog = this.ui.browser.el.element('nuxeo-dialog#contentFromRetrieveDialog');
-  dialog.click(`paper-button[name="${btn}"]`);
+    dialogElement = await browser.el.element('nuxeo-dialog#contentToRestoreDialog');
+  } else {
+    dialogElement = await browser.el.element('nuxeo-dialog#contentFromRetrieveDialog');
+  }
+  const buttonSelector = `paper-button[name="${btn}"]`;
+  const button = await dialogElement.$(buttonSelector);
+  await button.click();
+  await driver.pause(1000);
+});
+
+When('I move the files to cold storage', async function () {
+  await driver.pause(3000);
+  const browser = await this.ui.browser;
+  const selectionToolBar = await this.ui.browser.selectionToolbar;
+  await selectionToolBar.waitForVisible();
+  const ele = await selectionToolBar.el.element('nuxeo-move-contents-to-coldstorage-button');
+  await ele.click();
+  const dialog = await browser.el.element('nuxeo-dialog#contentsToMoveDialog');
+  await dialog.waitForVisible();
+  const confirm = await dialog.element('paper-button[name="confirm"]');
+  await confirm.click();
   driver.pause(1000);
 });
 
-When('I move the files to cold storage', function () {
-  this.ui.browser.selectionToolbar.waitForVisible();
-  this.ui.browser.selectionToolbar.click('nuxeo-move-contents-to-coldstorage-button');
-  const dialog = this.ui.browser.el.element('nuxeo-dialog#contentsToMoveDialog');
-  dialog.waitForVisible();
-  dialog.click('paper-button[name="confirm"]');
-  driver.pause(1000);
+When('I click the Retrieve file from cold storage button', async function () {
+  const browser = await this.ui.browser;
+  const page = await browser.documentPage('File');
+  const docView = await page.view;
+  await docView.waitForVisible();
+  const dropdownButton = await docView.el.$('div.actions paper-menu-button#dropdownButton');
+  await dropdownButton.click();
+  await docView.waitForVisible('nuxeo-retrieve-content-from-coldstorage-button');
+  const retrieveBtn = await docView.el.$('nuxeo-retrieve-content-from-coldstorage-button span');
+  await retrieveBtn.click();
 });
 
-When('I click the Retrieve file from cold storage button', function () {
-  const page = this.ui.browser.documentPage('File');
-  const docView = page.view;
-  docView.waitForVisible();
-  docView.click('div.actions paper-menu-button#dropdownButton');
-  docView.waitForVisible('nuxeo-retrieve-content-from-coldstorage-button');
-  const retrieveBtn = docView.el.element('nuxeo-retrieve-content-from-coldstorage-button span');
-  retrieveBtn.click();
+Then('I cannot see the Send file to cold storage button', async function () {
+  const browser = await this.ui.browser;
+  const menu = await browser.el.element('nuxeo-actions-menu');
+  await menu.$('#dropdownButton').click();
+  await menu.waitForVisible('[slot="dropdown"] .label');
+  const menuVisible = await menu.isVisible('nuxeo-move-content-to-coldstorage-button .action');
+  await menuVisible.should.be.equals(false);
 });
 
-Then('I cannot see the Send file to cold storage button', function () {
-  const menu = this.ui.browser.el.element('nuxeo-actions-menu');
-  menu.click('#dropdownButton');
-  menu.waitForVisible('[slot="dropdown"] .label');
-  menu.isVisible('nuxeo-move-content-to-coldstorage-button .action').should.be.equals(false);
+Then('I can see the file is stored in cold storage', async function () {
+  const browser = await this.ui.browser;
+  await this.ui.reload();
+  const page = await browser.documentPage(this.doc.type);
+  const infoBar = await page.infoBar;
+  await infoBar.waitForVisible('#coldStorageInfoBar .storedInColdStorage');
 });
 
-Then('I can see the file is stored in cold storage', function () {
-  this.ui.reload();
-  const page = this.ui.browser.documentPage(this.doc.type);
-  page.infoBar.waitForVisible('#coldStorageInfoBar .storedInColdStorage');
+Then('I can see the file is not stored in cold storage', async function () {
+  const browser = await this.ui.browser;
+  await this.ui.reload();
+  const page = await browser.documentPage(this.doc.type);
+  const infoBar = await page.infoBar;
+  const infoBarVisible = await infoBar.isVisible('#coldStorageInfoBar .storedInColdStorage');
+  await infoBarVisible.should.be.equals(false);
 });
 
-Then('I can see the file is not stored in cold storage', function () {
-  this.ui.reload();
-  const page = this.ui.browser.documentPage(this.doc.type);
-  page.infoBar.isVisible('#coldStorageInfoBar .storedInColdStorage').should.be.equals(false);
+Then('I can see the file is retrieved', async function () {
+  const browser = await this.ui.browser;
+  await this.ui.reload();
+  const page = await browser.documentPage(this.doc.type);
+  const infoBar = await page.infoBar;
+  await infoBar.waitForVisible('#coldStorageInfoBar #retrieved.storedInColdStorage');
 });
 
-Then('I can see the file is retrieved', function () {
-  this.ui.reload();
-  const page = this.ui.browser.documentPage(this.doc.type);
-  page.infoBar.waitForVisible('#coldStorageInfoBar #retrieved.storedInColdStorage');
+Then('I can see the file is being retrieved', async function () {
+  const browser = await this.ui.browser;
+  await this.ui.reload();
+  const page = await browser.documentPage(this.doc.type);
+  const infoBar = await page.infoBar;
+  await infoBar.waitForVisible('#coldStorageInfoBar #beingRetrieved.storedInColdStorage');
 });
 
-Then('I can see the file is being retrieved', function () {
-  this.ui.reload();
-  const page = this.ui.browser.documentPage(this.doc.type);
-  page.infoBar.waitForVisible('#coldStorageInfoBar #beingRetrieved.storedInColdStorage');
+Then('I can see the Send the selected files to cold storage action button', async function () {
+  const browser = await this.ui.browser;
+  const toolbar = await browser.selectionToolbar;
+  await toolbar.waitForVisible();
+  const button = await toolbar.isVisible('nuxeo-move-contents-to-coldstorage-button');
+  await button.should.be.equals(true);
 });
 
-Then('I can see the Send the selected files to cold storage action button', function () {
-  const toolbar = this.ui.browser.selectionToolbar;
-  toolbar.waitForVisible();
-  toolbar.isVisible('nuxeo-move-contents-to-coldstorage-button').should.be.equals(true);
+Then('I cannot see the Send the selected files to cold storage action button', async function () {
+  const browser = await this.ui.browser;
+  const toolbar = await browser.selectionToolbar;
+  await toolbar.waitForVisible();
+  const button = await toolbar.isVisible('nuxeo-move-contents-to-coldstorage-button');
+  await button.should.be.equals(false);
 });
 
-Then('I cannot see the Send the selected files to cold storage action button', function () {
-  const toolbar = this.ui.browser.selectionToolbar;
-  toolbar.waitForVisible();
-  toolbar.isVisible('nuxeo-move-contents-to-coldstorage-button').should.be.equals(false);
+Then('I can see the Remove button', async function () {
+  const browser = await this.ui.browser;
+  const page = await browser.documentPage('File');
+  const docView = await page.view;
+  await docView.waitForVisible();
+  const deleteButton = await docView.isVisible('nuxeo-delete-blob-button .action');
+  await deleteButton.should.be.equals(true);
 });
 
-Then('I can see the Remove button', function () {
-  const page = this.ui.browser.documentPage('File');
-  const docView = page.view;
-  docView.waitForVisible();
-  docView.isVisible('nuxeo-delete-blob-button .action').should.be.equals(true);
-});
-
-Then('I cannot see the Remove button', function () {
-  const page = this.ui.browser.documentPage('File');
-  const docView = page.view;
-  docView.waitForVisible();
-  docView.isVisible('nuxeo-delete-blob-button .action').should.be.equals(false);
+Then('I cannot see the Remove button', async function () {
+  const browser = await this.ui.browser;
+  const page = await browser.documentPage('File');
+  const docView = await page.view;
+  await docView.waitForVisible();
+  const deleteButton = await docView.isVisible('nuxeo-delete-blob-button .action');
+  await deleteButton.should.be.equals(false);
 });
