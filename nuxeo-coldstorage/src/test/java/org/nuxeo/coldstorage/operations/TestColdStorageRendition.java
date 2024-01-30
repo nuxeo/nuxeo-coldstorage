@@ -53,7 +53,7 @@ import org.nuxeo.runtime.test.runner.Features;
 /**
  * @since 2021.0.0
  */
-@Features({ ColdStorageFeature.class, S3BlobProviderFeature.class})
+@Features({ ColdStorageFeature.class, S3BlobProviderFeature.class })
 public class TestColdStorageRendition extends AbstractTestColdStorageOperation {
 
     @Inject
@@ -149,6 +149,7 @@ public class TestColdStorageRendition extends AbstractTestColdStorageOperation {
         session.save();
         return document;
     }
+
     @Override
     protected void checkMoveContent(List<DocumentModel> expectedDocs, List<DocumentModel> actualDocs) {
         assertEquals(expectedDocs.size(), actualDocs.size());
