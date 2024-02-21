@@ -47,19 +47,6 @@
                                     </#if>
                                     <tr>
                                         <td style="border:1px solid #eee;color:#888;font-size:13px;white-space:nowrap;">
-                                            Author
-                                        </td>
-                                        <td style="border:1px solid #eee;color:#000;font-size:13px;"><a
-                                                    style="color:#22aee8;text-decoration:underline;word-wrap:break-word!important;"
-                                                    href="${userUrl}">
-                                                <#if principalAuthor?? && (principalAuthor.lastName!="" || principalAuthor.firstName!="")>
-                                                    ${htmlEscape(principalAuthor.firstName)} ${htmlEscape(principalAuthor.lastName)}
-                                                </#if>
-                                                (${author})</a>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="border:1px solid #eee;color:#888;font-size:13px;white-space:nowrap;">
                                             Updated
                                         </td>
                                         <td style="border:1px solid #eee;color:#000;font-size:13px;">${dateTime?datetime?string("dd/MM/yyyy - HH:mm")}
