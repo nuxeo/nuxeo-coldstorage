@@ -1,4 +1,5 @@
 import Nuxeo from 'nuxeo';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { When, Then, Before } from '@cucumber/cucumber';
 
 Before(() => {
