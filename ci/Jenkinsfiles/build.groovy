@@ -54,7 +54,7 @@ Closure buildUnitTestStage(env) {
 
 pipeline {
   agent {
-    label 'jenkins-nuxeo-package-lts-2021-node-18'
+    label 'jenkins-nuxeo-package-lts-2021-nodejs18'
   }
   options {
     buildDiscarder(logRotator(daysToKeepStr: '60', numToKeepStr: '60', artifactNumToKeepStr: '5'))
@@ -114,6 +114,18 @@ pipeline {
       steps {
         script {
           def stages = [:]
+          stages['Frontend'] = {
+            container('playwright') {
+              nxWithGitHubStatus(context: 'utests/frontend') {
+                dir('nuxeo-coldstorage-web') {
+                  sh 'npm install'
+                  sh 'npm install --no-save playwright'
+                  sh 'npx playwright install --with-deps'
+                  sh 'npm run test'
+                }
+              }
+            }
+          }
           stages['Backend - dev'] = {
             container('maven') {
               nxWithGitHubStatus(context: 'utests/backend/dev') {
@@ -131,6 +143,8 @@ pipeline {
               }
             }
           }
+          stages['Backend - MongoDB'] = buildUnitTestStage('mongodb')
+          stages['Backend - PostgreSQL'] = buildUnitTestStage('postgresql')
           parallel stages
         }
       }
