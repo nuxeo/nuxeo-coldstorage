@@ -54,7 +54,7 @@ Closure buildUnitTestStage(env) {
 
 pipeline {
   agent {
-    label 'jenkins-nuxeo-package-lts-2021'
+    label 'jenkins-nuxeo-package-lts-2021-node-18'
   }
   options {
     buildDiscarder(logRotator(daysToKeepStr: '60', numToKeepStr: '60', artifactNumToKeepStr: '5'))
