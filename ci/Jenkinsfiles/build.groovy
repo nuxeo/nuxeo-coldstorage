@@ -121,6 +121,7 @@ pipeline {
                 dir('nuxeo-coldstorage-web') {
                   sh 'npm install --no-save playwright'
                   sh 'npx playwright install --with-deps'
+                  sh 'web-test-runner --version'
                   sh 'npm run test'
                 }
               }
