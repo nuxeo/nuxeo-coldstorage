@@ -25,10 +25,10 @@ limitations under the License.
     <exec executable="node" failonerror="true" outputproperty="node-version">
       <arg value="--version" />
     </exec>
-    <fail message="NodeJS version must be 14">
+    <fail message="NodeJS version must be 18">
       <condition>
         <not>
-          <contains string="${node-version}" substring="v14" />
+          <contains string="${node-version}" substring="v18" />
         </not>
       </condition>
     </fail>
