@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<component name="org.nuxeo.coldstorage.jsonEnrichers">
+  <extension target="org.nuxeo.ecm.core.io.MarshallerRegistry" point="marshallers">
+    <register class="org.nuxeo.coldstorage.io.IsSharedMainContentJsonEnricher"
+      enable="true" />
+  </extension>
+</component>
