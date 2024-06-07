@@ -136,4 +136,11 @@ public interface ColdStorageService {
      */
     void propagateRestoreFromColdStorage(CoreSession session, String blobDigest);
 
+    /**
+     * Internal use.
+     *
+     * @since 2023.4
+     */
+    void proceedRetrieveMainContent(CoreSession session, DocumentModel documentModel);
+
 }
