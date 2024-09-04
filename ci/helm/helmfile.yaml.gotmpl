@@ -1,3 +1,14 @@
+environments:
+  mongodbUnitTests:
+    values:
+    - environments/unit-tests-mongodb.yaml
+  postgresqlUnitTests:
+    values:
+    - environments/unit-tests-postgresql.yaml
+  functionalTests:
+    values:
+    - environments/functional-tests.yaml
+---
 repositories:
 - name: bitnami
   # use a former version of index.yaml from the git repository as Bitnami all removed charts older than 6 months from
@@ -33,14 +44,3 @@ releases:
   condition: postgresql.enabled
   values:
   - values/values-postgresql.yaml.gotmpl
-
-environments:
-  mongodbUnitTests:
-    values:
-    - environments/unit-tests-mongodb.yaml
-  postgresqlUnitTests:
-    values:
-    - environments/unit-tests-postgresql.yaml
-  functionalTests:
-    values:
-    - environments/functional-tests.yaml
