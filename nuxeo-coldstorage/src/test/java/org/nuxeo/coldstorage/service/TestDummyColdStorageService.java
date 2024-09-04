@@ -106,13 +106,13 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
     @LogCaptureFeature.FilterWith(ColdStorageActionsLogFilter.class)
     public void shouldBulkMoveToColdStorage() throws IOException {
         final String fileContent = FILE_CONTENT + System.currentTimeMillis();
-        List<DocumentModel> docs = new ArrayList<DocumentModel>();
+        List<DocumentRef> docs = new ArrayList<DocumentRef>();
         int nbDocs = 10;
         for (int i = 0; i < nbDocs; i++) {
             docs.add(createFileDocument(DEFAULT_DOC_NAME + i, fileContent + i));
         }
         // Set legal hold on one of the doc to make it impossible to move to cold storage
-        DocumentRef legalHoldRef = docs.remove(nbDocs / 2).getRef();
+        DocumentRef legalHoldRef = docs.remove(nbDocs / 2);
         session.makeRecord(legalHoldRef);
         session.setLegalHold(legalHoldRef, true, null);
 
@@ -135,8 +135,8 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         BulkStatus status = bulkService.getStatus(commandId);
         assertTrue(status.isCompleted());
         assertEquals(1, status.getErrorCount());
-        for (DocumentModel doc : docs) {
-            assertSentToColdStorage(session, doc.getRef());
+        for (DocumentRef doc : docs) {
+            assertSentToColdStorage(session, doc);
         }
     }
 
@@ -236,13 +236,13 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         ACE[] aces = { new ACE("john", SecurityConstants.READ, true), //
                 new ACE("john", SecurityConstants.WRITE, true), //
                 new ACE("john", SecurityConstants.WRITE_COLD_STORAGE, true) };
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, blobContent, aces);
+        DocumentRef docRef = createFileDocument(DEFAULT_DOC_NAME, blobContent, aces);
 
-        CoreSession userSession = CoreInstance.getCoreSession(documentModel.getRepositoryName(), "john");
-        documentModel = moveAndRestore(documentModel);
+        CoreSession userSession = CoreInstance.getCoreSession(session.getRepositoryName(), "john");
+        moveAndRestore(docRef);
         waitForRetrieve();
-        documentModel = assertRestoredFromColdStorage(documentModel.getRef(), blobContent);
-        moveAndVerifyContent(userSession, documentModel.getRef());
+        assertRestoredFromColdStorage(docRef, blobContent);
+        moveAndVerifyContent(userSession, docRef);
     }
 
     @Test
@@ -327,10 +327,10 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
     @Test
     public void shouldMakeRestoreImmediately() throws IOException, InterruptedException {
         final String fileContent = FILE_CONTENT + System.currentTimeMillis();
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, fileContent);
-        documentModel = moveAndRestore(documentModel);
+        DocumentRef docRef = createFileDocument(DEFAULT_DOC_NAME, fileContent);
+        moveAndRestore(docRef);
         waitForRetrieve();
-        assertRestoredFromColdStorage(documentModel.getRef(), fileContent);
+        assertRestoredFromColdStorage(docRef, fileContent);
     }
 
     @Test
@@ -359,14 +359,13 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
 
     @Test
     public void shouldBeingRetrieved() {
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
+        DocumentRef docRef = createFileDocument(DEFAULT_DOC_NAME, true);
 
         // move the blob to cold storage
-        documentModel = service.moveToColdStorage(session, documentModel.getRef());
-        session.saveDocument(documentModel);
+        service.moveToColdStorage(session, docRef);
+        transactionalFeature.nextTransaction();
         // request a retrieval from the cold storage
-        documentModel = service.retrieveFromColdStorage(session, documentModel.getRef(), RESTORE_DURATION);
-        session.saveDocument(documentModel);
+        DocumentModel documentModel = service.retrieveFromColdStorage(session, docRef, RESTORE_DURATION);
         transactionalFeature.nextTransaction();
         documentModel.refresh();
 
@@ -378,22 +377,22 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
     @Test
     public void shouldMoveToColdStorageSameContent() throws IOException {
         // First doc with given content
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
-        moveAndVerifyContent(session, documentModel.getRef());
+        DocumentRef docRef = createFileDocument(DEFAULT_DOC_NAME, true);
+        moveAndVerifyContent(session, docRef);
 
         // Second doc with same content
-        documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
-        moveAndVerifyContent(session, documentModel.getRef());
+        docRef = createFileDocument(DEFAULT_DOC_NAME, true);
+        moveAndVerifyContent(session, docRef);
     }
 
     // NXP-31874
     @Test
     public void shouldRestoreOnRetrieveIfBlobAlreadyRestored() throws IOException {
         final String fileContent = FILE_CONTENT + System.currentTimeMillis();
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, fileContent);
+        DocumentRef docRef = createFileDocument(DEFAULT_DOC_NAME, fileContent);
 
         // move the blob to cold storage
-        documentModel = service.moveToColdStorage(session, documentModel.getRef());
+        DocumentModel documentModel = service.moveToColdStorage(session, docRef);
 
         // Let's mock a document sent to ColdStorage but somehow its blob has been restored independently
         ManagedBlob coldContent = (ManagedBlob) documentModel.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
@@ -413,10 +412,10 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
     @Test
     public void shouldRestoreOnRestoreIfBlobAlreadyRestored() throws IOException {
         final String fileContent = FILE_CONTENT + System.currentTimeMillis();
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, fileContent);
+        DocumentRef docRef = createFileDocument(DEFAULT_DOC_NAME, fileContent);
 
         // move the blob to cold storage
-        documentModel = service.moveToColdStorage(session, documentModel.getRef());
+        DocumentModel documentModel = service.moveToColdStorage(session, docRef);
 
         // Let's mock a document sent to ColdStorage but somehow its blob has been restored independently
         ManagedBlob coldContent = (ManagedBlob) documentModel.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);

@@ -85,7 +85,7 @@ public class PreventColdStorageUpdateListener implements EventListener {
 
         if (docHasFacet || previousDocumentHasFacet) {
             // Do not trigger a full text re-indexing since the main blob was sent to cold storage
-            log.trace("Document is in cold storage, skip fulltext reindex", doc::getId);
+            log.trace("Document: {} is in cold storage, skip fulltext reindex", doc::getId);
             DownloadBlobGuard.enable();
         }
     }

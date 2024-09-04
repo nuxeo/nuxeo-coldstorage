@@ -34,6 +34,7 @@ import org.nuxeo.ecm.blob.s3.S3BlobProviderFeature;
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.Blobs;
 import org.nuxeo.ecm.core.api.DocumentModel;
+import org.nuxeo.ecm.core.api.DocumentRef;
 import org.nuxeo.ecm.core.blob.BlobManager;
 import org.nuxeo.ecm.core.blob.BlobProvider;
 import org.nuxeo.ecm.core.blob.BlobStatus;
@@ -50,15 +51,13 @@ public class TestS3ColdStorageService extends AbstractTestColdStorageService {
     public void shouldRestoreFromColdStorageWhenReuploaded() throws IOException {
         final String fileContent = FILE_CONTENT + System.currentTimeMillis();
         // Create a 1st doc with given content
-        DocumentModel documentModel1 = createFileDocument(DEFAULT_DOC_NAME, fileContent);
-        transactionalFeature.nextTransaction();
-        moveAndVerifyContent(session, documentModel1.getRef());
+        DocumentRef docRef1 = createFileDocument(DEFAULT_DOC_NAME, fileContent);
+        moveAndVerifyContent(session, docRef1);
 
         // Creating  a 2nd doc with same content will trigger an immediate restore
-        DocumentModel documentModel2 = createFileDocument(DEFAULT_DOC_NAME + "_bis", fileContent);
-        transactionalFeature.nextTransaction();
-        assertRestoredFromColdStorage(documentModel2.getRef(), fileContent);
-        assertRestoredFromColdStorage(documentModel1.getRef(), fileContent);
+        DocumentRef docRef2 = createFileDocument(DEFAULT_DOC_NAME + "_bis", fileContent);
+        assertRestoredFromColdStorage(docRef1, fileContent);
+        assertRestoredFromColdStorage(docRef2, fileContent);
     }
 
     @Test
@@ -69,7 +68,7 @@ public class TestS3ColdStorageService extends AbstractTestColdStorageService {
         doc.setPropertyValue("file:content", (Serializable) Blobs.createBlob(CONTENT));
         doc = session.createDocument(doc);
         session.saveDocument(doc);
-
+        transactionalFeature.nextTransaction();
         moveAndVerifyContent(session, doc.getRef());
 
         ManagedBlob blob = (ManagedBlob) doc.getPropertyValue("file:content");
