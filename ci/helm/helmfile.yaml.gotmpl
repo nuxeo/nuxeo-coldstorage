@@ -15,7 +15,7 @@ repositories:
   # the index.yaml descriptor, see https://github.com/bitnami/charts/issues/10539
   url: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
 - name: nuxeo
-  url: https://chartmuseum.platform.dev.nuxeo.com/
+  url: https://packages.nuxeo.com/repository/helm-releases-public/
 
 helmDefaults:
   timeout: 600
@@ -24,7 +24,7 @@ helmDefaults:
 releases:
 - name: nuxeo
   chart: nuxeo/nuxeo
-  version: 3.0.13
+  version: ~3.1.0
   condition: nuxeo.enabled
   {{ if eq .Environment.Name "functionalTests" }}
   needs:
