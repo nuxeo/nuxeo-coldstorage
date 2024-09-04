@@ -115,20 +115,19 @@ public abstract class AbstractTestColdStorageService {
         ACE[] aces = { new ACE("john", SecurityConstants.READ, true), //
                 new ACE("john", SecurityConstants.WRITE, true), //
                 new ACE("john", SecurityConstants.WRITE_COLD_STORAGE, true) };
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true, aces);
-
-        CoreSession userSession = CoreInstance.getCoreSession(documentModel.getRepositoryName(), "john");
-        moveAndVerifyContent(userSession, documentModel.getRef());
+        DocumentRef docRef = createFileDocument(DEFAULT_DOC_NAME, true, aces);
+        CoreSession userSession = CoreInstance.getCoreSession(session.getRepositoryName(), "john");
+        moveAndVerifyContent(userSession, docRef);
     }
 
     @Test
     public void shouldFailWithoutRightPermissions() {
         ACE[] aces = { new ACE("john", SecurityConstants.READ, true) };
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true, aces);
+        DocumentRef docRef = createFileDocument(DEFAULT_DOC_NAME, true, aces);
 
         try {
-            CoreSession userSession = CoreInstance.getCoreSession(documentModel.getRepositoryName(), "john");
-            service.moveToColdStorage(userSession, documentModel.getRef());
+            CoreSession userSession = CoreInstance.getCoreSession(session.getRepositoryName(), "john");
+            service.moveToColdStorage(userSession, docRef);
             fail("Should fail because the user does not have permissions to move document to cold storage");
         } catch (NuxeoException e) {
             assertEquals(SC_FORBIDDEN, e.getStatusCode());
@@ -137,103 +136,105 @@ public abstract class AbstractTestColdStorageService {
 
     @Test
     public void shouldNotFailMoveAlreadyInColdStorage() {
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
+        DocumentRef docRef = createFileDocument(DEFAULT_DOC_NAME, true);
 
         // move for the first time
-        documentModel = service.moveToColdStorage(session, documentModel.getRef());
+        service.moveToColdStorage(session, docRef);
 
         // try to make another move
-        service.moveToColdStorage(session, documentModel.getRef());
+        service.moveToColdStorage(session, docRef);
     }
 
     @Test
     public void shouldFailMoveToColdStorageNoContent() {
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, false);
+        DocumentRef docRef = createFileDocument(DEFAULT_DOC_NAME, false);
         try {
-            service.moveToColdStorage(session, documentModel.getRef());
+            service.moveToColdStorage(session, docRef);
             fail("Should fail because there is no main content associated with the document");
         } catch (NuxeoException e) {
             assertEquals(SC_NOT_FOUND, e.getStatusCode());
-            assertEquals(String.format("There is no main content for document: %s.", documentModel), e.getMessage());
+            assertEquals(String.format("There is no main content for document: %s.", session.getDocument(docRef)),
+                    e.getMessage());
         }
     }
 
     @Test
     public void shouldFailMoveToColdStorageUnderLegalHold() {
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
-        session.makeRecord(documentModel.getRef());
-        session.setLegalHold(documentModel.getRef(), true, "any comment");
+        DocumentRef docRef = createFileDocument(DEFAULT_DOC_NAME, true);
+        session.makeRecord(docRef);
+        session.setLegalHold(docRef, true, "any comment");
         try {
-            service.moveToColdStorage(session, documentModel.getRef());
+            service.moveToColdStorage(session, docRef);
             fail("Should fail because the document is under legal hold");
         } catch (NuxeoException e) {
             assertEquals(SC_FORBIDDEN, e.getStatusCode());
             assertEquals(String.format(
-                    "The document %s is under retention or legal hold and cannot be moved to cold storage",
-                    documentModel.getId()), e.getMessage());
+                    "The document %s is under retention or legal hold and cannot be moved to cold storage", docRef),
+                    e.getMessage());
         }
     }
 
     @Test
     public void shouldFailMoveToColdStorageUnderRetention() {
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
-        session.makeRecord(documentModel.getRef());
+        DocumentRef docRef = createFileDocument(DEFAULT_DOC_NAME, true);
+        session.makeRecord(docRef);
         Calendar retainUntil = Calendar.getInstance();
         retainUntil.add(Calendar.DAY_OF_MONTH, 5);
-        session.setRetainUntil(documentModel.getRef(), retainUntil, "any comment");
+        session.setRetainUntil(docRef, retainUntil, "any comment");
         try {
-            service.moveToColdStorage(session, documentModel.getRef());
+            service.moveToColdStorage(session, docRef);
             fail("Should fail because the document is under retention");
         } catch (NuxeoException e) {
             assertEquals(SC_FORBIDDEN, e.getStatusCode());
             assertEquals(String.format(
-                    "The document %s is under retention or legal hold and cannot be moved to cold storage",
-                    documentModel.getId()), e.getMessage());
+                    "The document %s is under retention or legal hold and cannot be moved to cold storage", docRef),
+                    e.getMessage());
         }
     }
 
     @Test
     public void shouldRequestRetrieval() {
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
+        DocumentRef docRef = createFileDocument(DEFAULT_DOC_NAME, true);
 
         // move the blob to cold storage
-        service.moveToColdStorage(session, documentModel.getRef());
+        service.moveToColdStorage(session, docRef);
         // request a retrieval from the cold storage
-        documentModel = service.retrieveFromColdStorage(session, documentModel.getRef(), RESTORE_DURATION);
+        DocumentModel documentModel = service.retrieveFromColdStorage(session, docRef, RESTORE_DURATION);
 
         assertEquals(Boolean.TRUE, documentModel.getPropertyValue(COLD_STORAGE_BEING_RETRIEVED_PROPERTY));
     }
 
     @Test
     public void shouldFailRequestRetrievalBeingRetrieved() {
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
+        DocumentRef docRef = createFileDocument(DEFAULT_DOC_NAME, true);
 
         // move the blob to cold storage
-        service.moveToColdStorage(session, documentModel.getRef());
+        service.moveToColdStorage(session, docRef);
         // request a retrieval from the cold storage
-        documentModel = service.retrieveFromColdStorage(session, documentModel.getRef(), RESTORE_DURATION);
+        service.retrieveFromColdStorage(session, docRef, RESTORE_DURATION);
 
         // try to request a retrieval for a second time
         try {
-            service.retrieveFromColdStorage(session, documentModel.getRef(), RESTORE_DURATION);
+            service.retrieveFromColdStorage(session, docRef, RESTORE_DURATION);
             fail("Should fail because the cold storage content is being retrieved.");
         } catch (NuxeoException e) {
             assertEquals(SC_FORBIDDEN, e.getStatusCode());
             assertEquals(String.format("The cold storage content associated with the document: %s is being retrieved.",
-                    documentModel), e.getMessage());
+                    session.getDocument(docRef)), e.getMessage());
         }
     }
 
     @Test
     public void shouldFailRequestRetrievalNoContent() {
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
+        DocumentRef docRef = createFileDocument(DEFAULT_DOC_NAME, true);
         try {
             // try a request retrieval from the cold storage where the blob is not stored in it
-            service.retrieveFromColdStorage(session, documentModel.getRef(), RESTORE_DURATION);
+            service.retrieveFromColdStorage(session, docRef, RESTORE_DURATION);
             fail("Should fail because there no cold storage content associated to this document.");
         } catch (NuxeoException e) {
             assertEquals(SC_NOT_FOUND, e.getStatusCode());
-            assertEquals(String.format("No cold storage content defined for document: %s.", documentModel),
+            assertEquals(
+                    String.format("No cold storage content defined for document: %s.", session.getDocument(docRef)),
                     e.getMessage());
         }
     }
@@ -241,9 +242,9 @@ public abstract class AbstractTestColdStorageService {
     @Test
     public void shouldFailUpdateMainContentAlreadyInColdStorage() throws IOException {
         // move the main content into the cold storage
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
-        moveAndVerifyContent(session, documentModel.getRef());
-        ManagedBlob expectedColdContent = (ManagedBlob) session.getDocument(documentModel.getRef())
+        DocumentRef docRef = createFileDocument(DEFAULT_DOC_NAME, true);
+        DocumentModel documentModel = moveAndVerifyContent(session, docRef);
+        ManagedBlob expectedColdContent = (ManagedBlob) session.getDocument(docRef)
                                                                .getPropertyValue(FILE_CONTENT_PROPERTY);
 
         // we cannot update the main content as it is already in cold storage
@@ -280,8 +281,8 @@ public abstract class AbstractTestColdStorageService {
     @Test
     public void shouldFailRemoveColdStorageFacet() throws IOException {
         // move the main content into the cold storage
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, true);
-        moveAndVerifyContent(session, documentModel.getRef());
+        DocumentRef docRef = createFileDocument(DEFAULT_DOC_NAME, true);
+        DocumentModel documentModel = moveAndVerifyContent(session, docRef);
 
         // we cannot update the main content as it is already in cold storage
         documentModel.refresh();
@@ -355,13 +356,12 @@ public abstract class AbstractTestColdStorageService {
 
         // Create a doc with 'foo' text as main content
         final String fileContent = FILE_CONTENT + System.currentTimeMillis();
-        DocumentModel documentModel = createFileDocument(DEFAULT_DOC_NAME, fileContent);
-        transactionalFeature.nextTransaction();
+        DocumentRef docRef = createFileDocument(DEFAULT_DOC_NAME, fileContent);
         DocumentModelList res = session.query(
                 String.format("SELECT * FROM Document WHERE ecm:fulltext = '%s'", fileContent));
         assertEquals(1, res.size());
 
-        documentModel = service.moveToColdStorage(session, documentModel.getRef());
+        service.moveToColdStorage(session, docRef);
 
         transactionalFeature.nextTransaction();
         coreFeature.getStorageConfiguration().waitForFulltextIndexing();
@@ -371,11 +371,11 @@ public abstract class AbstractTestColdStorageService {
         assertEquals(1, res.size());
     }
 
-    protected DocumentModel moveAndRestore(DocumentModel documentModel) throws IOException {
+    protected DocumentModel moveAndRestore(DocumentRef docRef) throws IOException {
         // move the blob to cold storage and verify the content
-        moveAndVerifyContent(session, documentModel.getRef());
+        moveAndVerifyContent(session, docRef);
         // undo move from the cold storage
-        return service.restoreFromColdStorage(session, documentModel.getRef());
+        return service.restoreFromColdStorage(session, docRef);
     }
 
     protected DocumentModel moveAndVerifyContent(CoreSession session, DocumentRef ref) throws IOException {
@@ -405,16 +405,16 @@ public abstract class AbstractTestColdStorageService {
     protected abstract void verifyColdContent(Blob content) throws IOException;
 
     protected DocumentModel moveAndRequestRetrievalFromColdStorage(String documentName) {
-        DocumentModel documentModel = createFileDocument(documentName, true);
-        documentModel = service.moveToColdStorage(session, documentModel.getRef());
-        return service.retrieveFromColdStorage(session, documentModel.getRef(), RESTORE_DURATION);
+        DocumentRef docRef = createFileDocument(documentName, true);
+        service.moveToColdStorage(session, docRef);
+        return service.retrieveFromColdStorage(session, docRef, RESTORE_DURATION);
     }
 
-    protected DocumentModel createFileDocument(String name, boolean addBlobContent, ACE... aces) {
+    protected DocumentRef createFileDocument(String name, boolean addBlobContent, ACE... aces) {
         return createFileDocument(name, addBlobContent ? FILE_CONTENT + System.currentTimeMillis() : null, aces);
     }
 
-    protected DocumentModel createFileDocument(String name, String content, ACE... aces) {
+    protected DocumentRef createFileDocument(String name, String content, ACE... aces) {
         DocumentModel documentModel = session.createDocumentModel("/", name, "File");
         if (content != null) {
             documentModel.setPropertyValue("file:content", (Serializable) Blobs.createBlob(content));
@@ -426,7 +426,8 @@ public abstract class AbstractTestColdStorageService {
             acl.addAll(List.of(aces));
             document.setACP(acp, true);
         }
-        return document;
+        transactionalFeature.nextTransaction();
+        return document.getRef();
     }
 
     protected List<DocumentModel> createSameBlobFileDocuments(String name, int nbDoc, Blob blob, String username,
