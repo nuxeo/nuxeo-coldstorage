@@ -15,8 +15,9 @@ service:
     dev.nuxeo.com/resource: service
 amazonS3:
   enabled: true
-  accessKeyId: {{ requiredEnv "AWS_ACCESS_KEY_ID" }}
-  secretAccessKey: {{ requiredEnv "AWS_SECRET_ACCESS_KEY" }}
+  auth:
+    accessKeyId: {{ requiredEnv "AWS_ACCESS_KEY_ID" }}
+    secretKey: {{ requiredEnv "AWS_SECRET_ACCESS_KEY" }}
   region: {{ requiredEnv "AWS_REGION" }}
   bucket: {{ requiredEnv "AWS_BUCKET" }}
   bucketPrefix: {{ requiredEnv "AWS_BUCKET_PREFIX" }}
