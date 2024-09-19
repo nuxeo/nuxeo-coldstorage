@@ -21,7 +21,7 @@ package org.nuxeo.coldstorage.io;
 import java.io.Serializable;
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

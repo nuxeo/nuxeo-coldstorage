@@ -21,9 +21,9 @@
 
 package org.nuxeo.coldstorage.operations;
 
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
-import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
-import static javax.servlet.http.HttpServletResponse.SC_PRECONDITION_FAILED;
+import static jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static jakarta.servlet.http.HttpServletResponse.SC_NOT_FOUND;
+import static jakarta.servlet.http.HttpServletResponse.SC_PRECONDITION_FAILED;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -37,7 +37,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.junit.Test;
 import org.nuxeo.coldstorage.ColdStorageConstants;
@@ -65,6 +65,7 @@ import org.nuxeo.runtime.transaction.TransactionHelper;
  */
 @Features(DummyColdStorageFeature.class)
 public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
+
     @Inject
     protected CoreSession session;
 

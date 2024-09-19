@@ -19,7 +19,7 @@
 
 package org.nuxeo.coldstorage.events;
 
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
