@@ -160,7 +160,10 @@ pipeline {
               sh "mkdir -p ci/docker/target && cp ${NUXEO_COLDSTORAGE_PACKAGE_PATH} ci/docker/target"
               def nuxeoVersion = sh(returnStdout: true,
                 script: 'mvn org.apache.maven.plugins:maven-help-plugin:3.3.0:evaluate -Dexpression=nuxeo.platform.version -q -DforceStdout')
-              nxDocker.build(skaffoldFile: 'ci/docker/skaffold.yaml', envVars: ["NUXEO_VERSION=${nuxeoVersion}"])
+                withCredentials([usernamePassword(credentialsId: 'packages.nuxeo.com-auth', usernameVariable: 'YUM_REPO_USERNAME', passwordVariable: 'YUM_REPO_PASSWORD')]) {
+                   sh 'envsubst < ci/docker/nuxeo-private.repo > ci/docker/nuxeo-private.repo~gen'
+                }
+                nxDocker.build(skaffoldFile: 'ci/docker/skaffold.yaml', envVars: ["NUXEO_VERSION=${nuxeoVersion}"])
             }
           }
           nxWithGitHubStatus(context: 'ftests') {
