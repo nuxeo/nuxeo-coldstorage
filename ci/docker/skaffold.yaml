@@ -11,37 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-apiVersion: skaffold/v2beta17
+apiVersion: skaffold/v2beta29
 kind: Config
 build:
   tagPolicy:
     envTemplate:
       template: "{{.VERSION}}"
   artifacts:
-    - image: "$DOCKER_REGISTRY/nuxeo/nuxeo-coldstorage-ftests"
+    - image: "nuxeo/nuxeo-coldstorage-ftests"
       context: ci/docker
-      kaniko:
-        useNewRun: true
-        singleSnapshot: true
-        snapshot-mode: "time"
-        buildArgs:
-          NUXEO_VERSION: "{{.NUXEO_VERSION}}"
-          BUILD_TAG: "{{.BUILD_TAG}}"
-          SCM_REF: "{{.GIT_COMMIT}}"
-          VERSION: "{{.VERSION}}"
-  cluster:
-    namespace: platform
-    dockerConfig:
-      secretName: jenkins-docker-cfg
-    resources:
-      requests:
-        cpu: "1"
-        memory: "3Gi"
-      limits:
-        cpu: "2"
-        memory: "6Gi"
-    tolerations:
-      - key: team
-        operator: "Equal"
-        value: platform
-        effect: "NoSchedule"
+      custom:
+        buildCommand: |
+          docker-buildx \
+            --build-arg NUXEO_VERSION={{.NUXEO_VERSION}} \
+            --build-arg BUILD_TAG={{.BUILD_TAG}} \
+            --build-arg GIT_COMMIT={{.GIT_COMMIT}} \
+            --build-arg VERSION={{.VERSION}} \
+            --secret id=nuxeo-private,src=nuxeo-private.repo~gen \
