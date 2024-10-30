@@ -42,7 +42,7 @@ import org.nuxeo.ecm.core.blob.ManagedBlob;
 import org.nuxeo.runtime.api.Framework;
 import org.nuxeo.runtime.test.runner.Features;
 
-import com.amazonaws.services.s3.model.StorageClass;
+import software.amazon.awssdk.services.s3.model.StorageClass;
 
 @Features({ ColdStorageFeature.class, S3BlobProviderFeature.class })
 public class TestS3ColdStorageService extends AbstractTestColdStorageService {
@@ -88,7 +88,7 @@ public class TestS3ColdStorageService extends AbstractTestColdStorageService {
         assertNotNull(content);
         BlobStatus status = getStatus((ManagedBlob) content);
         assertFalse(status.isDownloadable());
-        assertEquals(StorageClass.Glacier.toString(), status.getStorageClass());
+        assertEquals(StorageClass.GLACIER.toString(), status.getStorageClass());
     }
 
 }

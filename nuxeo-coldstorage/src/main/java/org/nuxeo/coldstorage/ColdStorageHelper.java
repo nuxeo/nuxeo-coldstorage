@@ -32,7 +32,7 @@ import org.nuxeo.ecm.core.blob.BlobStatus;
 import org.nuxeo.ecm.core.blob.ManagedBlob;
 import org.nuxeo.runtime.api.Framework;
 
-import com.amazonaws.services.s3.model.StorageClass;
+import software.amazon.awssdk.services.s3.model.StorageClass;
 
 /**
  * @since 2021.0.0
@@ -69,6 +69,6 @@ public class ColdStorageHelper {
     }
 
     public static boolean isInColdStorage(BlobStatus status) {
-        return StorageClass.Glacier.toString().equals(status.getStorageClass());
+        return StorageClass.GLACIER.toString().equals(status.getStorageClass());
     }
 }
