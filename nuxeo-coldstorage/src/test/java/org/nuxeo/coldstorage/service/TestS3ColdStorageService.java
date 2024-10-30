@@ -54,7 +54,7 @@ public class TestS3ColdStorageService extends AbstractTestColdStorageService {
         DocumentRef docRef1 = createFileDocument(DEFAULT_DOC_NAME, fileContent);
         moveAndVerifyContent(session, docRef1);
 
-        // Creating  a 2nd doc with same content will trigger an immediate restore
+        // Creating a 2nd doc with same content will trigger an immediate restore
         DocumentRef docRef2 = createFileDocument(DEFAULT_DOC_NAME + "_bis", fileContent);
         assertRestoredFromColdStorage(docRef1, fileContent);
         assertRestoredFromColdStorage(docRef2, fileContent);
