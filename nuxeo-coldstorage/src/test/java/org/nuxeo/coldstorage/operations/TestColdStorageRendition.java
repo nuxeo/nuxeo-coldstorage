@@ -20,15 +20,12 @@
 package org.nuxeo.coldstorage.operations;
 
 import static jakarta.servlet.http.HttpServletResponse.SC_NOT_FOUND;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import jakarta.inject.Inject;
 
@@ -38,22 +35,25 @@ import org.nuxeo.coldstorage.ColdStorageFeature;
 import org.nuxeo.common.utils.FileUtils;
 import org.nuxeo.ecm.automation.OperationException;
 import org.nuxeo.ecm.blob.s3.S3BlobProviderFeature;
-import org.nuxeo.ecm.core.api.Blob;
-import org.nuxeo.ecm.core.api.Blobs;
-import org.nuxeo.ecm.core.api.CoreSession;
-import org.nuxeo.ecm.core.api.DocumentModel;
-import org.nuxeo.ecm.core.api.NuxeoException;
+import org.nuxeo.ecm.core.api.*;
 import org.nuxeo.ecm.platform.picture.api.ImagingDocumentConstants;
+import org.nuxeo.ecm.platform.picture.test.ImagingFeature;
 import org.nuxeo.ecm.platform.rendition.Rendition;
 import org.nuxeo.ecm.platform.rendition.service.RenditionService;
 import org.nuxeo.ecm.platform.video.VideoConstants;
+import org.nuxeo.ecm.platform.video.VideoFeature;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.Features;
 
 /**
  * @since 2021.0.0
  */
-@Features({ ColdStorageFeature.class, S3BlobProviderFeature.class })
+@Features({ //
+        ColdStorageFeature.class, //
+        ImagingFeature.class, //
+        VideoFeature.class, //
+        S3BlobProviderFeature.class //
+})
 public class TestColdStorageRendition extends AbstractTestColdStorageOperation {
 
     @Inject
@@ -153,7 +153,7 @@ public class TestColdStorageRendition extends AbstractTestColdStorageOperation {
     @Override
     protected void checkMoveContent(List<DocumentModel> expectedDocs, List<DocumentModel> actualDocs) {
         assertEquals(expectedDocs.size(), actualDocs.size());
-        List<String> expectedDocIds = expectedDocs.stream().map(DocumentModel::getId).collect(Collectors.toList());
+        List<String> expectedDocIds = expectedDocs.stream().map(DocumentModel::getId).toList();
         for (DocumentModel updatedDoc : actualDocs) {
             // check document
             assertTrue(expectedDocIds.contains(updatedDoc.getId()));

@@ -21,30 +21,8 @@
 
 package org.nuxeo.coldstorage.service;
 
-import static jakarta.servlet.http.HttpServletResponse.SC_CONFLICT;
-import static jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN;
-import static jakarta.servlet.http.HttpServletResponse.SC_NOT_FOUND;
-import static jakarta.servlet.http.HttpServletResponse.SC_PRECONDITION_FAILED;
-import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_BEING_RETRIEVED_PROPERTY;
-import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_ARCHIVE_LOCATION_MAIL_TEMPLATE_KEY;
-import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME;
-import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_NOTIFICATION_NAME;
-import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_UNTIL_MAIL_TEMPLATE_KEY;
-import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL;
-import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_MOVED_EVENT_NAME;
-import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY;
-import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_RESTORED_EVENT_NAME;
-import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_RESTORED_NOTIFICATION_NAME;
-import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_TO_RESTORE_EVENT_NAME;
-import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_TO_RETRIEVE_EVENT_NAME;
-import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_FACET_NAME;
-import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_NUMBER_OF_DAYS_OF_AVAILABILITY_PROPERTY_NAME;
-import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_THUMBNAIL_PREVIEW_REQUIRED_PROPERTY_NAME;
-import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_TO_BE_RESTORED_PROPERTY;
-import static org.nuxeo.coldstorage.ColdStorageConstants.EVENT_CATEGORY;
-import static org.nuxeo.coldstorage.ColdStorageConstants.EVENT_CATEGORY_LABEL;
-import static org.nuxeo.coldstorage.ColdStorageConstants.FILE_CONTENT_PROPERTY;
-import static org.nuxeo.coldstorage.ColdStorageConstants.GET_DOCUMENTS_TO_CHECK_QUERY;
+import static jakarta.servlet.http.HttpServletResponse.*;
+import static org.nuxeo.coldstorage.ColdStorageConstants.*;
 import static org.nuxeo.coldstorage.events.CheckAlreadyInColdStorageListener.DISABLE_CHECK_ALREADY_IN_COLD_STORAGE_LISTENER;
 import static org.nuxeo.coldstorage.events.PreventColdStorageUpdateListener.DISABLE_PREVENT_COLD_STORAGE_UPDATE_LISTENER;
 import static org.nuxeo.ecm.core.api.CoreSession.ALLOW_VERSION_WRITE;
@@ -54,12 +32,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 
 import org.apache.logging.log4j.LogManager;
@@ -69,14 +42,7 @@ import org.nuxeo.coldstorage.ColdStorageRenditionDescriptor;
 import org.nuxeo.coldstorage.action.CheckColdStorageAvailabilityAction;
 import org.nuxeo.coldstorage.action.PropagateMoveToColdStorageContentAction;
 import org.nuxeo.coldstorage.action.PropagateRestoreFromColdStorageContentAction;
-import org.nuxeo.ecm.core.api.Blob;
-import org.nuxeo.ecm.core.api.CoreInstance;
-import org.nuxeo.ecm.core.api.CoreSession;
-import org.nuxeo.ecm.core.api.DocumentModel;
-import org.nuxeo.ecm.core.api.DocumentRef;
-import org.nuxeo.ecm.core.api.DocumentSecurityException;
-import org.nuxeo.ecm.core.api.NuxeoException;
-import org.nuxeo.ecm.core.api.NuxeoPrincipal;
+import org.nuxeo.ecm.core.api.*;
 import org.nuxeo.ecm.core.api.event.CoreEventConstants;
 import org.nuxeo.ecm.core.api.impl.DownloadBlobGuard;
 import org.nuxeo.ecm.core.api.security.SecurityConstants;
@@ -159,7 +125,7 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         // Let's add cold storage event category in appropriate directory.
         Framework.doPrivileged(() -> {
             DirectoryService directoryService = Framework.getService(DirectoryService.class);
-            if (directoryService == null) {
+            if (directoryService == null || directoryService.getDirectory("eventCategories") == null) {
                 // don't bother in test ctx
                 return;
             }

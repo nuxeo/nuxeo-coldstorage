@@ -364,7 +364,6 @@ public abstract class AbstractTestColdStorageService {
         service.moveToColdStorage(session, docRef);
 
         transactionalFeature.nextTransaction();
-        coreFeature.getStorageConfiguration().waitForFulltextIndexing();
 
         // Assert binary text has not been erased after doc sent to cold storage
         res = session.query(String.format("SELECT * FROM Document WHERE ecm:fulltext = '%s'", fileContent));
