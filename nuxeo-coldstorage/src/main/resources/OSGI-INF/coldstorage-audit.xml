@@ -1,5 +1,5 @@
 <component name="org.nuxeo.coldstorage.audit" version="1.0">
-  <extension target="org.nuxeo.ecm.platform.audit.service.NXAuditEventsService" point="event">
+  <extension target="org.nuxeo.audit.service.AuditComponent" point="event">
     <event name="coldStorageContentMoved" />
     <event name="coldStorageContentToRetrieve" />
     <event name="coldStorageContentAvailable" />

@@ -106,7 +106,7 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
     @LogCaptureFeature.FilterWith(ColdStorageActionsLogFilter.class)
     public void shouldBulkMoveToColdStorage() throws IOException {
         final String fileContent = FILE_CONTENT + System.currentTimeMillis();
-        List<DocumentRef> docs = new ArrayList<DocumentRef>();
+        List<DocumentRef> docs = new ArrayList<>();
         int nbDocs = 10;
         for (int i = 0; i < nbDocs; i++) {
             docs.add(createFileDocument(DEFAULT_DOC_NAME + i, fileContent + i));
@@ -163,7 +163,7 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
 
             // and assert it is cancelled and a cold storage download event is fired instead
             assertEquals(2, listener.streamCapturedEvents().count());
-            assertTrue(listener.findFirstCapturedEvent(DownloadService.EVENT_NAME).get().isCanceled());
+            assertTrue(listener.findFirstCapturedEvent(DownloadService.EVENT_NAME).orElseThrow().isCanceled());
             assertTrue(listener.findFirstCapturedEvent(COLD_STORAGE_CONTENT_DOWNLOAD_EVENT_NAME).isPresent());
         }
     }
@@ -185,7 +185,7 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         List<DocumentModel> list2 = createSameBlobFileDocuments(DEFAULT_DOC_NAME + "2", 10, blob2, "john", READ, WRITE,
                 WRITE_COLD_STORAGE);
         coreFeature.waitForAsyncCompletion(); // for thumbnail generation
-        List<DocumentModel> documentModels = new ArrayList<DocumentModel>();
+        List<DocumentModel> documentModels = new ArrayList<>();
         documentModels = Stream.concat(list1.stream(), list2.stream()).collect(Collectors.toList());
         CoreSession userSession = CoreInstance.getCoreSession(documentModels.get(0).getRepositoryName(), "john");
 
@@ -466,9 +466,9 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
 
     protected void waitForRetrieve() throws InterruptedException {
         Thread.sleep(DummyBlobProvider.RESTORE_DELAY_MILLISECONDS + 200);
-        EventService eventService = Framework.getService(EventService.class);
         EventContextImpl ctx = new EventContextImpl();
-        eventService.fireEvent(ctx.newEvent(COLD_STORAGE_CHECK_CONTENT_AVAILABILITY_EVENT_NAME));
+        Framework.getService(EventService.class)
+                 .fireEvent(ctx.newEvent(COLD_STORAGE_CHECK_CONTENT_AVAILABILITY_EVENT_NAME));
         coreFeature.waitForAsyncCompletion();
     }
 

@@ -159,10 +159,6 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         // Let's add cold storage event category in appropriate directory.
         Framework.doPrivileged(() -> {
             DirectoryService directoryService = Framework.getService(DirectoryService.class);
-            if (directoryService == null) {
-                // don't bother in test ctx
-                return;
-            }
             try (Session dirSession = directoryService.getDirectory("eventCategories").getSession()) {
                 if (!dirSession.hasEntry(EVENT_CATEGORY)) {
                     Map<String, Object> entry = new HashMap<>();

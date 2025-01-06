@@ -313,9 +313,9 @@ public abstract class AbstractTestColdStorageService {
 
     @Test
     @Deploy("org.nuxeo.coldstorage.test:OSGI-INF/test-thumbnail-recomputation-contrib.xml")
-    public void shouldNotRecomputeThumbnail() throws IOException {
+    public void shouldNotRecomputeThumbnail() {
         DocumentModel documentModel = session.createDocumentModel("/", DEFAULT_DOC_NAME, "MyCustomFile");
-        documentModel.setPropertyValue("file:content",
+        documentModel.setPropertyValue("file:content", // NOSONAR
                 (Serializable) Blobs.createBlob(FILE_CONTENT + System.currentTimeMillis()));
         documentModel = session.createDocument(documentModel);
         documentModel = session.saveDocument(documentModel);
@@ -332,7 +332,7 @@ public abstract class AbstractTestColdStorageService {
         assertEquals(originalThumbnail.getKey(), thumbnailUpdateOne.getKey());
 
         // Emulate the case where the content is updated
-        documentModel.setPropertyValue(FILE_CONTENT_PROPERTY, (Serializable) thumbnailUpdateOne);
+        documentModel.setPropertyValue(FILE_CONTENT_PROPERTY, thumbnailUpdateOne);
 
         // shouldn't recompute the thumbnail
         documentModel.putContextData(DISABLE_THUMBNAIL_COMPUTATION, true);
@@ -364,7 +364,6 @@ public abstract class AbstractTestColdStorageService {
         service.moveToColdStorage(session, docRef);
 
         transactionalFeature.nextTransaction();
-        coreFeature.getStorageConfiguration().waitForFulltextIndexing();
 
         // Assert binary text has not been erased after doc sent to cold storage
         res = session.query(String.format("SELECT * FROM Document WHERE ecm:fulltext = '%s'", fileContent));
@@ -432,7 +431,7 @@ public abstract class AbstractTestColdStorageService {
 
     protected List<DocumentModel> createSameBlobFileDocuments(String name, int nbDoc, Blob blob, String username,
             String... permissions) {
-        List<DocumentModel> docs = new ArrayList<DocumentModel>();
+        List<DocumentModel> docs = new ArrayList<>();
         for (int i = 0; i < nbDoc; i++) {
             DocumentModel documentModel = session.createDocumentModel("/", name + (i + 1), "File");
             documentModel.setPropertyValue("file:content", (Serializable) blob);

@@ -19,8 +19,10 @@
 
 package org.nuxeo.coldstorage;
 
+import org.nuxeo.audit.test.AuditFeature;
 import org.nuxeo.ecm.platform.ec.notification.NotificationFeature;
-import org.nuxeo.ecm.platform.picture.core.ImagingFeature;
+import org.nuxeo.ecm.platform.picture.test.ImagingFeature;
+import org.nuxeo.ecm.platform.thumbnail.ThumbnailFeature;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.Features;
 import org.nuxeo.runtime.test.runner.LogCaptureFeature;
@@ -29,14 +31,16 @@ import org.nuxeo.runtime.test.runner.RunnerFeature;
 /**
  * @since 2021.0.0
  */
-@Features({ ImagingFeature.class, LogCaptureFeature.class, NotificationFeature.class })
-@Deploy("org.nuxeo.ecm.platform.notification")
-@Deploy("org.nuxeo.ecm.core.management")
+@Features({ //
+        AuditFeature.class, //
+        LogCaptureFeature.class, //
+        NotificationFeature.class, //
+        ThumbnailFeature.class, //
+        ImagingFeature.class //
+})
 @Deploy("org.nuxeo.ecm.platform.video")
 @Deploy("org.nuxeo.ecm.platform.convert")
-@Deploy("org.nuxeo.ecm.platform.thumbnail")
-@Deploy("org.nuxeo.ecm.platform.rendition.core")
-@Deploy("org.nuxeo.ecm.platform.convert")
+@Deploy("org.nuxeo.ecm.default.config")
 @Deploy("org.nuxeo.coldstorage")
 @Deploy("org.nuxeo.coldstorage.test")
 public class ColdStorageFeature implements RunnerFeature {

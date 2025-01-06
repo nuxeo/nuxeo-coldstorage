@@ -36,8 +36,6 @@ Closure buildUnitTestStage(env) {
                 sh """
                   mvn -B -nsu -pl :nuxeo-coldstorage \
                     -Dcustom.environment=${env} \
-                    -Dcustom.environment.log.dir=target-${env} \
-                    -Dnuxeo.test.core=${env == 'mongodb' ? 'mongodb' : 'vcs'} \
                     test
                 """
               }
@@ -67,6 +65,7 @@ pipeline {
     AWS_REGION = 'us-east-1'
     AWS_BUCKET = "nuxeo-platform-coldstorage"
     CURRENT_NAMESPACE = nxK8s.getCurrentNamespace()
+    TEST_SERVICE_DOMAIN_SUFFIX = 'svc.cluster.local'
     MAVEN_OPTS = "$MAVEN_OPTS -Xms512m -Xmx3072m"
     VERSION = nxUtils.getVersion()
     NUXEO_COLDSTORAGE_PACKAGE_PATH = "nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-${VERSION}.zip"

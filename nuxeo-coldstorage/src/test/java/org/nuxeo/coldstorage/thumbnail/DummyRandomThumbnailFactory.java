@@ -34,9 +34,11 @@ import org.nuxeo.ecm.platform.thumbnail.ThumbnailConstants;
  *
  * @since 2021.0.0
  */
-public class DummyRandomThumbnailFactory extends DummyThumbnailFactory  {
+public class DummyRandomThumbnailFactory extends DummyThumbnailFactory {
 
     public static final String RANDOM_THUMBNAIL_BLOB_NAME = "randomlyComputed";
+
+    protected Random random = new Random();
 
     @Override
     public Blob getThumbnail(DocumentModel doc, CoreSession session) {
@@ -50,8 +52,8 @@ public class DummyRandomThumbnailFactory extends DummyThumbnailFactory  {
     @Override
     public Blob computeThumbnail(DocumentModel doc, CoreSession session) {
         // Let recompute a random thumbnail for testing purposes
-        byte[] bytes = new byte[new Random().nextInt(50) + 20];
-        new Random().nextBytes(bytes);
+        byte[] bytes = new byte[random.nextInt(50) + 20];
+        random.nextBytes(bytes);
         Blob blob = Blobs.createBlob(bytes);
         blob.setFilename(RANDOM_THUMBNAIL_BLOB_NAME);
         return blob;

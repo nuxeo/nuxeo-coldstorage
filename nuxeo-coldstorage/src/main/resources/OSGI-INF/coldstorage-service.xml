@@ -2,6 +2,7 @@
 <component name="org.nuxeo.coldstorage.service.ColdStorageService">
 
     <require>org.nuxeo.ecm.platform.rendition.service.RenditionService</require>
+    <require>org.nuxeo.ecm.directories</require>
 
     <implementation class="org.nuxeo.coldstorage.service.ColdStorageServiceImpl" />
 
