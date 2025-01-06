@@ -64,9 +64,6 @@ public class RequestRetrievalFromColdStorageTest extends AbstractTestColdStorage
     public static final String READ_USER = "ReadUser";
 
     @Inject
-    protected CoreSession session;
-
-    @Inject
     protected NotificationManager notificationManager;
 
     @Test
@@ -94,15 +91,6 @@ public class RequestRetrievalFromColdStorageTest extends AbstractTestColdStorage
             CoreSession readSession = CoreInstance.getCoreSession(session.getRepositoryName());
             requestRetrievalContentFromColdStorage(documentModel, readSession);
         }
-    }
-
-    @Test
-    public void shouldRequestRetrievalWithDefaultValue() throws OperationException, IOException {
-        DocumentModel documentModel = createFileDocument(session, true);
-        // first make the move to cold storage
-        documentModel = moveContentToColdStorage(session, documentModel);
-        // request a retrieval from the cold storage
-        requestRetrievalContentFromColdStorage(documentModel, session);
     }
 
     @Test

@@ -23,17 +23,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import jakarta.inject.Inject;
 
 import org.junit.runner.RunWith;
 import org.nuxeo.coldstorage.ColdStorageConstants;
-import org.nuxeo.coldstorage.ColdStorageFeature;
 import org.nuxeo.coldstorage.ColdStorageHelper;
 import org.nuxeo.ecm.automation.AutomationService;
 import org.nuxeo.ecm.automation.OperationContext;
@@ -49,7 +46,6 @@ import org.nuxeo.ecm.core.api.security.ACP;
 import org.nuxeo.ecm.core.blob.ManagedBlob;
 import org.nuxeo.ecm.core.test.CoreFeature;
 import org.nuxeo.runtime.test.runner.Deploy;
-import org.nuxeo.runtime.test.runner.Features;
 import org.nuxeo.runtime.test.runner.FeaturesRunner;
 import org.nuxeo.runtime.test.runner.TransactionalFeature;
 
@@ -57,7 +53,6 @@ import org.nuxeo.runtime.test.runner.TransactionalFeature;
  * @since 2021.0.0
  */
 @RunWith(FeaturesRunner.class)
-@Features(ColdStorageFeature.class)
 @Deploy("org.nuxeo.ecm.automation.core")
 @Deploy("org.nuxeo.ecm.automation.features")
 public abstract class AbstractTestColdStorageOperation {
@@ -77,7 +72,7 @@ public abstract class AbstractTestColdStorageOperation {
     protected TransactionalFeature transactionalFeature;
 
     protected DocumentModel moveContentToColdStorage(CoreSession session, DocumentModel documentModel)
-            throws OperationException, IOException {
+            throws OperationException {
         try (OperationContext context = new OperationContext(session)) {
             context.setInput(documentModel);
             documentModel = (DocumentModel) automationService.run(context, MoveToColdStorage.ID);
@@ -87,14 +82,14 @@ public abstract class AbstractTestColdStorageOperation {
     }
 
     protected void moveContentToColdStorage(CoreSession session, List<DocumentModel> documents)
-            throws OperationException, IOException {
+            throws OperationException {
         try (OperationContext context = new OperationContext(session)) {
             context.setInput(documents);
             checkMoveContent(documents, (DocumentModelList) automationService.run(context, MoveToColdStorage.ID));
         }
     }
 
-    protected void checkMoveContent(DocumentModel doc) throws IOException {
+    protected void checkMoveContent(DocumentModel doc) {
         // check document
         assertTrue(doc.hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME));
 
@@ -104,10 +99,9 @@ public abstract class AbstractTestColdStorageOperation {
         ColdStorageHelper.isInColdStorage((ManagedBlob) coldStorageContent);
     }
 
-    protected void checkMoveContent(List<DocumentModel> expectedDocs, List<DocumentModel> actualDocs)
-            throws IOException {
+    protected void checkMoveContent(List<DocumentModel> expectedDocs, List<DocumentModel> actualDocs) {
         assertEquals(expectedDocs.size(), actualDocs.size());
-        List<String> expectedDocIds = expectedDocs.stream().map(DocumentModel::getId).collect(Collectors.toList());
+        List<String> expectedDocIds = expectedDocs.stream().map(DocumentModel::getId).toList();
         for (DocumentModel updatedDoc : actualDocs) {
             assertTrue(expectedDocIds.contains(updatedDoc.getId()));
             checkMoveContent(updatedDoc);

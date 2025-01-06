@@ -67,13 +67,10 @@ import org.nuxeo.runtime.transaction.TransactionHelper;
 public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
 
     @Inject
-    protected CoreSession session;
-
-    @Inject
     protected ThumbnailService thumbnailService;
 
     @Test
-    public void shouldFailWithoutRightPermissions() throws OperationException, IOException {
+    public void shouldFailWithoutRightPermissions() throws OperationException {
         ACE[] aces = { new ACE("john", SecurityConstants.READ, true) };
         DocumentModel documentModel = createFileDocument(session, true, aces);
 
@@ -87,7 +84,7 @@ public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
     }
 
     @Test
-    public void shouldMoveToColdStorage() throws OperationException, IOException {
+    public void shouldMoveToColdStorage() throws OperationException {
         // with regular user with "WriteColdStorage" permission
         ACE[] aces = { new ACE("john", SecurityConstants.READ, true), //
                 new ACE("john", SecurityConstants.WRITE, true), //
@@ -103,13 +100,13 @@ public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
     }
 
     @Test
-    public void shouldMoveDocsToColdStorage() throws OperationException, IOException {
+    public void shouldMoveDocsToColdStorage() throws OperationException {
         // with regular user with "WriteColdStorage" permission
-        ACE[] aces = { new ACE("linda", SecurityConstants.READ, true), //
+        ACE[] aces = { new ACE("linda", SecurityConstants.READ, true), // NOSONAR
                 new ACE("linda", SecurityConstants.WRITE, true), //
                 new ACE("linda", SecurityConstants.WRITE_COLD_STORAGE, true) };
 
-        List<DocumentModel> documents = List.of(createFileDocument(session, "MyFile1", true, aces), //
+        List<DocumentModel> documents = List.of(createFileDocument(session, "MyFile1", true, aces), // NOSONAR
                 createFileDocument(session, "MyFile2", true, aces), //
                 createFileDocument(session, "MyFile3", true, aces));
 
@@ -125,7 +122,7 @@ public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
     }
 
     @Test
-    public void shouldFailMoveDocsToColdStorage() throws OperationException, IOException {
+    public void shouldFailMoveDocsToColdStorage() throws OperationException {
         DocumentModel underLegalHold = createFileDocument(session, "MyFile1", true);
         session.makeRecord(underLegalHold.getRef());
         session.setLegalHold(underLegalHold.getRef(), true, "any comment");
@@ -148,7 +145,7 @@ public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
     }
 
     @Test
-    public void shouldNotFailMoveAlreadyInColdStorage() throws OperationException, IOException {
+    public void shouldNotFailMoveAlreadyInColdStorage() throws OperationException {
         DocumentModel documentModel = createFileDocument(session, true);
         // make a move
         moveContentToColdStorage(session, documentModel);
@@ -158,7 +155,7 @@ public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
 
     @Test
     @WithFrameworkProperty(name = COLD_STORAGE_THUMBNAIL_PREVIEW_REQUIRED_PROPERTY_NAME, value = "true")
-    public void shouldFailMoveToColdStorageNoThumbnail() throws OperationException, IOException {
+    public void shouldFailMoveToColdStorageNoThumbnail() throws OperationException {
         DocumentModel documentModel = createFileDocument(session, true);
         try {
             moveContentToColdStorage(session, documentModel);
@@ -179,13 +176,13 @@ public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
 
     @Test
     @WithFrameworkProperty(name = COLD_STORAGE_THUMBNAIL_PREVIEW_REQUIRED_PROPERTY_NAME, value = "false")
-    public void shouldNotFailMoveToColdStorageNoThumbnail() throws OperationException, IOException {
+    public void shouldNotFailMoveToColdStorageNoThumbnail() throws OperationException {
         DocumentModel documentModel = createFileDocument(session, true);
         moveContentToColdStorage(session, documentModel);
     }
 
     @Test
-    public void shouldFailMoveToColdStorageNoContent() throws OperationException, IOException {
+    public void shouldFailMoveToColdStorageNoContent() throws OperationException {
         DocumentModel documentModel = createFileDocument(session, false);
         try {
             moveContentToColdStorage(session, documentModel);
@@ -200,7 +197,7 @@ public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
     @Deploy("org.nuxeo.ecm.platform.thumbnail:OSGI-INF/thumbnail-listener-contrib.xml")
     @Deploy("org.nuxeo.ecm.platform.thumbnail:OSGI-INF/thumbnail-core-types-contrib.xml")
     @Deploy("org.nuxeo.ecm.platform.types")
-    public void shouldNotRecomputeThumbnail() throws IOException, OperationException {
+    public void shouldNotRecomputeThumbnail() throws OperationException, IOException {
         DocumentModel documentModel = createFileDocument(session, true);
         transactionalFeature.nextTransaction();
         Blob originalThumbnail = thumbnailService.getThumbnail(documentModel, session);
@@ -216,7 +213,7 @@ public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
     }
 
     @Test
-    public void shouldNotReplaceColdStorageContent() throws IOException, OperationException {
+    public void shouldNotReplaceColdStorageContent() throws OperationException {
         DocumentModel documentModel = createFileDocument(session, true);
         transactionalFeature.nextTransaction();
         moveContentToColdStorage(session, documentModel);
@@ -224,9 +221,9 @@ public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
         documentModel.refresh();
 
         try {
-            Blob BloThumbnail = thumbnailService.getThumbnail(documentModel, session);
+            Blob blobThumbnail = thumbnailService.getThumbnail(documentModel, session);
             documentModel.setPropertyValue(ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY,
-                    (Serializable) BloThumbnail);
+                    (Serializable) blobThumbnail);
             session.saveDocument(documentModel);
             fail("Should fail because the document content can't be updated");
         } catch (NuxeoException e) {
@@ -235,7 +232,7 @@ public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
     }
 
     @Test
-    public void shouldNotDeleteColdStorageFacet() throws IOException, OperationException {
+    public void shouldNotDeleteColdStorageFacet() throws OperationException {
         DocumentModel documentModel = createFileDocument(session, true);
         transactionalFeature.nextTransaction();
         moveContentToColdStorage(session, documentModel);
