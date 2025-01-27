@@ -25,6 +25,6 @@ build:
           docker-buildx \
             --build-arg NUXEO_VERSION={{.NUXEO_VERSION}} \
             --build-arg BUILD_TAG={{.BUILD_TAG}} \
-            --build-arg GIT_COMMIT={{.GIT_COMMIT}} \
+            --build-arg SCM_REF={{.GIT_COMMIT}} \
             --build-arg VERSION={{.VERSION}} \
             --secret id=nuxeo-private,src=nuxeo-private.repo~gen \
