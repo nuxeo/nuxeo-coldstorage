@@ -13,7 +13,19 @@ on:
     paths:
       - 'nuxeo-coldstorage-web/i18n/messages.json'
 
+  # TMP
+  pull_request:
+    branches: [ "lts-2021"]
+
 jobs:
+  call-workflow-in-lts-2023:
+    # if: github.event_name == 'schedule'
+    if: github.event_name == 'pull_request'
+    # in uses, cannot use environment variable for {owner}/{repo} nor matrix strategy variable for {ref}
+    # thus hardcoding them
+    # uses: nuxeo/nuxeo-coldstorage/.github/workflows/crowdin.yml@lts-2023
+    uses: nuxeo/nuxeo-coldstorage/.github/workflows/crowdin.yml@fix-NXP-32945-crowdin-job-schedule-2023
+
   crowdin:
     runs-on: ubuntu-latest
 
