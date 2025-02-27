@@ -7,6 +7,9 @@ on:
     # Everyday at 01:12
     - cron: '12 1 * * *'
 
+  # Make workflow reusable, to be called by the scheduled crowdin workflow in the default branch
+  workflow_call:
+
   # Sync when a commit is done on the reference branches
   push:
     branches: ["lts-2023"]
