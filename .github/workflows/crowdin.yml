@@ -19,10 +19,12 @@ jobs:
   call-workflow-in-lts-2023:
     if: github.event_name == 'schedule'
     uses: nuxeo/nuxeo-coldstorage/.github/workflows/crowdin.yml@lts-2023
+    secrets: inherit
 
   call-workflow-in-lts-2025:
     if: github.event_name == 'schedule'
     uses: nuxeo/nuxeo-coldstorage/.github/workflows/crowdin.yml@lts-2025
+    secrets: inherit
 
   crowdin:
     runs-on: ubuntu-latest
