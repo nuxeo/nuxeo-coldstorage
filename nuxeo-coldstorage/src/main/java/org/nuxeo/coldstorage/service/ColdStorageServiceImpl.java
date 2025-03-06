@@ -91,6 +91,7 @@ import org.nuxeo.ecm.core.event.Event;
 import org.nuxeo.ecm.core.event.EventService;
 import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
 import org.nuxeo.ecm.core.io.download.DownloadService;
+import org.nuxeo.ecm.core.query.sql.NXQL;
 import org.nuxeo.ecm.directory.Session;
 import org.nuxeo.ecm.directory.api.DirectoryService;
 import org.nuxeo.ecm.platform.ec.notification.NotificationConstants;
@@ -530,6 +531,11 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
      * @param blobDigests the blob digests
      */
     public void propagateRestoreFromColdStorage(CoreSession session, String blobDigest) {
+        if (session.queryProjection(String.format("SELECT " + NXQL.ECM_UUID + " FROM Document WHERE %s/digest = '%s'",
+                COLD_STORAGE_CONTENT_PROPERTY, blobDigest), 1, 0).isEmpty()) {
+            log.debug("No other cold document referencing blob: {}", blobDigest);
+            return;
+        }
         String query = String.format("SELECT * FROM Document WHERE %s/digest = '%s'", COLD_STORAGE_CONTENT_PROPERTY,
                 blobDigest);
 
