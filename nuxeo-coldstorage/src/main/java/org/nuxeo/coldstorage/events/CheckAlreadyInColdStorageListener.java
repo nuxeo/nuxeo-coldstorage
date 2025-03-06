@@ -83,7 +83,7 @@ public class CheckAlreadyInColdStorageListener implements EventListener {
             return;
         }
         Blob blob = (Blob) doc.getPropertyValue(FILE_CONTENT_PROPERTY);
-        if (blob != null && blob instanceof ManagedBlob) {
+        if (blob instanceof ManagedBlob) {
             ColdStorageService service = Framework.getService(ColdStorageService.class);
             CoreSession session = docCtx.getCoreSession();
             if (ColdStorageHelper.isInColdStorage((ManagedBlob) blob)) {
