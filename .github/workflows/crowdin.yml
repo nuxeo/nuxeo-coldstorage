@@ -32,10 +32,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          ref: lts-2021
 
       - name: Crowdin Action
         uses: crowdin/github-action@1.5.2
         with:
+          # Disable 'git checkout "${GITHUB_REF#refs/heads/}"'
+          skip_ref_checkout: true
+
           # Tokens
           project_id: ${{ secrets.CROWDIN_PROJECT_ID }}
           token: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
@@ -50,9 +55,11 @@ jobs:
           auto_approve_imported: true
 
           # Name of the branch where to merge the translations
-          localization_branch_name: crowdin-translations-update
+          localization_branch_name: crowdin-translations-update-lts-2021
+          pull_request_base_branch_name: lts-2021
           create_pull_request: true
           pull_request_reviewers: 'manonlumeau'
+          pull_request_title: New Crowdin translations by GitHub Action (lts-2021)
 
           # Automatically download all the new translations
           download_translations: true
