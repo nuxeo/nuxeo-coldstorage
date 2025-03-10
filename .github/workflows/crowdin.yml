@@ -2,11 +2,6 @@
 name: Crowdin
 
 on:
-  # Check for updates every day
-  schedule:
-    # Everyday at 01:12
-    - cron: '12 1 * * *'
-
   # Make workflow reusable, to be called by the scheduled crowdin workflow in the default branch
   workflow_call:
 
