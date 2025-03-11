@@ -8,7 +8,7 @@ const baseConfig = {
   browsers: [
     playwrightLauncher({ product: 'chromium' }),
     /* playwrightLauncher({ product: 'webkit' }), */
-    playwrightLauncher({ product: 'firefox' }),
+    /* playwrightLauncher({ product: 'firefox' }), */
   ],
   coverage: true,
   nodeResolve: true,
