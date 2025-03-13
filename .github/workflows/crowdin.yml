@@ -38,6 +38,7 @@ jobs:
           ref: lts-2021
 
       - name: Crowdin Action
+        id: crowdin-sync
         uses: crowdin/github-action@1.5.2
         with:
           # Disable 'git checkout "${GITHUB_REF#refs/heads/}"'
@@ -66,5 +67,11 @@ jobs:
           # Automatically download all the new translations
           download_translations: true
 
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enable auto-merge for the PR
+        if: steps.crowdin-sync.outputs.pull_request_url
+        run: gh pr --repo $GITHUB_REPOSITORY merge ${{ steps.crowdin-sync.outputs.pull_request_url }} --auto --rebase
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
