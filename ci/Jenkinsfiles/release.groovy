@@ -97,19 +97,17 @@ pipeline {
       steps {
         container('maven') {
           script {
-            def jiraIssueFetchers = [
-                type                 : 'jira',
-                jql                  : "project = ${JIRA_PROJECT} and fixVersion = ${JIRA_MOVING_VERSION}",
-                newJiraVersion       : [
-                    project    : env.JIRA_PROJECT,
-                    name       : env.JIRA_RELEASED_VERSION,
-                    description: "Cold Storage Addon ${VERSION}",
-                    releaseDate: LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE),
-                    released   : true,
-                ],
-                jiraMovingVersionName: env.JIRA_MOVING_VERSION,
-            ]
-            nxProject.release(issuesFetchers: [jiraIssueFetchers], previousVersion: nxUtils.getPreviousMajorDotMinorVersion())
+            nxProject.release(
+              jql                  : "project = ${JIRA_PROJECT} and fixVersion = ${JIRA_MOVING_VERSION}",
+              newJiraVersion       : [
+                project    : env.JIRA_PROJECT,
+                name       : env.JIRA_RELEASED_VERSION,
+                description: "Cold Storage Addon ${VERSION}",
+                releaseDate: LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE),
+                released   : true,
+              ],
+              jiraMovingVersionName: env.JIRA_MOVING_VERSION,
+            )
           }
         }
       }
