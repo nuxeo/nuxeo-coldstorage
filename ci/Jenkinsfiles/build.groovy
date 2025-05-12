@@ -16,7 +16,7 @@
 * Contributors:
 *     Kevin Leturc <kevin.leturc@hyland.com>
 */
-library identifier: "platform-ci-shared-library@v0.0.53"
+library identifier: "platform-ci-shared-library@v0.0.59"
 
 Closure buildUnitTestStage(env) {
   return {
@@ -247,8 +247,9 @@ pipeline {
   post {
     always {
       script {
-        currentBuild.description = "Build ${VERSION}"
+        nxUtils.setBuildDescription()
         nxJira.updateIssues()
+        nxUtils.notifyBuildStatusIfNecessary()
       }
     }
   }
