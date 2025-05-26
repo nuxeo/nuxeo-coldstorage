@@ -2,10 +2,8 @@
 name: Crowdin
 
 on:
-  # Check for updates every day
-  schedule:
-    # Everyday at 01:12
-    - cron: '12 1 * * *'
+  # Make workflow reusable, to be called by the scheduled crowdin workflow in the default branch
+  workflow_call:
 
   # Sync when a commit is done on the reference branches
   push:
@@ -14,20 +12,6 @@ on:
       - 'nuxeo-coldstorage-web/i18n/messages.json'
 
 jobs:
-  # in uses, cannot use environment variable for {owner}/{repo} nor matrix strategy variable for {ref}
-  # thus hardcoding them
-  call-workflow-in-lts-2023:
-    if: github.event_name == 'schedule'
-    uses: nuxeo/nuxeo-coldstorage/.github/workflows/crowdin.yml@lts-2023
-    secrets: inherit
-    needs: crowdin
-
-  call-workflow-in-lts-2025:
-    if: github.event_name == 'schedule'
-    uses: nuxeo/nuxeo-coldstorage/.github/workflows/crowdin.yml@lts-2025
-    secrets: inherit
-    needs: call-workflow-in-lts-2023
-
   crowdin:
     runs-on: ubuntu-latest
 
