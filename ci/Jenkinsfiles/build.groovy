@@ -100,7 +100,12 @@ pipeline {
                 Compile
                 ----------------------------------------"""
                 echo "MAVEN_OPTS=$MAVEN_OPTS"
-                sh 'mvn -B -nsu -T4C install -DskipTests'
+                sh """
+                  mvn -B -nsu -T4C install -DskipTests \
+                    -Dfrontend-plugin.node.server.id=nexus-internal \
+                    -Dfrontend-plugin.node.download.root=https://${NODE_DIST_REGISTRY} \
+                    -Dfrontend-plugin.node.npm.userconfig=${NPM_CONFIG_USERCONFIG}
+                """
               }
             }
           }
@@ -205,7 +210,10 @@ pipeline {
                 secrets: [[name: clidSecret, namespace: 'platform']]) {
                 dir('nuxeo-coldstorage-web') {
                   retry(3) {
-                    sh "npm run ftest -- --nuxeoUrl=http://nuxeo.${NAMESPACE}.svc.cluster.local/nuxeo"
+                    sh """
+                      mvn -B -nsu com.github.eirslett:frontend-maven-plugin:npm@ftest -Pftest \
+                      -Dfrontend-plugin.ftest.nuxeoUrl=http://nuxeo.${NAMESPACE}.svc.cluster.local/nuxeo
+                    """
                   }
                 }
               }

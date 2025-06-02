@@ -31,6 +31,7 @@ bin
 
 # build artifacts
 target*/
+node/
 coverage/
 node_modules/
 nashorn_code_cache/
