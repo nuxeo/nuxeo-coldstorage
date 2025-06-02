@@ -16,6 +16,14 @@
     compliance, etc.
   </description>
 
+  <properties>
+    <frontend-plugin.node.version>v18.20.8</frontend-plugin.node.version>
+    <frontend-plugin.node.download.root/>
+    <frontend-plugin.node.server.id/>
+    <frontend-plugin.node.npm.userconfig>${env.HOME}/.npmrc</frontend-plugin.node.npm.userconfig>
+    <frontend-plugin.ftest.nuxeoUrl>http://localhost:8080</frontend-plugin.ftest.nuxeoUrl>
+  </properties>
+
   <modules>
     <module>nuxeo-coldstorage</module>
     <module>nuxeo-coldstorage-package</module>
@@ -92,6 +100,19 @@
           <version>2.43.0</version>
           <configuration combine.children="append">
             <ratchetFrom>origin/lts-2025</ratchetFrom>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>com.github.eirslett</groupId>
+          <artifactId>frontend-maven-plugin</artifactId>
+          <version>1.15.1</version>
+          <configuration>
+            <nodeVersion>${frontend-plugin.node.version}</nodeVersion>
+            <nodeDownloadRoot>${frontend-plugin.node.download.root}</nodeDownloadRoot>
+            <serverId>${frontend-plugin.node.server.id}</serverId>
+            <environmentVariables>
+              <NPM_CONFIG_USERCONFIG>${frontend-plugin.node.npm.userconfig}</NPM_CONFIG_USERCONFIG>
+            </environmentVariables>
           </configuration>
         </plugin>
       </plugins>
