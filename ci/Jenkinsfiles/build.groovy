@@ -16,7 +16,7 @@
 * Contributors:
 *     Kevin Leturc <kevin.leturc@hyland.com>
 */
-library identifier: "platform-ci-shared-library@v0.0.59"
+library identifier: "platform-ci-shared-library@v0.0.67"
 
 Closure buildUnitTestStage(env) {
   return {
