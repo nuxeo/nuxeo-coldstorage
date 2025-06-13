@@ -26,6 +26,12 @@ Nuxeo's ecosystem is Java based and uses Maven. This addon is not an exception a
 mvn clean install
 ```
 
+The following configuration is needed in `$HOME/.npmrc`
+```
+@nuxeo:registry=https://packages.nuxeo.com/repository/npm-public/
+```
+to build the **nuxeo-coldstorage-web** module.
+
 This will build all the modules except _ci_ and generate the correspondent artifacts: _`.jar`_ files for the contributions, and a _`.zip_ file for the package.
 
 ## DB configuration
