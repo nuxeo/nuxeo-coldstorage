@@ -26,6 +26,9 @@ bin
 .factorypath
 .java-version
 
+# node
+.nprmrc
+
 # build artifacts
 target*/
 coverage/
