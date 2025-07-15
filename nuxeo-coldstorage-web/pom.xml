@@ -15,16 +15,6 @@
         <artifactId>frontend-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>clean</id>
-            <phase>clean</phase>
-            <configuration>
-              <arguments>run clean</arguments>
-            </configuration>
-            <goals>
-              <goal>npm</goal>
-            </goals>
-          </execution>
-          <execution>
             <id>install node and npm</id>
             <goals>
               <goal>install-node-and-npm</goal>
