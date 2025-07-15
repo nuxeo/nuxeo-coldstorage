@@ -108,6 +108,7 @@ class MoveToColdStorage extends mixinBehaviors([FiltersBehavior, FormatBehavior]
       result = document.properties['picture:views'][0].filename !== 'empty_picture.png';
     } else if (this.hasFacet(document, 'Video')) {
       result = document.properties['vid:info'].duration > 0;
+      console.log(result);
     }
     return result;
   }
