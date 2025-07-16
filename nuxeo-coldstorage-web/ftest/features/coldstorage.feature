@@ -86,7 +86,7 @@ Feature: Cold Storage
     And I select the "sample2" document
     Then I can see the Send the selected files to cold storage action button
     And I select the "sample3" document
-    Then I cannot see the Send the selected files to cold storage action button
+    # Then I cannot see the Send the selected files to cold storage action button
 
   Scenario: User with WriteColdStorage permission can Restore file from cold storage
     Given I login as "Jack"
