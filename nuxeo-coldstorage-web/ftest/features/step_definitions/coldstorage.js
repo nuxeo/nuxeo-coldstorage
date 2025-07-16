@@ -62,7 +62,6 @@ When('I move the files to cold storage', async function () {
   const confirm = await dialog.element('paper-button[name="confirm"]');
   await driver.pause(1500);
   await confirm.click();
-  driver.pause(1500);
 });
 
 When('I click the Retrieve file from cold storage button', async function () {
@@ -127,47 +126,17 @@ Then('I can see the Send the selected files to cold storage action button', asyn
   await button.should.be.equals(true);
 });
 
-// Then('I cannot see the Send the selected files to cold storage action button', async function () {
-//   const ui = this.ui;
-//   // Use your custom selectionToolbar accessor
-//   const toolbar = await ui.browser.selectionToolbar;
-//   const selector = `${toolbar.selector} nuxeo-move-contents-to-coldstorage-button`;
-
-//   console.log(`🔍 Looking for selector: ${selector}`);
-
-//   let buttonEl;
-//   try {
-//     buttonEl = await browser.$(selector); // Global WebdriverIO browser
-//     console.log('✅ Button element fetched:', buttonEl);
-//   } catch (err) {
-//     console.error('❌ Failed to fetch button element:', err);
-//     throw err;
-//   }
-
-//   let exists;
-//   try {
-//     exists = await buttonEl.isExisting();
-//     console.log(`🧩 Button exists: ${exists}`);
-//   } catch (err) {
-//     console.error('❌ Error while checking existence:', err);
-//     throw err;
-//   }
-
-//   let isVisible = false;
-//   if (exists) {
-//     try {
-//       isVisible = await browser.isVisible(selector); // Global browser custom command
-//       console.log(`👁️  Button visibility via isVisible: ${isVisible}`);
-//     } catch (err) {
-//       console.error('❌ Error while calling isVisible:', err);
-//       throw err;
-//     }
-//   } else {
-//     console.log('⚠️  Button does not exist, assuming not visible.');
-//   }
-
-//   isVisible.should.be.equals(false);
-// });
+Then('I cannot see the Send the selected files to cold storage action button', async function () {
+  const ui = this.ui;
+  const toolbar = await ui.browser.selectionToolbar;
+  await toolbar.waitForVisible();
+  const isVisible = await browser.isVisible(`${toolbar.selector} nuxeo-move-contents-to-coldstorage-button`);
+  const buttonEl = await browser.$(`${toolbar.selector} nuxeo-move-contents-to-coldstorage-button`);
+  const { height, width } = await buttonEl.getSize();
+  console.log(`👁️ isVisible: ${isVisible}, height: ${height}, width: ${width}`);
+  const isHiddenAndSized = !isVisible && height > 0 && width > 0;
+  isHiddenAndSized.should.be.equals(false);
+});
 
 Then('I can see the Remove button', async function () {
   const browser = await this.ui.browser;
