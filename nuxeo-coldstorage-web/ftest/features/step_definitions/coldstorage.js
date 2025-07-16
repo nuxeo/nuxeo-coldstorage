@@ -1,5 +1,4 @@
 import Nuxeo from 'nuxeo';
-const {expect} = require('chai');
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { When, Then, Before } from '@cucumber/cucumber';
 
@@ -129,16 +128,19 @@ Then('I can see the Send the selected files to cold storage action button', asyn
   await button.should.be.equals(true);
 });
 
+const chai = require('chai');
+chai.should(); // Enable "should" assertions
+
 Then('I cannot see the Send the selected files to cold storage action button', async function () {
   const browser = await this.ui.browser;
   const toolbar = await browser.selectionToolbar;
   await toolbar.waitForVisible();
-  console.log(toolbar); 
+  console.log(toolbar);
   const buttonEl = await toolbar.$('nuxeo-move-contents-to-coldstorage-button');
-  console.log(buttonEl); 
+  console.log(buttonEl);
   const isVisible = await this.ui.isTrulyVisible(buttonEl);
-  console.log(isVisible); 
-  expect(isVisible).to.be.false;
+  console.log(isVisible);
+  isVisible.should.be.false;
 });
 
 
