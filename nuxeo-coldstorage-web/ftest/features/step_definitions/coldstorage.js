@@ -128,14 +128,16 @@ Then('I can see the Send the selected files to cold storage action button', asyn
 });
 
 Then('I cannot see the Send the selected files to cold storage action button', async function () {
-  const browser = await this.ui.browser;
+  const ui = this.ui;
+  // Use your custom selectionToolbar accessor
+  const toolbar = await ui.browser.selectionToolbar;
+  const selector = `${toolbar.selector} nuxeo-move-contents-to-coldstorage-button`;
 
-  const selector = 'nuxeo-selection-toolbar#toolbar nuxeo-move-contents-to-coldstorage-button';
   console.log(`🔍 Looking for selector: ${selector}`);
 
   let buttonEl;
   try {
-    buttonEl = await browser.$(selector);
+    buttonEl = await browser.$(selector); // Global WebdriverIO browser
     console.log('✅ Button element fetched:', buttonEl);
   } catch (err) {
     console.error('❌ Failed to fetch button element:', err);
@@ -154,7 +156,7 @@ Then('I cannot see the Send the selected files to cold storage action button', a
   let isVisible = false;
   if (exists) {
     try {
-      isVisible = await browser.isVisible(selector);
+      isVisible = await browser.isVisible(selector); // Global browser custom command
       console.log(`👁️  Button visibility via isVisible: ${isVisible}`);
     } catch (err) {
       console.error('❌ Error while calling isVisible:', err);
