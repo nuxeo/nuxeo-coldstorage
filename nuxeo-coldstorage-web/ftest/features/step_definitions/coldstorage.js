@@ -60,9 +60,9 @@ When('I move the files to cold storage', async function () {
   const dialog = await browser.el.element('nuxeo-dialog#contentsToMoveDialog');
   await dialog.waitForVisible();
   const confirm = await dialog.element('paper-button[name="confirm"]');
-  await driver.pause(2000);
+  await driver.pause(1500);
   await confirm.click();
-  driver.pause(2000);
+  driver.pause(1500);
 });
 
 When('I click the Retrieve file from cold storage button', async function () {
@@ -123,13 +123,9 @@ Then('I can see the Send the selected files to cold storage action button', asyn
   const browser = await this.ui.browser;
   const toolbar = await browser.selectionToolbar;
   await toolbar.waitForVisible();
-  console.log(toolbar);
   const button = await toolbar.isVisible('nuxeo-move-contents-to-coldstorage-button');
   await button.should.be.equals(true);
 });
-
-const chai = require('chai');
-chai.should(); // Enable "should" assertions
 
 Then('I cannot see the Send the selected files to cold storage action button', async function () {
   const browser = await this.ui.browser;
@@ -142,8 +138,6 @@ Then('I cannot see the Send the selected files to cold storage action button', a
   console.log(isVisible);
   isVisible.should.be.equals(false);
 });
-
-
 Then('I can see the Remove button', async function () {
   const browser = await this.ui.browser;
   const page = await browser.documentPage('File');
