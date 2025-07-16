@@ -24,7 +24,7 @@ amazonS3:
 mongodb:
   enabled: true
   host: {{ printf "mongodb.%s" $localDomain }}
-packages: nuxeo-web-ui-3.1.20-rc.003 amazon-s3-online-storage /packages/nuxeo-coldstorage-package-*.zip
+packages: nuxeo-web-ui-3.1.20-rc.004 amazon-s3-online-storage /packages/nuxeo-coldstorage-package-*.zip
 customEnvs:
 - name: NUXEO_CONNECT_URL
   value: https://nos-preprod-connect.nuxeocloud.com/nuxeo/site/
