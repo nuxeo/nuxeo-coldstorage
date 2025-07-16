@@ -137,7 +137,7 @@ Then('I cannot see the Send the selected files to cold storage action button', a
   console.log(`👁️  Displayed: ${isDisplayed}, Height: ${height}, Width: ${width}`);
   const visibleWithSize = isDisplayed && height > 0 && width > 0;
   console.log(visibleWithSize);
-  visibleWithSize.should.be.false;
+  visibleWithSize.should.be.equals(false);
 });
 
 Then('I can see the Remove button', async function () {
