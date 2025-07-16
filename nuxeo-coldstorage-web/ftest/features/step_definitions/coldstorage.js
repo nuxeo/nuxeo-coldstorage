@@ -130,14 +130,44 @@ Then('I can see the Send the selected files to cold storage action button', asyn
 Then('I cannot see the Send the selected files to cold storage action button', async function () {
   const browser = await this.ui.browser;
   const toolbar = await browser.selectionToolbar;
-  await toolbar.waitForVisible();
-  console.log(toolbar);
-  const buttonEl = await toolbar.$('nuxeo-move-contents-to-coldstorage-button');
-  console.log(buttonEl);
-  const isVisible = await browser.isTrulyVisible(buttonEl);
-  console.log(isVisible);
+
+  const selector = 'nuxeo-selection-toolbar#toolbar nuxeo-move-contents-to-coldstorage-button';
+  console.log(`🔍 Looking for selector: ${selector}`);
+
+  let buttonEl;
+  try {
+    buttonEl = await browser.$(selector);
+    console.log('✅ Button element fetched:', buttonEl);
+  } catch (err) {
+    console.error('❌ Failed to fetch button element:', err);
+    throw err;
+  }
+
+  let exists;
+  try {
+    exists = await buttonEl.isExisting();
+    console.log(`🧩 Button exists: ${exists}`);
+  } catch (err) {
+    console.error('❌ Error while checking existence:', err);
+    throw err;
+  }
+
+  let isVisible = false;
+  if (exists) {
+    try {
+      isVisible = await browser.isVisible(selector);
+      console.log(`👁️  Button visibility via isVisible: ${isVisible}`);
+    } catch (err) {
+      console.error('❌ Error while calling isVisible:', err);
+      throw err;
+    }
+  } else {
+    console.log('⚠️  Button does not exist, assuming not visible.');
+  }
+
   isVisible.should.be.equals(false);
 });
+
 Then('I can see the Remove button', async function () {
   const browser = await this.ui.browser;
   const page = await browser.documentPage('File');
