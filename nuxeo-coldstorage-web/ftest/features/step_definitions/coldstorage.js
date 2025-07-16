@@ -167,7 +167,6 @@ Then('I cannot see the Send the selected files to cold storage action button', a
   isVisible.should.be.equals(false);
 });
 
-
 Then('I can see the Remove button', async function () {
   const browser = await this.ui.browser;
   const page = await browser.documentPage('File');
