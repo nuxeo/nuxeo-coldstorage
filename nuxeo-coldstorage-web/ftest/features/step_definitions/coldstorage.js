@@ -131,12 +131,9 @@ Then('I cannot see the Send the selected files to cold storage action button', a
   const toolbar = await browser.selectionToolbar;
   await toolbar.waitForVisible();
   const toolbarEl = await toolbar.el;
-  console.log('toolbarEl', toolbarEl);
   const buttonEl = await toolbarEl.$('nuxeo-move-contents-to-coldstorage-button');
-  console.log('buttonEl', buttonEl);
   const isDisplayed = await buttonEl.isDisplayed();
   const { height, width } = await buttonEl.getSize();
-  console.log(`👁️  Displayed: ${isDisplayed}, Height: ${height}, Width: ${width}`);
   const visibleWithSize = isDisplayed && height > 0 && width > 0;
   console.log(visibleWithSize);
   visibleWithSize.should.be.equals(false);
