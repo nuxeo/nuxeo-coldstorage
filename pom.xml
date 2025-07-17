@@ -17,7 +17,7 @@
   </description>
 
   <properties>
-    <frontend-plugin.node.version>v22.17.0</frontend-plugin.node.version>
+    <frontend-plugin.node.version>v18.20.8</frontend-plugin.node.version>
     <frontend-plugin.node.download.root/>
     <frontend-plugin.node.server.id/>
     <frontend-plugin.node.npm.userconfig>${env.HOME}/.npmrc</frontend-plugin.node.npm.userconfig>
