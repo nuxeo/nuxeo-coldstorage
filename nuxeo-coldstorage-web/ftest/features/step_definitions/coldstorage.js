@@ -62,7 +62,7 @@ When('I move the files to cold storage', async function () {
   const confirm = await dialog.element('paper-button[name="confirm"]');
   await driver.pause(1500);
   await confirm.click();
-  await driver.pause(1000);
+  driver.pause(1000);
 });
 
 When('I click the Retrieve file from cold storage button', async function () {
