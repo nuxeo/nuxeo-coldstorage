@@ -173,7 +173,7 @@ pipeline {
               def testNamespace = "${CURRENT_NAMESPACE}-coldstorage-${BRANCH_NAME}-${BUILD_NUMBER}-ftests".replaceAll('\\.', '-').toLowerCase()
               def nuxeoParentVersion = readMavenPom().getParent().getVersion()
               // target connect preprod if nuxeo-parent is a snapshot version or a build version
-              def clidSecret = 'instance-clid-preprod'
+              def clidSecret = nuxeoParentVersion.matches("^\\d+\\.\\d+(-SNAPSHOT|\\.\\d+)\$") ? 'instance-clid-preprod' : 'instance-clid'
               nxWithHelmfileDeployment(namespace: testNamespace, environment: "functionalTests", envVars: ["CONNECT_CLID_SECRET=${clidSecret}"],
                 secrets: [[name: clidSecret, namespace: 'platform']]) {
                 dir('nuxeo-coldstorage-web') {
