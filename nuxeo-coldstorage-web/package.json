@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@nuxeo/nuxeo-web-ui-ftest": "~3.1.6-rc.014",
-    "expect-webdriverio": "3.3.1",
+    "expect-webdriverio": "5.3.4",
     "@open-wc/eslint-config": "^0.3.0",
     "@esm-bundle/chai": "^4.1.5",
     "@nuxeo/testing-helpers": "~3.1.0-rc.75",
@@ -26,7 +26,8 @@
     "rollup": "^2.33.1",
     "rollup-plugin-copy": "^3.3.0",
     "rollup-plugin-minify-html-literals": "^1.2.5",
-    "rollup-plugin-terser": "^7.0.2"
+    "rollup-plugin-terser": "^7.0.2",
+    "wdio-cucumberjs-json-reporter": "6.0.1"
   },
   "dependencies": {
     "@nuxeo/nuxeo-elements": "~3.1.0-rc.75",
