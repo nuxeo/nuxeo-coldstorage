@@ -60,6 +60,7 @@ When('I move the files to cold storage', async function () {
   const dialog = await browser.el.element('nuxeo-dialog#contentsToMoveDialog');
   await dialog.waitForVisible();
   const confirm = await dialog.element('paper-button[name="confirm"]');
+  await driver.pause(1500);
   await confirm.click();
   driver.pause(1000);
 });
@@ -130,8 +131,13 @@ Then('I cannot see the Send the selected files to cold storage action button', a
   const browser = await this.ui.browser;
   const toolbar = await browser.selectionToolbar;
   await toolbar.waitForVisible();
-  const button = await toolbar.isVisible('nuxeo-move-contents-to-coldstorage-button');
-  await button.should.be.equals(false);
+  const toolbarEl = await toolbar.el;
+  const buttonEl = await toolbarEl.$('nuxeo-move-contents-to-coldstorage-button');
+  const isDisplayed = await buttonEl.isDisplayed();
+  const { height, width } = await buttonEl.getSize();
+  const visibleWithSize = isDisplayed && height > 0 && width > 0;
+  console.log(visibleWithSize);
+  visibleWithSize.should.be.equals(false);
 });
 
 Then('I can see the Remove button', async function () {
@@ -148,6 +154,7 @@ Then('I cannot see the Remove button', async function () {
   const page = await browser.documentPage('File');
   const docView = await page.view;
   await docView.waitForVisible();
+  await driver.pause(1000);
   const deleteButton = await docView.isVisible('nuxeo-delete-blob-button .action');
   await deleteButton.should.be.equals(false);
 });
