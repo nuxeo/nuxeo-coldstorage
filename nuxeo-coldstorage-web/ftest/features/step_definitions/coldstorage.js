@@ -136,7 +136,6 @@ Then('I cannot see the Send the selected files to cold storage action button', a
   const isDisplayed = await buttonEl.isDisplayed();
   const { height, width } = await buttonEl.getSize();
   const visibleWithSize = isDisplayed && height > 0 && width > 0;
-  console.log(visibleWithSize);
   visibleWithSize.should.be.equals(false);
 });
 
