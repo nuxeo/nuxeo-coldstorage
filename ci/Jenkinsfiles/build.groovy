@@ -68,6 +68,7 @@ pipeline {
     TEST_SERVICE_DOMAIN_SUFFIX = 'svc.cluster.local'
     MAVEN_OPTS = "$MAVEN_OPTS -Xms512m -Xmx3072m"
     MAVEN_CLI_ARGS = "-B -V -nsu -Dnuxeo.skip.enforcer=true -Prelease"
+    NUXEO_VERSION = nxMvn.getProperty(key: 'project.parent.version')
     VERSION = nxUtils.getVersion()
     NUXEO_COLDSTORAGE_PACKAGE_PATH = "nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-${VERSION}.zip"
   }
@@ -203,23 +204,26 @@ pipeline {
       }
       steps {
         container('maven') {
-          nxWithGitHubStatus(context: 'docker/build') {
-            script {
+          script {
+            // target connect preprod if nuxeo-parent is a snapshot version or a build version
+            def clidSecret = env.NUXEO_VERSION.matches("^\\d+\\.\\d+(-SNAPSHOT|\\.\\d+)\$") ? 'instance-clid-preprod' : 'instance-clid'
+            def clid = nxK8s.getSecretData(namespace: 'platform', name: clidSecret, key: 'instance\\.clid')
+            def connectUrl = clidSecret.contains('preprod') ? CONNECT_PREPROD_SITE_URL : CONNECT_PROD_SITE_URL
+
+            nxWithGitHubStatus(context: 'docker/build') {
               sh "mkdir -p ci/docker/target && cp ${NUXEO_COLDSTORAGE_PACKAGE_PATH} ci/docker/target"
               def nuxeoVersion = sh(returnStdout: true,
                 script: 'mvn org.apache.maven.plugins:maven-help-plugin:3.3.0:evaluate -Dexpression=nuxeo.platform.version -q -DforceStdout')
-                withCredentials([usernamePassword(credentialsId: 'packages.nuxeo.com-auth', usernameVariable: 'YUM_REPO_USERNAME', passwordVariable: 'YUM_REPO_PASSWORD')]) {
-                   sh 'envsubst < ci/docker/nuxeo-private.repo > ci/docker/nuxeo-private.repo~gen'
-                }
-                nxDocker.build(skaffoldFile: 'ci/docker/skaffold.yaml', envVars: ["NUXEO_VERSION=${nuxeoVersion}"])
+              withCredentials([usernamePassword(credentialsId: 'packages.nuxeo.com-auth', usernameVariable: 'YUM_REPO_USERNAME', passwordVariable: 'YUM_REPO_PASSWORD')]) {
+                sh 'envsubst < ci/docker/nuxeo-private.repo > ci/docker/nuxeo-private.repo~gen'
+              }
+              // use withEnv for clid to not print it to the console, which nxDocker does
+              withEnv(["CLID=${clid}"]) {
+                nxDocker.build(skaffoldFile: 'ci/docker/skaffold.yaml', envVars: ["CONNECT_URL=${connectUrl}", "NUXEO_VERSION=${nuxeoVersion}"])
+              }
             }
-          }
-          nxWithGitHubStatus(context: 'ftests') {
-            script {
+            nxWithGitHubStatus(context: 'ftests') {
               def testNamespace = "${CURRENT_NAMESPACE}-coldstorage-${BRANCH_NAME}-${BUILD_NUMBER}-ftests".replaceAll('\\.', '-').toLowerCase()
-              def nuxeoParentVersion = readMavenPom().getParent().getVersion()
-              // target connect preprod if nuxeo-parent is a snapshot version or a build version
-              def clidSecret = nuxeoParentVersion.matches("^\\d+\\.\\d+(-SNAPSHOT|\\.\\d+)\$") ? 'instance-clid-preprod' : 'instance-clid'
               nxWithHelmfileDeployment(namespace: testNamespace, environment: "functionalTests", envVars: ["CONNECT_CLID_SECRET=${clidSecret}"],
                 secrets: [[name: clidSecret, namespace: 'platform']]) {
                 dir('nuxeo-coldstorage-web') {
