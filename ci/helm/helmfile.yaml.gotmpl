@@ -8,39 +8,12 @@ environments:
   functionalTests:
     values:
     - environments/functional-tests.yaml
+    - values/env-values-nuxeo.yaml.gotmpl
+values: # values for all environments and helmfiles
+- git::https://{{ requiredEnv "GITHUB_USER" }}:{{ requiredEnv "GITHUB_PASSWORD" }}@github.com/nuxeo/nuxeo-lts.git@ci/helm/apps/base/values/env-values-global.yaml.gotmpl?ref=v{{ requiredEnv "NUXEO_VERSION" }}&depth=1
+- values/env-values-global.yaml
 ---
-repositories:
-- name: bitnami
-  # use a former version of index.yaml from the git repository as Bitnami all removed charts older than 6 months from
-  # the index.yaml descriptor, see https://github.com/bitnami/charts/issues/10539
-  url: https://raw.githubusercontent.com/bitnami/charts/d2a3b454f8bb808a493d417199d3e2e09b5c650c/bitnami
-- name: nuxeo
-  url: https://packages.nuxeo.com/repository/helm-releases-public/
-
-helmDefaults:
-  timeout: 600
-  wait: true
-
-releases:
-- name: nuxeo
-  chart: nuxeo/nuxeo
-  version: ~3.1.0
-  condition: nuxeo.enabled
-  {{ if eq .Environment.Name "functionalTests" }}
-  needs:
-  - mongodb
-  {{ end }}
+helmfiles:
+- path: git::https://{{ requiredEnv "GITHUB_USER" }}:{{ requiredEnv "GITHUB_PASSWORD" }}@github.com/nuxeo/nuxeo-lts.git@ci/helm/apps/helmfile-base.yaml.gotmpl?ref=v{{ requiredEnv "NUXEO_VERSION" }}&depth=1
   values:
-  - values/values-nuxeo.yaml.gotmpl
-- name: mongodb
-  chart: bitnami/mongodb
-  version: 13.3.1
-  condition: mongodb.enabled
-  values:
-  - values/values-mongodb.yaml.gotmpl
-- name: postgresql
-  chart: bitnami/postgresql
-  version: 10.16.2 # latest chart version for app version 13
-  condition: postgresql.enabled
-  values:
-  - values/values-postgresql.yaml.gotmpl
+  - {{ toYaml .Values | nindent 4 }}
