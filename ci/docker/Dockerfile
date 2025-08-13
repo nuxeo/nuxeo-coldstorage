@@ -17,4 +17,11 @@ RUN --mount=type=secret,id=nuxeo-private,target=/etc/yum.repos.d/nuxeo-private.r
     && dnf clean all
 USER 900
 
-COPY --chown=900:0 target/nuxeo-coldstorage-package-$VERSION.zip /packages/
+RUN --mount=type=secret,id=CLID,env=CLID \
+    --mount=type=secret,id=CONNECT_URL,env=CONNECT_URL \
+    /install-packages.sh --clid ${CLID} --connect-url ${CONNECT_URL} \
+      amazon-s3-online-storage \
+      nuxeo-web-ui
+
+RUN --mount=type=bind,source=./target,target=/tmp/local-packages  \
+    /install-packages.sh --offline /tmp/local-packages/*.zip

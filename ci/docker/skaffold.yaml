@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-apiVersion: skaffold/v2beta17
+apiVersion: skaffold/v2beta29
 kind: Config
 build:
   tagPolicy:
@@ -27,4 +27,6 @@ build:
             --build-arg BUILD_TAG={{.BUILD_TAG}} \
             --build-arg SCM_REF={{.GIT_COMMIT}} \
             --build-arg VERSION={{.VERSION}} \
+            --secret id=CLID \
+            --secret id=CONNECT_URL \
             --secret id=nuxeo-private,src=nuxeo-private.repo~gen \
