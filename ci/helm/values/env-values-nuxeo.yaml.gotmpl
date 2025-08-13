@@ -1,0 +1,18 @@
+nuxeo:
+  image:
+    repository: {{ printf "%s/nuxeo/nuxeo-coldstorage-ftests" (requiredEnv "DOCKER_REGISTRY") }}
+    tag: {{ requiredEnv "VERSION" | quote }}
+  amazonS3:
+    enabled: true
+    auth:
+      accessKeyId: {{ requiredEnv "AWS_ACCESS_KEY_ID" }}
+      secretKey: {{ requiredEnv "AWS_SECRET_ACCESS_KEY" }}
+    region: {{ requiredEnv "AWS_REGION" }}
+    bucket: {{ requiredEnv "AWS_BUCKET" }}
+    bucketPrefix: {{ requiredEnv "AWS_BUCKET_PREFIX" }}
+  customEnvs:
+  - name: NUXEO_CLID
+    valueFrom:
+      secretKeyRef:
+        name: {{ env "CONNECT_CLID_SECRET" | default "instance-clid" }}
+        key: instance.clid

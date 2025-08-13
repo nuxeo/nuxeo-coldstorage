@@ -1,0 +1,4 @@
+global:
+  labels:
+    dev.nuxeo.com/repository: nuxeo-coldstorage
+    dev.nuxeo.com/team: platform

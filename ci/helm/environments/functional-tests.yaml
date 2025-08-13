@@ -1,11 +1,16 @@
-# enabled conditions
+# these values are required by helmfile-base.yaml.gotmpl releases
 nuxeo:
   enabled: true
 mongodb:
   enabled: true
 postgresql:
   enabled: false
+opensearch:
+  enabled: false
+kafka:
+  enabled: true
 
 # values definition
-labels:
-  usage: ftests
+global:
+  labels:
+    dev.nuxeo.com/usage: ftests
