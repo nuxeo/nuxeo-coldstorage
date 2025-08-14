@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.nuxeo</groupId>
     <artifactId>nuxeo-parent</artifactId>
-    <version>2025.0</version>
+    <version>2025.1</version>
   </parent>
 
   <groupId>org.nuxeo.coldstorage</groupId>
@@ -97,7 +97,6 @@
         <plugin>
           <groupId>com.diffplug.spotless</groupId>
           <artifactId>spotless-maven-plugin</artifactId>
-          <version>2.43.0</version>
           <configuration combine.children="append">
             <ratchetFrom>origin/lts-2025</ratchetFrom>
           </configuration>
