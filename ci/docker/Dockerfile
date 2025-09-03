@@ -12,11 +12,8 @@ LABEL org.nuxeo.coldstorage.version=$VERSION
 
 USER root
 # install RPM Fusion free repository
-RUN dnf -y localinstall --nogpgcheck https://mirrors.rpmfusion.org/free/el/rpmfusion-free-release-9.noarch.rpm \
-    # enable the Rocky Linux 9 - CRB repository which contains some ffmpeg libraries
-    && dnf config-manager --enable crb \
-    # install ffmpeg package
-    && dnf -y install ffmpeg \
+RUN --mount=type=secret,id=nuxeo-private,target=/etc/yum.repos.d/nuxeo-private.repo \
+    dnf -y install ffmpeg-nuxeo \
     && dnf clean all
 USER 900
 
