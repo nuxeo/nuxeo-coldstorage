@@ -26,9 +26,6 @@ bin
 .factorypath
 .java-version
 
-# node
-.nprmrc
-
 # build artifacts
 target*/
 node/
@@ -38,7 +35,6 @@ nashorn_code_cache/
 chromedriver.log
 *.log
 *.pyc
-package-lock.json
 
 # Helm charts
 **/*.tgz
