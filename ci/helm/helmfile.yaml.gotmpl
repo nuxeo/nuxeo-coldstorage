@@ -10,10 +10,10 @@ environments:
     - environments/functional-tests.yaml
     - values/env-values-nuxeo.yaml.gotmpl
 values: # values for all environments and helmfiles
-- git::https://{{ requiredEnv "GITHUB_USER" }}:{{ requiredEnv "GITHUB_PASSWORD" }}@github.com/nuxeo/nuxeo-lts.git@ci/helm/apps/base/values/env-values-global.yaml.gotmpl?ref=v2023.36.0&depth=1
+- git::https://{{ requiredEnv "GITHUB_USER" }}:{{ requiredEnv "GITHUB_PASSWORD" }}@github.com/nuxeo/nuxeo-lts.git@ci/helm/apps/base/values/env-values-global.yaml.gotmpl?ref=v{{ requiredEnv "NUXEO_VERSION" }}&depth=1
 - values/env-values-global.yaml
 ---
 helmfiles:
-- path: git::https://{{ requiredEnv "GITHUB_USER" }}:{{ requiredEnv "GITHUB_PASSWORD" }}@github.com/nuxeo/nuxeo-lts.git@ci/helm/apps/helmfile-base.yaml.gotmpl?ref=v2023.36.0&depth=1
+- path: git::https://{{ requiredEnv "GITHUB_USER" }}:{{ requiredEnv "GITHUB_PASSWORD" }}@github.com/nuxeo/nuxeo-lts.git@ci/helm/apps/helmfile-base.yaml.gotmpl?ref=v{{ requiredEnv "NUXEO_VERSION" }}&depth=1
   values:
   - {{ toYaml .Values | nindent 4 }}
