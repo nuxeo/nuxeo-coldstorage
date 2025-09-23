@@ -21,10 +21,10 @@
             </goals>
           </execution>
           <execution>
-            <id>npm-install</id>
+            <id>npm-ci</id>
             <phase>process-resources</phase>
             <configuration>
-              <arguments>install</arguments>
+              <arguments>ci</arguments>
             </configuration>
             <goals>
               <goal>npm</goal>
