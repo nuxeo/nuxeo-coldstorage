@@ -22,6 +22,9 @@ updates:
           "version-update:semver-minor"
         ]
 
+      # Nuxeo dependencies Dependabot would try to fetch unnecessarily
+      - dependency-name: "org.nuxeo.*"
+
       # Nuxeo parent POM
       - dependency-name: "org.nuxeo:nuxeo-parent"
         update-types: ["version-update:semver-patch"]
@@ -77,6 +80,9 @@ updates:
       # Major version updates
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+
+      # Nuxeo dependencies Dependabot would try to fetch unnecessarily
+      - dependency-name: "org.nuxeo.*"
 
       # Nuxeo parent POM
       - dependency-name: "org.nuxeo:nuxeo-parent"
