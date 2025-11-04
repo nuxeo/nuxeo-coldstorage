@@ -36,8 +36,12 @@ updates:
       interval: "daily"
     # Limit version updates to 10 to prevent CI overload
     open-pull-requests-limit: 10
-    # Group all version updates (patch only)
+    # Group version updates (patch only)
     groups:
+      nuxeo-version-updates:
+        applies-to: "version-updates"
+        patterns:
+          - "@nuxeo/*"
       version-updates:
         applies-to: "version-updates"
         patterns:
@@ -99,8 +103,11 @@ updates:
       interval: "daily"
     # Limit version updates to 10 to prevent CI overload
     open-pull-requests-limit: 10
-    # Group all version updates (minor and patch)
+    # Group version updates (minor and patch)
     groups:
+      nuxeo-version-updates:
+        patterns:
+          - "@nuxeo/*"
       version-updates:
         patterns:
           - "*"
