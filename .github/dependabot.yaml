@@ -47,6 +47,10 @@ updates:
         patterns:
           - "*"
     ignore:
+      # Nuxeo major security updates
+      - dependency-name: "@nuxeo/*"
+        versions: [">=2025.0.0"]
+
       # Major and minor version updates
       - dependency-name: "*"
         update-types: [
