@@ -5,6 +5,7 @@ FROM docker-private.packages.nuxeo.com/nuxeo/nuxeo:${NUXEO_VERSION}
 ARG BUILD_TAG=unknown
 ARG SCM_REF=unknown
 ARG VERSION=unknown
+ARG NUXEO_WEB_UI_PACKAGE=nuxeo-web-ui
 
 LABEL org.nuxeo.coldstorage.build-tag=$BUILD_TAG
 LABEL org.nuxeo.coldstorage.scm-ref=$SCM_REF
@@ -21,7 +22,7 @@ RUN --mount=type=secret,id=CLID,env=CLID \
     --mount=type=secret,id=CONNECT_URL,env=CONNECT_URL \
     /install-packages.sh --clid ${CLID} --connect-url ${CONNECT_URL} \
       amazon-s3-online-storage \
-      nuxeo-web-ui
+      ${NUXEO_WEB_UI_PACKAGE}
 
 RUN --mount=type=bind,source=./target,target=/tmp/local-packages  \
     /install-packages.sh --offline /tmp/local-packages/*.zip

@@ -27,6 +27,7 @@ build:
             --build-arg BUILD_TAG={{.BUILD_TAG}} \
             --build-arg SCM_REF={{.GIT_COMMIT}} \
             --build-arg VERSION={{.VERSION}} \
+            --build-arg NUXEO_WEB_UI_PACKAGE={{.NUXEO_WEB_UI_PACKAGE}} \
             --secret id=CLID \
             --secret id=CONNECT_URL \
             --secret id=nuxeo-private,src=nuxeo-private.repo~gen \

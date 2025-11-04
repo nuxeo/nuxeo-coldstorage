@@ -18,6 +18,19 @@
 */
 library identifier: "platform-ci-shared-library@v0.0.75"
 
+String getWebUIVersion() {
+  container('maven') {
+    dir('nuxeo-coldstorage-web') {
+      return sh(
+        returnStdout: true,
+        script: '''
+          jq --raw-output '.packages."node_modules/@nuxeo/nuxeo-web-ui-ftest".version' package-lock.json
+        '''
+      ).trim()
+    }
+  }
+}
+
 Closure buildUnitTestStage(env) {
   return {
     container('maven') {
@@ -72,6 +85,7 @@ pipeline {
     NUXEO_VERSION = nxMvn.getProperty(key: 'project.parent.version')
     VERSION = nxUtils.getVersion()
     NUXEO_COLDSTORAGE_PACKAGE_PATH = "nuxeo-coldstorage-package/target/nuxeo-coldstorage-package-${VERSION}.zip"
+    NUXEO_WEB_UI_VERSION = getWebUIVersion()
   }
   stages {
     stage('Set labels') {
@@ -167,6 +181,7 @@ pipeline {
             def clidSecret = env.NUXEO_VERSION.matches("^\\d+\\.\\d+(-SNAPSHOT|\\.\\d+)\$") ? 'instance-clid-preprod' : 'instance-clid'
             def clid = nxK8s.getSecretData(namespace: 'platform', name: clidSecret, key: 'instance\\.clid')
             def connectUrl = clidSecret.contains('preprod') ? CONNECT_PREPROD_SITE_URL : CONNECT_PROD_SITE_URL
+            def nuxeoWebUIPackage = "nuxeo-web-ui-${NUXEO_WEB_UI_VERSION}"
 
             nxWithGitHubStatus(context: 'docker/build') {
               sh "mkdir -p ci/docker/target && cp ${NUXEO_COLDSTORAGE_PACKAGE_PATH} ci/docker/target"
@@ -176,7 +191,14 @@ pipeline {
               }
               // use withEnv for clid to not print it to the console, which nxDocker does
               withEnv(["CLID=${clid}"]) {
-                nxDocker.build(skaffoldFile: 'ci/docker/skaffold.yaml', envVars: ["CONNECT_URL=${connectUrl}", "NUXEO_VERSION=${nuxeoVersion}"])
+                nxDocker.build(
+                  skaffoldFile: 'ci/docker/skaffold.yaml',
+                  envVars: [
+                    "CONNECT_URL=${connectUrl}",
+                    "NUXEO_VERSION=${nuxeoVersion}",
+                    "NUXEO_WEB_UI_PACKAGE=${nuxeoWebUIPackage}"
+                  ]
+                )
               }
             }
             nxWithGitHubStatus(context: 'ftests') {
