@@ -44,10 +44,6 @@
       <artifactId>nuxeo-core-binarymanager-s3</artifactId>
     </dependency>
     <dependency>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>s3</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.nuxeo.ecm.platform</groupId>
       <artifactId>nuxeo-platform-rendition-api</artifactId>
     </dependency>
