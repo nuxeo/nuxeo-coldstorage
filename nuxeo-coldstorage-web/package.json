@@ -23,7 +23,7 @@
     "lint-staged": "^10.5.1",
     "polymer-cli": "^1.9.11",
     "prettier": "2.1.2",
-    "rollup": "^2.33.1",
+    "rollup": "^2.80.0",
     "rollup-plugin-copy": "^3.3.0",
     "rollup-plugin-minify-html-literals": "^1.2.5",
     "rollup-plugin-terser": "^7.0.2",
