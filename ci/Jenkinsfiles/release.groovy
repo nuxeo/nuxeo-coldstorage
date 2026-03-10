@@ -19,7 +19,7 @@
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-library identifier: "platform-ci-shared-library@v0.0.75"
+library identifier: "platform-ci-shared-library@v0.0.78"
 
 pipeline {
   agent {
@@ -39,6 +39,19 @@ pipeline {
         container('maven') {
           script {
             nxK8s.setPodLabels(branch: env.BRANCH_NAME)
+          }
+        }
+      }
+    }
+    stage('Check blocker issues') {
+      steps {
+        container('maven') {
+          script {
+            def blockerIssueCheck = nxProject.checkBlockerJiraIssues()
+            if (blockerIssueCheck) {
+              env.TEAMS_NOTIFICATION_MESSAGE = blockerIssueCheck.message
+              error 'Found some unresolved or uncommitted blocker issues'
+            }
           }
         }
       }
@@ -113,7 +126,7 @@ pipeline {
     always {
       script {
         nxUtils.setReleaseDescription()
-        nxUtils.notifyReleaseStatusIfNecessary()
+        nxUtils.notifyReleaseStatusIfNecessary(details: env.TEAMS_NOTIFICATION_MESSAGE)
       }
     }
   }
