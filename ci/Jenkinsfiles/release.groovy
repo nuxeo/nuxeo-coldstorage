@@ -25,11 +25,6 @@ pipeline {
   agent {
     label 'jenkins-nuxeo-package-lts-2023'
   }
-  options {
-    buildDiscarder(logRotator(daysToKeepStr: '60', numToKeepStr: '60', artifactNumToKeepStr: '5'))
-    disableConcurrentBuilds()
-    githubProjectProperty(projectUrlStr: 'https://github.com/nuxeo/nuxeo-coldstorage')
-  }
   environment {
     BRANCH_NAME = "${params.BRANCH}"
     BUILD_VERSION = "${params.BUILD_VERSION}"
