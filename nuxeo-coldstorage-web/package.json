@@ -4,11 +4,11 @@
   "author": "Nuxeo",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@nuxeo/nuxeo-web-ui-ftest": "~2025.13.0",
+    "@nuxeo/nuxeo-web-ui-ftest": "~2025.14.0",
     "expect-webdriverio": "5.3.4",
     "@open-wc/eslint-config": "^0.3.0",
     "@esm-bundle/chai": "^4.1.5",
-    "@nuxeo/testing-helpers": "~2025.13.0",
+    "@nuxeo/testing-helpers": "~2025.14.0",
     "@rollup/plugin-node-resolve": "^7.1.3",
     "@web/dev-server-legacy": "^0.1.6",
     "@web/test-runner": "^0.13.11",
@@ -30,8 +30,8 @@
     "wdio-cucumberjs-json-reporter": "6.0.1"
   },
   "dependencies": {
-    "@nuxeo/nuxeo-elements": "~2025.13.0",
-    "@nuxeo/nuxeo-ui-elements": "~2025.13.0",
+    "@nuxeo/nuxeo-elements": "~2025.14.0",
+    "@nuxeo/nuxeo-ui-elements": "~2025.14.0",
     "@polymer/iron-icon": "^3.0.0",
     "@polymer/iron-icons": "^3.0.1",
     "@polymer/iron-iconset-svg": "^3.0.1",
