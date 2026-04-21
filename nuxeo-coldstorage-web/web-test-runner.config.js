@@ -1,5 +1,4 @@
 /* eslint import/no-extraneous-dependencies: ["error", {"devDependencies": true}] */
-const { createSauceLabsLauncher } = require('@web/test-runner-saucelabs');
 const { legacyPlugin } = require('@web/dev-server-legacy');
 const { playwrightLauncher } = require('@web/test-runner-playwright');
 
@@ -21,6 +20,8 @@ const baseConfig = {
 
 const isSauceLabsRun = process.env.SAUCE_USERNAME && process.env.SAUCE_ACCESS_KEY;
 if (isSauceLabsRun) {
+  // eslint-disable-next-line global-require
+  const { createSauceLabsLauncher } = require('@web/test-runner-saucelabs');
   const sharedCapabilities = {
     'sauce:options': {
       name: 'Nuxeo Cold Storage',
