@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<component name="org.nuxeo.coldstorage.ui.properties">
+
+  <extension target="org.nuxeo.runtime.ConfigurationService" point="configuration">
+    <property name="org.nuxeo.web.ui.coldstorage.restoreMigrationEnabled">
+      ${nuxeo.coldstorage.migration.restore.enabled:=false}
+    </property>
+  </extension>
+
+</component>
