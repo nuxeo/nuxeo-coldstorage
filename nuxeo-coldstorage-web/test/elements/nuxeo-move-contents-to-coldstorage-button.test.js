@@ -242,6 +242,54 @@ suite('Cold Storage', () => {
         await flush();
         expect(isElementVisible(button)).to.be.true;
       });
+
+      test('Should not be visible when restore migration is enabled', async () => {
+        window.Nuxeo = window.Nuxeo || {};
+        window.Nuxeo.UI = window.Nuxeo.UI || {};
+        window.Nuxeo.UI.config = {
+          coldstorage: {
+            restoreMigrationEnabled: 'true',
+          },
+        };
+
+        button = await fixture(
+          html`
+            <nuxeo-move-contents-to-coldstorage-button
+              .documents=${documents}
+            ></nuxeo-move-contents-to-coldstorage-button>
+          `,
+        );
+
+        await flush();
+        expect(isElementVisible(button)).to.be.false;
+
+        // Cleanup
+        delete window.Nuxeo.UI.config.coldstorage;
+      });
+
+      test('Should be visible when restore migration is disabled', async () => {
+        window.Nuxeo = window.Nuxeo || {};
+        window.Nuxeo.UI = window.Nuxeo.UI || {};
+        window.Nuxeo.UI.config = {
+          coldstorage: {
+            restoreMigrationEnabled: 'false',
+          },
+        };
+
+        button = await fixture(
+          html`
+            <nuxeo-move-contents-to-coldstorage-button
+              .documents=${documents}
+            ></nuxeo-move-contents-to-coldstorage-button>
+          `,
+        );
+
+        await flush();
+        expect(isElementVisible(button)).to.be.true;
+
+        // Cleanup
+        delete window.Nuxeo.UI.config.coldstorage;
+      });
     });
 
     suite('Interactions', () => {
