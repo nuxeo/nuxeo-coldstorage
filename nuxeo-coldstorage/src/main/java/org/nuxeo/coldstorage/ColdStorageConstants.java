@@ -64,6 +64,11 @@ public class ColdStorageConstants {
 
     public static final String COLD_STORAGE_THUMBNAIL_PREVIEW_REQUIRED_PROPERTY_NAME = "nuxeo.coldstorage.thumbnailPreviewRequired";
 
+    /**
+     * @since 2025.2
+     */
+    public static final String COLD_STORAGE_RESTORE_MIGRATION_ENABLED_PROPERTY_NAME = "nuxeo.coldstorage.migration.restore.enabled";
+
     public static final String COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL = "coldstorage:downloadableUntil";
 
     public static final String EVENT_CATEGORY = "coldStorage";

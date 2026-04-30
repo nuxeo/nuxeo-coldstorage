@@ -22,10 +22,11 @@ import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_PR
 
 import java.io.IOException;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import javax.annotation.Nonnull;
+
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.DocumentModel;
+import org.nuxeo.ecm.core.api.NuxeoException;
 import org.nuxeo.ecm.core.blob.BlobManager;
 import org.nuxeo.ecm.core.blob.BlobProvider;
 import org.nuxeo.ecm.core.blob.BlobStatus;
@@ -39,32 +40,33 @@ import com.amazonaws.services.s3.model.StorageClass;
  */
 public class ColdStorageHelper {
 
-    private static final Logger log = LogManager.getLogger(ColdStorageHelper.class);
-
-    public static BlobStatus getBlobStatus(DocumentModel doc) {
+    public static BlobStatus getBlobStatus(@Nonnull DocumentModel doc) {
         Blob coldContent = (Blob) doc.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
+        if (coldContent == null) {
+            throw new NuxeoException("Document: %s has no cold storage content.".formatted(doc.getId()));
+        }
         return getStatus((ManagedBlob) coldContent);
     }
 
-    public static BlobStatus getStatus(ManagedBlob blob) {
+    public static BlobStatus getStatus(@Nonnull ManagedBlob blob) {
         try {
             BlobProvider provider = Framework.getService(BlobManager.class).getBlobProvider(blob);
             return provider.getStatus(blob);
         } catch (IOException e) {
-            log.error("Unable to get blob status for blob: {}", blob, e);
-            return null;
+            throw new NuxeoException("Unable to get blob status for blob: %s".formatted(blob), e);
         }
     }
 
-    public static boolean isDownloadable(BlobStatus blobStatus) {
+    public static boolean isDownloadable(@Nonnull BlobStatus blobStatus) {
         return !isInColdStorage(blobStatus) || blobStatus.isDownloadable();
     }
 
-    public static boolean isInColdStorage(ManagedBlob blob) {
+    public static boolean isInColdStorage(@Nonnull ManagedBlob blob) {
         return isInColdStorage(getStatus(blob));
     }
 
-    public static boolean isInColdStorage(BlobStatus status) {
+    public static boolean isInColdStorage(@Nonnull BlobStatus status) {
         return StorageClass.Glacier.toString().equals(status.getStorageClass());
     }
+
 }

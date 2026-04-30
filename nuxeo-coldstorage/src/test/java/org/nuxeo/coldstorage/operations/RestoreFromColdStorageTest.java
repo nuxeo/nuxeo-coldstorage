@@ -26,6 +26,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CHECK_CONTENT_AVAILABILITY_EVENT_NAME;
+import static org.nuxeo.coldstorage.MockS3BlobProvider.waitForRestore;
 
 import java.io.IOException;
 import java.util.List;
@@ -37,7 +38,6 @@ import org.nuxeo.coldstorage.ColdStorageConstants;
 import org.nuxeo.coldstorage.DummyColdStorageFeature;
 import org.nuxeo.ecm.automation.OperationContext;
 import org.nuxeo.ecm.automation.OperationException;
-import org.nuxeo.ecm.core.DummyBlobProvider;
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.NuxeoException;
@@ -55,7 +55,7 @@ public class RestoreFromColdStorageTest extends AbstractTestColdStorageOperation
     protected NotificationManager notificationManager;
 
     @Test
-    public void shouldBeRestore() throws IOException, OperationException, InterruptedException {
+    public void shouldBeRestore() throws IOException, OperationException {
         DocumentModel documentModel = createFileDocument(session, true);
         // first make the move to cold storage
         documentModel = moveContentToColdStorage(session, documentModel);
@@ -63,7 +63,7 @@ public class RestoreFromColdStorageTest extends AbstractTestColdStorageOperation
     }
 
     @Test
-    public void shouldFailBeingRestored() throws IOException, OperationException, InterruptedException {
+    public void shouldFailBeingRestored() throws IOException, OperationException {
         DocumentModel documentModel = createFileDocument(session, true);
         transactionalFeature.nextTransaction();
 
@@ -81,7 +81,7 @@ public class RestoreFromColdStorageTest extends AbstractTestColdStorageOperation
     }
 
     @Test
-    public void shouldFailRestoreNoColdStorageContent() throws OperationException, IOException, InterruptedException {
+    public void shouldFailRestoreNoColdStorageContent() throws OperationException, IOException {
         DocumentModel documentModel = createFileDocument(session, true);
         try {
             // request a restore from the cold storage
@@ -93,7 +93,7 @@ public class RestoreFromColdStorageTest extends AbstractTestColdStorageOperation
     }
 
     @Test
-    public void shouldMakeRestoreMultipleTimes() throws IOException, OperationException, InterruptedException {
+    public void shouldMakeRestoreMultipleTimes() throws IOException, OperationException {
         DocumentModel documentModel = createFileDocument(session, true);
         transactionalFeature.nextTransaction();
 
@@ -127,8 +127,7 @@ public class RestoreFromColdStorageTest extends AbstractTestColdStorageOperation
         }
     }
 
-    protected DocumentModel restoreContentFromColdStorage(DocumentModel documentModel)
-            throws OperationException, IOException, InterruptedException {
+    protected void restoreContentFromColdStorage(DocumentModel documentModel) throws OperationException, IOException {
         try (OperationContext context = new OperationContext(session)) {
             context.setInput(documentModel);
             documentModel = (DocumentModel) automationService.run(context, RestoreFromColdStorage.ID);
@@ -144,11 +143,10 @@ public class RestoreFromColdStorageTest extends AbstractTestColdStorageOperation
         List<String> subscriptions = notificationManager.getSubscriptionsForUserOnDocument(username, documentModel);
         assertTrue(subscriptions.contains(ColdStorageConstants.COLD_STORAGE_CONTENT_RESTORED_NOTIFICATION_NAME));
         assertFalse(subscriptions.contains(ColdStorageConstants.COLD_STORAGE_CONTENT_AVAILABLE_NOTIFICATION_NAME));
-        return documentModel;
     }
 
-    protected void waitForRetrieve() throws InterruptedException {
-        Thread.sleep(DummyBlobProvider.RESTORE_DELAY_MILLISECONDS + 200);
+    protected void waitForRetrieve() {
+        waitForRestore();
         EventService eventService = Framework.getService(EventService.class);
         EventContextImpl ctx = new EventContextImpl();
         eventService.fireEvent(ctx.newEvent(COLD_STORAGE_CHECK_CONTENT_AVAILABILITY_EVENT_NAME));

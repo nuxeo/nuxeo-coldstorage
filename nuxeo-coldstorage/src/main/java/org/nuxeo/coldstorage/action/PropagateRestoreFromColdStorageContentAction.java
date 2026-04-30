@@ -30,7 +30,9 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.nuxeo.coldstorage.ColdStorageConstants;
+import org.nuxeo.coldstorage.ColdStorageHelper;
 import org.nuxeo.coldstorage.service.ColdStorageService;
+import org.nuxeo.coldstorage.service.RestoreContext;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentModelList;
@@ -82,7 +84,17 @@ public class PropagateRestoreFromColdStorageContentAction implements StreamProce
                     continue;
                 }
                 try {
-                    service.proceedRestoreMainContent(session, document, false, false);
+                    var blobStatus = ColdStorageHelper.getBlobStatus(document);
+                    if (ColdStorageHelper.isDownloadable(blobStatus)) {
+                        service.proceedRestoreMainContent(
+                                RestoreContext.builder(session, document)
+                                              .storageLevel(ColdStorageHelper.isInColdStorage(blobStatus))
+                                              .build());
+                    } else {
+                        log.warn("Document: {} cannot be restored: blob not downloadable (storage class: {})",
+                                document::getId, blobStatus::getStorageClass);
+                        delta.incrementSkipCount();
+                    }
                 } catch (NuxeoException e) {
                     errorCount++;
                     delta.inError("Cannot propagate restore from cold storage for document %s: %s".formatted(
