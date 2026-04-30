@@ -33,9 +33,6 @@ import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_DO
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.FILE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.GET_DOCUMENTS_TO_CHECK_QUERY;
-import static org.nuxeo.ecm.core.api.security.SecurityConstants.READ;
-import static org.nuxeo.ecm.core.api.security.SecurityConstants.WRITE;
-import static org.nuxeo.ecm.core.api.security.SecurityConstants.WRITE_COLD_STORAGE;
 import static org.nuxeo.ecm.core.api.versioning.VersioningService.VERSIONING_OPTION;
 
 import java.io.IOException;
@@ -49,7 +46,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -179,14 +175,11 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         blob1.setDigest(UUID.randomUUID().toString());
         Blob blob2 = Blobs.createBlob(fileContent + fileContent);
         blob2.setDigest(UUID.randomUUID().toString());
-        List<DocumentModel> list1 = createSameBlobFileDocuments(DEFAULT_DOC_NAME + "1", 10, blob1, "john", READ, WRITE,
-                WRITE_COLD_STORAGE);
+        List<DocumentModel> list1 = createSameBlobFileDocuments(DEFAULT_DOC_NAME + "1", blob1);
         // and another one with a different blob
-        List<DocumentModel> list2 = createSameBlobFileDocuments(DEFAULT_DOC_NAME + "2", 10, blob2, "john", READ, WRITE,
-                WRITE_COLD_STORAGE);
+        List<DocumentModel> list2 = createSameBlobFileDocuments(DEFAULT_DOC_NAME + "2", blob2);
         coreFeature.waitForAsyncCompletion(); // for thumbnail generation
-        List<DocumentModel> documentModels = new ArrayList<DocumentModel>();
-        documentModels = Stream.concat(list1.stream(), list2.stream()).collect(Collectors.toList());
+        List<DocumentModel> documentModels = Stream.concat(list1.stream(), list2.stream()).toList();
         CoreSession userSession = CoreInstance.getCoreSession(documentModels.get(0).getRepositoryName(), "john");
 
         // Move only the 2 first doc

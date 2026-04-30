@@ -89,8 +89,8 @@ public class PropagateMoveToColdStorageContentAction implements StreamProcessorT
                     session.saveDocument(documentModel);
                 } catch (NuxeoException e) {
                     errorCount++;
-                    delta.inError(String.format("Cannot propagate move to cold storage for document %s: %s", document.getId(),
-                            e.getMessage()));
+                    delta.inError("Cannot propagate move to cold storage for document %s: %s".formatted(
+                            document.getId(), e.getMessage()));
                     log.warn("Could not propagate move to cold storage for document: {}", document::getId, () -> e);
                 }
             }

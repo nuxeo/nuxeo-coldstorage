@@ -297,8 +297,7 @@ public abstract class AbstractTestColdStorageService {
         }
     }
 
-    protected DocumentModel assertRestoredFromColdStorage(DocumentRef documentRef, String expectedContent)
-            throws IOException {
+    protected void assertRestoredFromColdStorage(DocumentRef documentRef, String expectedContent) throws IOException {
         DocumentModel documentModel = session.getDocument(documentRef);
         // we shouldn't have any ColdStorage content
         assertFalse(documentModel.hasFacet(COLD_STORAGE_FACET_NAME));
@@ -308,7 +307,6 @@ public abstract class AbstractTestColdStorageService {
         BlobStatus status = getStatus(fileContent);
         assertFalse(status.isOngoingRestore());
         assertTrue(status.isDownloadable());
-        return documentModel;
     }
 
     @Test
@@ -371,11 +369,11 @@ public abstract class AbstractTestColdStorageService {
         assertEquals(1, res.size());
     }
 
-    protected DocumentModel moveAndRestore(DocumentRef docRef) throws IOException {
+    protected void moveAndRestore(DocumentRef docRef) throws IOException {
         // move the blob to cold storage and verify the content
         moveAndVerifyContent(session, docRef);
         // undo move from the cold storage
-        return service.restoreFromColdStorage(session, docRef);
+        service.restoreFromColdStorage(session, docRef);
     }
 
     protected DocumentModel moveAndVerifyContent(CoreSession session, DocumentRef ref) throws IOException {
@@ -430,17 +428,17 @@ public abstract class AbstractTestColdStorageService {
         return document.getRef();
     }
 
-    protected List<DocumentModel> createSameBlobFileDocuments(String name, int nbDoc, Blob blob, String username,
-            String... permissions) {
-        List<DocumentModel> docs = new ArrayList<DocumentModel>();
-        for (int i = 0; i < nbDoc; i++) {
+    protected List<DocumentModel> createSameBlobFileDocuments(String name, Blob blob) {
+        List<DocumentModel> docs = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
             DocumentModel documentModel = session.createDocumentModel("/", name + (i + 1), "File");
             documentModel.setPropertyValue("file:content", (Serializable) blob);
             DocumentModel document = session.createDocument(documentModel);
             ACP acp = document.getACP();
             ACL acl = acp.getOrCreateACL();
-            for (String permission : permissions) {
-                acl.add(new ACE(username, permission, true));
+            for (String permission : new String[] { SecurityConstants.READ, SecurityConstants.WRITE,
+                    SecurityConstants.WRITE_COLD_STORAGE }) {
+                acl.add(new ACE("john", permission, true));
             }
             session.setACP(document.getRef(), acp, false);
             docs.add(document);
