@@ -85,8 +85,8 @@ public class PropagateRestoreFromColdStorageContentAction implements StreamProce
                     service.proceedRestoreMainContent(session, document, false, false);
                 } catch (NuxeoException e) {
                     errorCount++;
-                    delta.inError(String.format("Cannot propagate restore from cold storage for document %s: %s", document.getId(),
-                            e.getMessage()));
+                    delta.inError("Cannot propagate restore from cold storage for document %s: %s".formatted(
+                            document.getId(), e.getMessage()));
                     log.warn("Could not propagate restore from cold storage for document: {}", document::getId,
                             () -> e);
                 }
