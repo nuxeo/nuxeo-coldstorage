@@ -105,7 +105,21 @@ class BulkMoveToColdStorage extends mixinBehaviors([FiltersBehavior, FormatBehav
   }
 
   _isAvailable(documents) {
-    return documents.length > 0 && documents.every((doc) => this._canMoveDocument(doc));
+    return (
+      !this._isMoveToColdStorageBlocked() &&
+      documents.length > 0 &&
+      documents.every((doc) => this._canMoveDocument(doc))
+    );
+  }
+
+  _isMoveToColdStorageBlocked() {
+    return (
+      Nuxeo &&
+      Nuxeo.UI &&
+      Nuxeo.UI.config &&
+      Nuxeo.UI.config.coldstorage &&
+      Nuxeo.UI.config.coldstorage.restoreMigrationEnabled === 'true'
+    );
   }
 
   _toggle() {
