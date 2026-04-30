@@ -33,6 +33,7 @@ import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_DO
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.FILE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.GET_DOCUMENTS_TO_CHECK_QUERY;
+import static org.nuxeo.coldstorage.MockS3BlobProvider.waitForRestore;
 import static org.nuxeo.ecm.core.api.versioning.VersioningService.VERSIONING_OPTION;
 
 import java.io.IOException;
@@ -56,8 +57,8 @@ import org.apache.logging.log4j.core.LogEvent;
 import org.junit.Test;
 import org.nuxeo.coldstorage.ColdStorageHelper;
 import org.nuxeo.coldstorage.DummyColdStorageFeature;
+import org.nuxeo.coldstorage.MockS3BlobProvider;
 import org.nuxeo.coldstorage.action.MoveToColdStorageContentAction;
-import org.nuxeo.ecm.core.DummyBlobProvider;
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.Blobs;
 import org.nuxeo.ecm.core.api.CoreInstance;
@@ -167,7 +168,7 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
     @Test
     @Deploy("org.nuxeo.coldstorage.test:OSGI-INF/test-coldstorage-bulk-contrib.xml")
     @LogCaptureFeature.FilterWith(ColdStorageActionsLogFilter.class)
-    public void shouldMoveManyDocsWithSameBlobToColdStorage() throws IOException, InterruptedException {
+    public void shouldMoveManyDocsWithSameBlobToColdStorage() throws IOException {
         // with regular user with "WriteColdStorage" permission
         // Let's create 2 lists of documents all sharing the same blob
         final String fileContent = FILE_CONTENT + System.currentTimeMillis();
@@ -223,7 +224,7 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
     }
 
     @Test
-    public void shouldMoveToColdStorageAfterRestore() throws IOException, InterruptedException {
+    public void shouldMoveToColdStorageAfterRestore() throws IOException {
         // with regular user with "WriteColdStorage" permission
         final String blobContent = FILE_CONTENT + System.currentTimeMillis();
         ACE[] aces = { new ACE("john", SecurityConstants.READ, true), //
@@ -239,7 +240,7 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
     }
 
     @Test
-    public void shouldCheckAvailability() throws InterruptedException, IOException {
+    public void shouldCheckAvailability() throws IOException {
         // Create 3 docs on which retrieval was requested
         DocumentRef docRef1 = moveAndRequestRetrievalFromColdStorage(DEFAULT_DOC_NAME + "1").getRef();
         DocumentRef docRef2 = moveAndRequestRetrievalFromColdStorage(DEFAULT_DOC_NAME + "2").getRef();
@@ -249,8 +250,8 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         List<DocumentModel> beingRetrievedDocs = session.query(GET_DOCUMENTS_TO_CHECK_QUERY);
         assertEquals(3, beingRetrievedDocs.size());
 
-        Thread.sleep(DummyBlobProvider.RESTORE_DELAY_MILLISECONDS + 200);
-        // Tweek blob status to have a doc on which retrieval was requested and that is still being retrieved
+        waitForRestore();
+        // Tweak blob status to have a doc on which retrieval was requested and that is still being retrieved
         BlobStatus coldContentStatusOfFile2 = new BlobStatus().withDownloadable(false).withOngoingRestore(true);
         addColdStorageContentBlobStatus(docRef2, coldContentStatusOfFile2);
         // and another one on which retrieval was requested but is no longer retrieved because retrieval time expired
@@ -296,7 +297,7 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
 
     // NXP-32003
     @Test
-    public void shouldCheckAvailabilityOnVersion() throws InterruptedException {
+    public void shouldCheckAvailabilityOnVersion() {
         DocumentModel documentModel = session.createDocumentModel("/", "DocWithVersion", "File");
         String content = FILE_CONTENT + System.currentTimeMillis();
         Blob blob = Blobs.createBlob(content);
@@ -313,12 +314,12 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         // Retrieve the version
         version = service.retrieveFromColdStorage(session, version.getRef(), RESTORE_DURATION);
         transactionalFeature.nextTransaction();
-        Thread.sleep(DummyBlobProvider.RESTORE_DELAY_MILLISECONDS + 200);
+        waitForRestore();
         assertTrue(service.checkIsRetrieved(session, version));
     }
 
     @Test
-    public void shouldMakeRestoreImmediately() throws IOException, InterruptedException {
+    public void shouldMakeRestoreImmediately() throws IOException {
         final String fileContent = FILE_CONTENT + System.currentTimeMillis();
         DocumentRef docRef = createFileDocument(DEFAULT_DOC_NAME, fileContent);
         moveAndRestore(docRef);
@@ -328,7 +329,7 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
 
     @Test
     @Deploy("org.nuxeo.coldstorage.test:OSGI-INF/test-thumbnail-recomputation-contrib.xml")
-    public void shouldNotRecomputeThumbnailOnMoveAndRestore() throws IOException, InterruptedException {
+    public void shouldNotRecomputeThumbnailOnMoveAndRestore() throws IOException {
         final String fileContent = FILE_CONTENT + System.currentTimeMillis();
         DocumentModel documentModel = session.createDocumentModel("/", DEFAULT_DOC_NAME, "MyCustomFile");
         documentModel.setPropertyValue("file:content", (Serializable) Blobs.createBlob(fileContent));
@@ -389,7 +390,7 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
 
         // Let's mock a document sent to ColdStorage but somehow its blob has been restored independently
         ManagedBlob coldContent = (ManagedBlob) documentModel.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
-        DummyBlobProvider blobProvider = (DummyBlobProvider) blobManager.getBlobProvider(coldContent.getProviderId());
+        MockS3BlobProvider blobProvider = (MockS3BlobProvider) blobManager.getBlobProvider(coldContent.getProviderId());
         String key = ColdStorageServiceImpl.getContentBlobKey(coldContent);
         BlobUpdateContext updateContext = new BlobUpdateContext(key).withColdStorageClass(false);
         blobProvider.updateBlob(updateContext);
@@ -412,7 +413,7 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
 
         // Let's mock a document sent to ColdStorage but somehow its blob has been restored independently
         ManagedBlob coldContent = (ManagedBlob) documentModel.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
-        DummyBlobProvider blobProvider = (DummyBlobProvider) blobManager.getBlobProvider(coldContent.getProviderId());
+        MockS3BlobProvider blobProvider = (MockS3BlobProvider) blobManager.getBlobProvider(coldContent.getProviderId());
         String key = ColdStorageServiceImpl.getContentBlobKey(coldContent);
         BlobUpdateContext updateContext = new BlobUpdateContext(key).withColdStorageClass(false);
         blobProvider.updateBlob(updateContext);
@@ -424,7 +425,7 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
 
     // NXP-31865
     @Test
-    public void shouldMoveAndRestoreVersionsWithSameColdStorageContent() throws InterruptedException, IOException {
+    public void shouldMoveAndRestoreVersionsWithSameColdStorageContent() throws IOException {
         DocumentModel documentModel = session.createDocumentModel("/", "FileWithVersions", "File");
         String content = FILE_CONTENT + System.currentTimeMillis();
         Blob blob = Blobs.createBlob(content);
@@ -457,8 +458,8 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         assertRestoredFromColdStorage(version.getRef(), content);
     }
 
-    protected void waitForRetrieve() throws InterruptedException {
-        Thread.sleep(DummyBlobProvider.RESTORE_DELAY_MILLISECONDS + 200);
+    protected void waitForRetrieve() {
+        waitForRestore();
         EventContextImpl ctx = new EventContextImpl();
         Framework.getService(EventService.class)
                  .fireEvent(ctx.newEvent(COLD_STORAGE_CHECK_CONTENT_AVAILABILITY_EVENT_NAME));
@@ -469,7 +470,7 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         ManagedBlob coldContent = (ManagedBlob) session.getDocument(documentRef)
                                                        .getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
 
-        DummyBlobProvider blobProvider = (DummyBlobProvider) blobManager.getBlobProvider(coldContent.getProviderId());
+        MockS3BlobProvider blobProvider = (MockS3BlobProvider) blobManager.getBlobProvider(coldContent.getProviderId());
         blobProvider.addStatus(coldContent, blobStatus);
     }
 
