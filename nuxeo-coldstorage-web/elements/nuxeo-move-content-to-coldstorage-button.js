@@ -98,7 +98,18 @@ class MoveToColdStorage extends mixinBehaviors([FiltersBehavior, FormatBehavior]
       !this.hasFacet(document, 'ColdStorage') &&
       (this.hasAdministrationPermissions(currentUser) || this.hasPermission(document, 'WriteColdStorage')) &&
       this.hasContent(document) &&
-      this._isRenditionAvailable(document)
+      this._isRenditionAvailable(document) &&
+      !this._isMoveToColdStorageBlocked()
+    );
+  }
+
+  _isMoveToColdStorageBlocked() {
+    return (
+      Nuxeo &&
+      Nuxeo.UI &&
+      Nuxeo.UI.config &&
+      Nuxeo.UI.config.coldstorage &&
+      Nuxeo.UI.config.coldstorage.restoreMigrationEnabled === 'true'
     );
   }
 
