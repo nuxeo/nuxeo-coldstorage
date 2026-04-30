@@ -337,7 +337,10 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
                 log.warn(
                         "Cold content blob: {} of document: {} is already restored. Restoring the Nuxeo document instead of retrieving.",
                         key, documentRef);
-                DocumentModel restored = proceedRestoreMainContent(session, documentModel, false, false);
+                // Only update storage level if blob is still in cold storage (GLACIER)
+                boolean needsStorageLevelRestore = ColdStorageHelper.isInColdStorage(blobStatus);
+                DocumentModel restored = proceedRestoreMainContent(
+                        RestoreContext.builder(session, documentModel).storageLevel(needsStorageLevelRestore).build());
                 // Fire event for audit purpose
                 fireEvent(restored, restored.getCoreSession(), COLD_STORAGE_CONTENT_TO_RESTORE_EVENT_NAME);
                 return restored;
@@ -423,7 +426,12 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         BlobStatus blobStatus = ColdStorageHelper.getBlobStatus(documentModel);
         if (ColdStorageHelper.isDownloadable(blobStatus)) {
             // Restore the main content synchronously no need to notify.
-            documentModel = proceedRestoreMainContent(session, documentModel, false);
+            // Only update storage level if blob is still in cold storage (GLACIER)
+            boolean needsStorageLevelRestore = ColdStorageHelper.isInColdStorage(blobStatus);
+            documentModel = proceedRestoreMainContent(RestoreContext.builder(session, documentModel)
+                                                                    .propagate(true)
+                                                                    .storageLevel(needsStorageLevelRestore)
+                                                                    .build());
         } else {
             // Need to retrieve the doc first, restoration will happen asynchronously once the doc will be retrieved
             // Subscribe the user to receive a mail notification once the content is restored
@@ -445,24 +453,22 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
     }
 
     @Override
-    public DocumentModel proceedRestoreMainContent(CoreSession session, DocumentModel documentModel, boolean notify) {
-        return proceedRestoreMainContent(session, documentModel, notify, true);
-    }
-
-    @Override
-    public DocumentModel proceedRestoreMainContent(CoreSession session, DocumentModel documentModel, boolean notify,
-            boolean propagate) {
+    public DocumentModel proceedRestoreMainContent(RestoreContext context) {
+        CoreSession session = context.getCoreSession();
+        DocumentModel documentModel = context.getDocumentModel();
         Blob coldContent = (Blob) documentModel.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
         if (coldContent == null) {
             throw new NuxeoException(String.format("Cold content is null for document: %s", documentModel.getId()));
         }
-        try {
-            String key = getContentBlobKey(coldContent);
-            BlobUpdateContext updateContext = new BlobUpdateContext(key).withColdStorageClass(false);
-            Framework.getService(BlobManager.class).getBlobProvider(coldContent).updateBlob(updateContext);
-        } catch (IOException e) {
-            log.error("Could not restore document {}", documentModel::getId);
-            throw new NuxeoException(e);
+        if (context.isStorageLevel()) {
+            try {
+                String key = getContentBlobKey(coldContent);
+                BlobUpdateContext updateContext = new BlobUpdateContext(key).withColdStorageClass(false);
+                Framework.getService(BlobManager.class).getBlobProvider(coldContent).updateBlob(updateContext);
+            } catch (IOException e) {
+                log.error("Could not restore document {}", documentModel::getId);
+                throw new NuxeoException(e);
+            }
         }
         // We must reset all properties of the Cold Storage facet before removing it, otherwise the properties will
         // still have the old values if we add back the facet (i.e. send back to cold storage)
@@ -495,13 +501,13 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         }
         documentModel = session.saveDocument(documentModel);
 
-        if (propagate) {
+        if (context.isPropagate()) {
             // Submit Bulk action to update documents referencing the same blob
             propagateRestoreFromColdStorage(session, coldContent.getDigest());
         }
 
         // Send notification
-        if (notify) {
+        if (context.isNotify()) {
             DocumentEventContext ctx = new DocumentEventContext(session, session.getPrincipal(), documentModel);
             EventService eventService = Framework.getService(EventService.class);
             ctx.setProperty(COLD_STORAGE_CONTENT_RESTORED_EVENT_NAME, "true");
@@ -574,7 +580,13 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
             // Check if the Document should be restored definitively
             Serializable undoMove = doc.getPropertyValue(COLD_STORAGE_TO_BE_RESTORED_PROPERTY);
             if (Boolean.TRUE.equals(undoMove)) {
-                proceedRestoreMainContent(session, doc, true);
+                // Only update storage level if blob is still in cold storage (GLACIER)
+                boolean needsStorageLevelRestore = ColdStorageHelper.isInColdStorage(blobStatus);
+                proceedRestoreMainContent(RestoreContext.builder(session, doc)
+                                                        .notify(true)
+                                                        .propagate(true)
+                                                        .storageLevel(needsStorageLevelRestore)
+                                                        .build());
             } else {
                 doc.setPropertyValue(COLD_STORAGE_BEING_RETRIEVED_PROPERTY, false);
 

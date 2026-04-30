@@ -110,14 +110,37 @@ public interface ColdStorageService {
 
     /**
      * Internal use.
+     *
+     * @deprecated since 2025.2, use {@link #proceedRestoreMainContent(RestoreContext)} instead
      */
-    DocumentModel proceedRestoreMainContent(CoreSession session, DocumentModel documentModel, boolean notify);
+    @Deprecated(since = "2025.2")
+    default DocumentModel proceedRestoreMainContent(CoreSession session, DocumentModel documentModel, boolean notify) {
+        return proceedRestoreMainContent(session, documentModel, notify, true);
+    }
 
     /**
      * Internal use.
+     *
+     * @deprecated since 2025.2, use {@link #proceedRestoreMainContent(RestoreContext)} instead
      */
-    DocumentModel proceedRestoreMainContent(CoreSession session, DocumentModel documentModel, boolean notify,
-            boolean propagate);
+    @Deprecated(since = "2025.2")
+    default DocumentModel proceedRestoreMainContent(CoreSession session, DocumentModel documentModel, boolean notify,
+            boolean propagate) {
+        return proceedRestoreMainContent(RestoreContext.builder(session, documentModel)
+                                                       .notify(notify)
+                                                       .propagate(propagate)
+                                                       .storageLevel(true)
+                                                       .build());
+    }
+
+    /**
+     * Internal use. Restores the main content from cold storage using the provided context.
+     *
+     * @param context the restore context containing the core session, document model and restore options
+     * @return the updated document model
+     * @since 2025.2
+     */
+    DocumentModel proceedRestoreMainContent(RestoreContext context);
 
     /**
      * Internal use.
