@@ -68,6 +68,76 @@ Create the following db indexes for an optimal functioning of the addon:
  - `nuxeo.bulk.action.checkColdStorageAvailability.scroller` : scroller implementation to be used to query documents being retrieved. `elastic` value can be set to relieve the regular back-end.
  - `nuxeo.coldstorage.numberOfDaysOfAvailability.value.default` : number of days a document remains available once it has been retrieved. Default value is `1`.
  - `nuxeo.coldstorage.thumbnailPreviewRequired` : is a thumbnail required to be used as a place holder to send a document to Cold Storage. Default value is `true`.
+ - `nuxeo.coldstorage.migration.restore.enabled` : when set to `true`, exits the cold storage addon by restoring all documents and blocking move to cold storage operations. Default value is `false`. **@since 2025.2**
+
+    **Exiting Cold Storage**
+
+   This planned operation restores all documents from cold storage back to Nuxeo's default S3 storage class (typically Intelligent-Tiering). After completion, the cold storage addon can be uninstalled.
+
+   **Timeline:**
+   - S3 Bulk restore: ~12 hours
+   - Migration runtime: varies with document volume
+   - Recommended restore window: 30 days (maximum flexibility for retries)
+
+   **Impact:** Move to cold storage operations are immediately blocked when the property is enabled. Restore operations continue to work.
+
+   ---
+
+   **Step 1: Block New Moves to Cold Storage**
+
+   Enable the property to block move operations:
+   ```
+   nuxeo.coldstorage.migration.restore.enabled=true
+   ```
+   on all Nuxeo nodes (front and worker nodes) and proceed to a whole cluster restart. No new documents can be moved to cold storage. Restore operations continue to work.
+
+   **Note:** Any pending move to cold storage bulk actions already queued will complete with errors (documents skipped). This is expected and safe.
+
+   **Step 2: Restore S3 Objects**
+
+   Use S3 Batch Operations to restore all Glacier objects:
+   1. In AWS Console: **S3 > Batch Operations**
+   2. Create an S3 inventory for your bucket
+   3. Create a Batch Operations job: **Restore** operation
+   4. Use the inventory as source
+   5. Configure:
+      - Retrieval tier: **Bulk**
+      - Duration: **30 days** (or longer for maximum comfort)
+   6. Submit and monitor the job
+
+   **Step 3: Wait for Completion**
+
+   Monitor the Batch Operations job until all objects reach "Restored" state (typically 5-12 hours).
+
+   **Step 4: Run Migration**
+
+   Execute the Nuxeo migration to restore documents:
+   ```
+   # Check current status
+   GET  /nuxeo/site/management/migration/restore-from-cold-storage-migration
+
+   # Run the migration step
+   POST /nuxeo/site/management/migration/restore-from-cold-storage-migration/enabled-to-done
+
+   # Poll until migration is no longer running (step field is null)
+   GET  /nuxeo/site/management/migration/restore-from-cold-storage-migration
+
+   # Probe to refresh state after migration completes
+   POST /nuxeo/site/management/migration/restore-from-cold-storage-migration/probe
+   ```
+
+   After probing, check the state:
+   - **State `done`**: All documents restored successfully
+   - **State `enabled`**: Some documents remain in cold storage (blobs not yet downloadable from S3)
+
+   If state remains `enabled`, wait for S3 restore window and retry the migration step.
+
+   **Step 5: Cleanup**
+
+   Once migration status is `done`:
+   - All documents are restored in Nuxeo
+   - Content is stored at the default S3 storage class
+   - Uninstall the cold storage addon
 
 ### Frontend Contribution
 
@@ -121,7 +191,6 @@ npm run ftest
 ```
 
 To run the functional tests, [Nuxeo Web UI Functional Testing Framework](https://github.com/nuxeo/nuxeo-web-ui/tree/maintenance-3.0.x/packages/nuxeo-web-ui-ftest) is used.
-Due to its inner dependencies, it only works using NodeJS `lts/dubnium`, i.e., `v10`.
 
 ## Development Workflow
 
@@ -129,7 +198,7 @@ Due to its inner dependencies, it only works using NodeJS `lts/dubnium`, i.e., `
 
 *Disclaimer:* In order to contribute and develop Nuxeo Cold Storage UI, it is assumed that there is a Nuxeo server running with Nuxeo Cold Storage package installed and properly configured according the documentation above.
 
-#### Install Dependencies  
+#### Install Dependencies
 
 ```sh
 npm install

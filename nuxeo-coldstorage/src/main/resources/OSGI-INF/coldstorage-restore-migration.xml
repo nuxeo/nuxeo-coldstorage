@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<component name="org.nuxeo.coldstorage.migrator" version="1.0">
+
+  <extension target="org.nuxeo.runtime.migration.MigrationService" point="configuration">
+
+    <migration id="restore-from-cold-storage-migration">
+      <description label="migration.coldstorage.restore">Restore documents from cold storage when move to cold storage is blocked</description>
+      <class>org.nuxeo.coldstorage.migrator.RestoreFromColdStorageMigrator</class>
+      <defaultState>disabled</defaultState>
+      <state id="disabled">
+        <description label="migration.coldstorage.restore.disabled">Move to cold storage is not blocked</description>
+      </state>
+      <state id="enabled">
+        <description label="migration.coldstorage.restore.enabled">Move to cold storage is blocked, documents in cold storage need restoration</description>
+      </state>
+      <state id="done">
+        <description label="migration.coldstorage.restore.done">All documents have been restored from cold storage</description>
+      </state>
+
+      <step id="enabled-to-done" fromState="enabled" toState="done">
+        <description label="migration.coldstorage.restore.step">Restore downloadable documents from cold storage</description>
+      </step>
+    </migration>
+
+  </extension>
+
+</component>
+

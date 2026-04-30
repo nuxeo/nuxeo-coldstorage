@@ -19,6 +19,8 @@
 
 package org.nuxeo.coldstorage.service;
 
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_RESTORE_MIGRATION_ENABLED_PROPERTY_NAME;
+
 import java.time.Duration;
 
 import org.nuxeo.ecm.core.api.Blob;
@@ -27,6 +29,7 @@ import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentRef;
 import org.nuxeo.ecm.core.api.NuxeoException;
 import org.nuxeo.ecm.core.blob.ManagedBlob;
+import org.nuxeo.runtime.api.Framework;
 
 /**
  * @since 2021.0.0
@@ -158,5 +161,17 @@ public interface ColdStorageService {
      * @since 2023.2
      */
     void propagateRestoreFromColdStorage(CoreSession session, String blobDigest);
+
+    /**
+     * Checks if move to cold storage operations are globally blocked via configuration.
+     *
+     * @return {@code true} if the
+     *         {@value org.nuxeo.coldstorage.ColdStorageConstants#COLD_STORAGE_RESTORE_MIGRATION_ENABLED_PROPERTY_NAME}
+     *         property is set to {@code true}, {@code false} otherwise
+     * @since 2025.2
+     */
+    default boolean isMoveToColdStorageBlocked() {
+        return Framework.isBooleanPropertyTrue(COLD_STORAGE_RESTORE_MIGRATION_ENABLED_PROPERTY_NAME);
+    }
 
 }

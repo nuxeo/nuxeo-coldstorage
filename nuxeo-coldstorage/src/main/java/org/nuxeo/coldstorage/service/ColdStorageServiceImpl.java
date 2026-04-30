@@ -237,6 +237,11 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
 
     @Override
     public DocumentModel proceedMoveToColdStorage(CoreSession session, DocumentRef documentRef) {
+        if (isMoveToColdStorageBlocked()) {
+            log.debug("Move to cold storage is globally blocked via configuration");
+            throw new NuxeoException("Move to cold storage operations are currently blocked", SC_FORBIDDEN);
+        }
+
         DocumentModel documentModel = session.getDocument(documentRef);
         if (session.isUnderRetentionOrLegalHold(documentRef)) {
             log.debug("The document {} is under retention or legal hold and cannot be moved to cold storage",
