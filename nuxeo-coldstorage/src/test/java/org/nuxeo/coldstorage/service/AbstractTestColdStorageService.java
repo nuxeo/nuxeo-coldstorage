@@ -25,6 +25,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
@@ -32,6 +33,7 @@ import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_BEING_RETR
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_FACET_NAME;
+import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_RESTORE_MIGRATION_ENABLED_PROPERTY_NAME;
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_TO_BE_RESTORED_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.FILE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.events.PreventColdStorageUpdateListener.DISABLE_PREVENT_COLD_STORAGE_UPDATE_LISTENER;
@@ -75,6 +77,7 @@ import org.nuxeo.ecm.core.test.StorageConfiguration;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.FeaturesRunner;
 import org.nuxeo.runtime.test.runner.TransactionalFeature;
+import org.nuxeo.runtime.test.runner.WithFrameworkProperty;
 
 /**
  * @since 2021.0.0
@@ -367,6 +370,16 @@ public abstract class AbstractTestColdStorageService {
         // Assert binary text has not been erased after doc sent to cold storage
         res = session.query(String.format("SELECT * FROM Document WHERE ecm:fulltext = '%s'", fileContent));
         assertEquals(1, res.size());
+    }
+
+    @Test
+    @WithFrameworkProperty(name = COLD_STORAGE_RESTORE_MIGRATION_ENABLED_PROPERTY_NAME, value = "true")
+    public void shouldFailWhenMoveToColdStorageIsBlocked() {
+        DocumentRef docRef = createFileDocument(DEFAULT_DOC_NAME, true);
+
+        var e = assertThrows(NuxeoException.class, () -> service.moveToColdStorage(session, docRef));
+        assertEquals(SC_FORBIDDEN, e.getStatusCode());
+        assertTrue(e.getMessage().contains("Move to cold storage operations are currently blocked"));
     }
 
     protected void moveAndRestore(DocumentRef docRef) throws IOException {
