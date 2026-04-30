@@ -33,9 +33,6 @@ import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_DO
 import static org.nuxeo.coldstorage.ColdStorageConstants.COLD_STORAGE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.FILE_CONTENT_PROPERTY;
 import static org.nuxeo.coldstorage.ColdStorageConstants.GET_DOCUMENTS_TO_CHECK_QUERY;
-import static org.nuxeo.ecm.core.api.security.SecurityConstants.READ;
-import static org.nuxeo.ecm.core.api.security.SecurityConstants.WRITE;
-import static org.nuxeo.ecm.core.api.security.SecurityConstants.WRITE_COLD_STORAGE;
 import static org.nuxeo.ecm.core.api.versioning.VersioningService.VERSIONING_OPTION;
 
 import java.io.IOException;
@@ -49,7 +46,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import jakarta.inject.Inject;
@@ -130,7 +126,7 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         assertEquals(1, caughtEvents.size());
         assertEquals(String.format(
                 "Cannot move document %s to cold storage: The document %s is under retention or legal hold and cannot be moved to cold storage",
-                legalHoldRef, legalHoldRef), caughtEvents.get(0));
+                legalHoldRef, legalHoldRef), caughtEvents.getFirst());
 
         BulkStatus status = bulkService.getStatus(commandId);
         assertTrue(status.isCompleted());
@@ -179,19 +175,16 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         blob1.setDigest(UUID.randomUUID().toString());
         Blob blob2 = Blobs.createBlob(fileContent + fileContent);
         blob2.setDigest(UUID.randomUUID().toString());
-        List<DocumentModel> list1 = createSameBlobFileDocuments(DEFAULT_DOC_NAME + "1", 10, blob1, "john", READ, WRITE,
-                WRITE_COLD_STORAGE);
+        List<DocumentModel> list1 = createSameBlobFileDocuments(DEFAULT_DOC_NAME + "1", blob1);
         // and another one with a different blob
-        List<DocumentModel> list2 = createSameBlobFileDocuments(DEFAULT_DOC_NAME + "2", 10, blob2, "john", READ, WRITE,
-                WRITE_COLD_STORAGE);
+        List<DocumentModel> list2 = createSameBlobFileDocuments(DEFAULT_DOC_NAME + "2", blob2);
         coreFeature.waitForAsyncCompletion(); // for thumbnail generation
-        List<DocumentModel> documentModels = new ArrayList<>();
-        documentModels = Stream.concat(list1.stream(), list2.stream()).collect(Collectors.toList());
-        CoreSession userSession = CoreInstance.getCoreSession(documentModels.get(0).getRepositoryName(), "john");
+        List<DocumentModel> documentModels = Stream.concat(list1.stream(), list2.stream()).toList();
+        CoreSession userSession = CoreInstance.getCoreSession(documentModels.getFirst().getRepositoryName(), "john");
 
         // Move only the 2 first doc
-        service.moveToColdStorage(userSession, list1.get(0).getRef());
-        service.moveToColdStorage(userSession, list2.get(0).getRef());
+        service.moveToColdStorage(userSession, list1.getFirst().getRef());
+        service.moveToColdStorage(userSession, list2.getFirst().getRef());
         coreFeature.waitForAsyncCompletion();
 
         // Moving the 2 first document to cold storage should moved all the other ones
@@ -203,8 +196,8 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         }
 
         // Restore only the 2 first doc
-        service.restoreFromColdStorage(session, list1.get(0).getRef());
-        service.restoreFromColdStorage(session, list2.get(0).getRef());
+        service.restoreFromColdStorage(session, list1.getFirst().getRef());
+        service.restoreFromColdStorage(session, list2.getFirst().getRef());
         waitForRetrieve();
 
         // Restoring the first document to cold storage should restore all the other ones
@@ -273,7 +266,7 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
 
             beingRetrievedDocs = session.query(GET_DOCUMENTS_TO_CHECK_QUERY);
             assertEquals(1, beingRetrievedDocs.size());
-            assertEquals(docRef2, beingRetrievedDocs.get(0).getRef());
+            assertEquals(docRef2, beingRetrievedDocs.getFirst().getRef());
 
             DocumentModel doc1 = session.getDocument(docRef1);
             String serverUrl = NotificationServiceHelper.getNotificationService().getServerUrlPrefix();
@@ -315,7 +308,7 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
         transactionalFeature.nextTransaction();
         documentModel = service.moveToColdStorage(session, documentModel.getRef());
         transactionalFeature.nextTransaction();
-        DocumentModel version = session.getVersions(documentModel.getRef()).get(0);
+        DocumentModel version = session.getVersions(documentModel.getRef()).getFirst();
 
         // Retrieve the version
         version = service.retrieveFromColdStorage(session, version.getRef(), RESTORE_DURATION);
@@ -443,7 +436,7 @@ public class TestDummyColdStorageService extends AbstractTestColdStorageService 
 
         List<DocumentModel> versions = session.getVersions(documentModel.getRef());
         assertEquals(1, versions.size());
-        DocumentModel version = versions.get(0);
+        DocumentModel version = versions.getFirst();
 
         transactionalFeature.nextTransaction();
 

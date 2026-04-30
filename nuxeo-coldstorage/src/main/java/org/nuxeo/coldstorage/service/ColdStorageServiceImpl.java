@@ -174,7 +174,7 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
     }
 
     @Override
-    public void stop(ComponentContext context) throws InterruptedException {
+    public void stop(ComponentContext context) {
         defaultRendition = null;
         renditionByDocType = null;
         renditionByFacets = null;
@@ -277,7 +277,7 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
                 BlobUpdateContext updateContext = new BlobUpdateContext(key).withColdStorageClass(true);
                 Framework.getService(BlobManager.class).getBlobProvider(coldContent).updateBlob(updateContext);
             } else {
-                log.warn("Main blob {} for document {} is already in cold storage with storage class {}",
+                log.debug("Main blob {} for document {} is already in cold storage with storage class {}",
                         coldContent::getDigest, documentModel::getId, oldStatus::getStorageClass);
             }
         } catch (IOException e) {
@@ -326,7 +326,7 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         }
         BlobStatus blobStatus = ColdStorageHelper.getBlobStatus(documentModel);
         Function<DocumentModel, Boolean> doNotify;
-        DocumentModel docResult = null;
+        DocumentModel docResult;
         Blob coldContent = (Blob) documentModel.getPropertyValue(COLD_STORAGE_CONTENT_PROPERTY);
         String key = getContentBlobKey(coldContent);
         if (ColdStorageHelper.isDownloadable(blobStatus)) {
@@ -525,10 +525,10 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
     }
 
     /**
-     * Restore from ColdStorage all documents referencing the given blob digests as main content.
+     * Restore from ColdStorage all documents referencing the given blob digest as main content.
      *
      * @param session the session
-     * @param blobDigests the blob digests
+     * @param blobDigest the blob digest
      */
     public void propagateRestoreFromColdStorage(CoreSession session, String blobDigest) {
         if (session.queryProjection(String.format("SELECT " + NXQL.ECM_UUID + " FROM Document WHERE %s/digest = '%s'",
@@ -600,14 +600,14 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
             }
             return true;
         } else if (!blobStatus.isOngoingRestore()) {
-            // the blob was probably retrieved and it already went back to cold storage
+            // the blob was probably retrieved, and it already went back to cold storage
             // Let's flag it as not being retrieved
             log.debug("Document {} is flagged as being retrieved but not its blob", doc::getPath);
             doc.setPropertyValue(COLD_STORAGE_BEING_RETRIEVED_PROPERTY, false);
             if (doc.isVersion()) {
                 doc.putContextData(ALLOW_VERSION_WRITE, true);
             }
-            doc = session.saveDocument(doc);
+            session.saveDocument(doc);
         }
         return false;
     }

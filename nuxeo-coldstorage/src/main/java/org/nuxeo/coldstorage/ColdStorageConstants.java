@@ -72,7 +72,10 @@ public class ColdStorageConstants {
 
     /**
      * Status about the cold storage content being retrieved or available.
+     *
+     * @deprecated since 2025.2, unused
      */
+    @Deprecated(since = "2025.2", forRemoval = true)
     public static class ColdStorageContentStatus {
 
         protected final int totalBeingRetrieved;
