@@ -42,6 +42,10 @@ import org.nuxeo.runtime.migration.MigrationDescriptor;
  * <p>
  * This migrator is enabled when move to cold storage is blocked via the
  * {@link ColdStorageConstants#COLD_STORAGE_RESTORE_MIGRATION_ENABLED_PROPERTY_NAME} property.
+ * <p>
+ * Only documents whose main blob is not currently downloadable (S3-side restore from cold storage still pending or
+ * expired) are reported as skipped; documents that no longer exist or were already restored concurrently are treated as
+ * successful restores.
  *
  * @since 2025.2
  */
@@ -82,7 +86,8 @@ public class RestoreFromColdStorageMigrator extends AbstractBulkMigrator {
     }
 
     @Override
-    public void compute(CoreSession session, List<String> ids, Map<String, Serializable> properties) {
+    public void compute(CoreSession session, List<String> ids, Map<String, Serializable> properties,
+            MigrationProgress progress) {
         var service = Framework.getService(ColdStorageService.class);
         for (String id : ids) {
             var docRef = new IdRef(id);
@@ -118,9 +123,11 @@ public class RestoreFromColdStorageMigrator extends AbstractBulkMigrator {
                     // Not downloadable - log warning and skip (document keeps ColdStorage facet)
                     log.warn("Document {} cannot be restored: blob not downloadable (storage class: {})", () -> id,
                             blobStatus::getStorageClass);
+                    progress.skipped(1);
                 }
             } catch (NuxeoException e) {
                 log.error("Failed to restore document: {} from cold storage", id, e);
+                progress.inError(1, e.getMessage());
             }
         }
     }
