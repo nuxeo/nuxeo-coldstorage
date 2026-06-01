@@ -32,6 +32,8 @@ import static org.nuxeo.coldstorage.migrator.RestoreFromColdStorageMigrator.MIGR
 import static org.nuxeo.coldstorage.migrator.RestoreFromColdStorageMigrator.MIGRATION_DONE_STATE;
 import static org.nuxeo.coldstorage.migrator.RestoreFromColdStorageMigrator.MIGRATION_ENABLED_STATE;
 import static org.nuxeo.coldstorage.migrator.RestoreFromColdStorageMigrator.MIGRATION_ID;
+import static org.nuxeo.ecm.core.api.security.SecurityConstants.SYSTEM_USERNAME;
+import static org.nuxeo.ecm.core.migrator.AbstractBulkMigrator.PARAM_MIGRATION_ID;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -55,6 +57,9 @@ import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.blob.BlobManager;
 import org.nuxeo.ecm.core.blob.BlobUpdateContext;
 import org.nuxeo.ecm.core.blob.ManagedBlob;
+import org.nuxeo.ecm.core.bulk.BulkService;
+import org.nuxeo.ecm.core.bulk.message.BulkStatus;
+import org.nuxeo.ecm.core.migrator.AbstractBulkMigrator;
 import org.nuxeo.runtime.api.Framework;
 import org.nuxeo.runtime.migration.MigrationService;
 import org.nuxeo.runtime.test.runner.Features;
@@ -80,6 +85,9 @@ public class TestRestoreFromColdStorageMigrator {
 
     @Inject
     protected MigrationService migrationService;
+
+    @Inject
+    protected BulkService bulkService;
 
     @Inject
     protected ColdStorageService coldStorageService;
@@ -165,6 +173,7 @@ public class TestRestoreFromColdStorageMigrator {
 
         // Wait for migration to complete
         await().atMost(Duration.ofMinutes(1)).until(() -> !migrationService.getStatus(MIGRATION_ID).isRunning());
+        assertBulkStatus(1, 1, 0, 0);
         transactionalFeature.nextTransaction();
 
         // Verify document was restored and no longer has ColdStorage facet
@@ -208,6 +217,8 @@ public class TestRestoreFromColdStorageMigrator {
 
         // Wait for migration to complete
         await().atMost(Duration.ofMinutes(1)).until(() -> !migrationService.getStatus(MIGRATION_ID).isRunning());
+
+        assertBulkStatus(1, 1, 1, 0);
 
         // Advance transaction to avoid stale reads
         transactionalFeature.nextTransaction();
@@ -365,6 +376,7 @@ public class TestRestoreFromColdStorageMigrator {
 
         // Wait for migration to complete
         await().atMost(Duration.ofMinutes(1)).until(() -> !migrationService.getStatus(MIGRATION_ID).isRunning());
+        assertBulkStatus(10, 10, 4, 0);
         transactionalFeature.nextTransaction();
 
         // Verify results:
@@ -393,6 +405,26 @@ public class TestRestoreFromColdStorageMigrator {
     }
 
     // Helper methods
+
+    protected void assertBulkStatus(long total, long processed, long skipped, long error) {
+        var bulkStatus = bulkService.getStatuses(SYSTEM_USERNAME)
+                                    .stream()
+                                    .filter(s -> AbstractBulkMigrator.MigrationAction.ACTION_NAME.equals(s.getAction()))
+                                    .filter(s -> {
+                                        var cmd = bulkService.getCommand(s.getId());
+                                        return RestoreFromColdStorageMigrator.MIGRATION_ID.equals(
+                                                cmd.getParam(PARAM_MIGRATION_ID));
+                                    })
+                                    .findFirst()
+                                    .orElseThrow(() -> new AssertionError(
+                                            "no bulk status found for migration " + MIGRATION_ID));
+
+        assertEquals(BulkStatus.State.COMPLETED, bulkStatus.getState());
+        assertEquals(total, bulkStatus.getTotal());
+        assertEquals(processed, bulkStatus.getProcessed());
+        assertEquals(skipped, bulkStatus.getSkipCount());
+        assertEquals(error, bulkStatus.getErrorCount());
+    }
 
     protected DocumentModel createFileDocument(CoreSession session) {
         String uniqueName = "MyFile-" + UUID.randomUUID().toString().substring(0, 8);
