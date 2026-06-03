@@ -59,9 +59,12 @@ import org.nuxeo.ecm.core.blob.BlobManager;
 import org.nuxeo.ecm.core.blob.BlobUpdateContext;
 import org.nuxeo.ecm.core.blob.ManagedBlob;
 import org.nuxeo.ecm.core.bulk.BulkService;
+import org.nuxeo.ecm.core.bulk.BulkServiceImpl;
 import org.nuxeo.ecm.core.bulk.message.BulkStatus;
 import org.nuxeo.ecm.core.migrator.AbstractBulkMigrator;
 import org.nuxeo.runtime.api.Framework;
+import org.nuxeo.runtime.kv.KeyValueService;
+import org.nuxeo.runtime.kv.KeyValueStoreProvider;
 import org.nuxeo.runtime.migration.MigrationService;
 import org.nuxeo.runtime.test.runner.Features;
 import org.nuxeo.runtime.test.runner.FeaturesRunner;
@@ -97,6 +100,9 @@ public class TestRestoreFromColdStorageMigrator {
     public void tearDown() {
         // Reset the framework property after each test
         Framework.getProperties().remove(COLD_STORAGE_RESTORE_MIGRATION_ENABLED_PROPERTY_NAME);
+        // Clear bulk kv store manually
+        ((KeyValueStoreProvider) Framework.getService(KeyValueService.class)
+                                          .getKeyValueStore(BulkServiceImpl.BULK_KV_STORE_NAME)).clear();
     }
 
     @Test
