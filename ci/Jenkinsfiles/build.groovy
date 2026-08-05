@@ -206,6 +206,25 @@ pipeline {
               nxWithHelmfileDeployment(namespace: testNamespace, environment: "functionalTests", envVars: ["CONNECT_CLID_SECRET=${clidSecret}"],
                 secrets: [[name: clidSecret, namespace: 'platform']]) {
                 dir('nuxeo-coldstorage-web') {
+                  // === TEMPORARY (revert before merge) =======================================
+                  // Validate coldstorage ftest against the unreleased Chrome-"stable" ftest code
+                  // from nuxeo-web-ui PR #3315 (base maintenance-3.1.x / LTS-2023), which is not
+                  // published to the npm registry. Pack @nuxeo/nuxeo-web-ui-ftest from the PR branch
+                  // and install it over the released 3.1.32 in node_modules before running ftest. The
+                  // server WebUI marketplace package stays 3.1.32 (the PR is test-side only), so no
+                  // Docker or getWebUIVersion() change is needed. To revert: delete this sh block.
+                  sh '''
+                    set -eu
+                    export PATH="$PWD/node:$PATH"
+                    WEBUI_PR_BRANCH=ftest-wdio-browser-provisioning-optimization
+                    rm -rf /tmp/webui-pr /tmp/nuxeo-nuxeo-web-ui-ftest-*.tgz
+                    git clone --depth 1 --branch "$WEBUI_PR_BRANCH" \
+                      https://github.com/nuxeo/nuxeo-web-ui.git /tmp/webui-pr
+                    ( cd /tmp/webui-pr/packages/nuxeo-web-ui-ftest && npm pack --pack-destination /tmp )
+                    npm install --no-save --no-package-lock /tmp/nuxeo-nuxeo-web-ui-ftest-*.tgz
+                    node -e "console.log('Using @nuxeo/nuxeo-web-ui-ftest', require('@nuxeo/nuxeo-web-ui-ftest/package.json').version, '(PR #3315)')"
+                  '''
+                  // === END TEMPORARY =========================================================
                   retry(3) {
                     sh """
                       mvn -B -nsu com.github.eirslett:frontend-maven-plugin:npm@ftest -Pftest \
