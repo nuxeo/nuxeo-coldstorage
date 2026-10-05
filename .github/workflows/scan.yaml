@@ -1,0 +1,51 @@
+name: Scan for vulnerabilities
+
+on:
+  # Run manually or with the GitHub CLI
+  workflow_dispatch:
+    inputs:
+      packages:
+        description: |
+          Comma-separated list of packages to scan, as Maven artifacts in the "groupId:artifactId:version:extension"
+          format
+        type: string
+        required: true
+      version:
+        description: Version of the packages to scan, used for workflow artifact naming.
+        type: string
+        required: true
+
+permissions:
+  # actions: read is required by the SARIF upload to GitHub code scanning
+  actions: read
+  contents: read
+  security-events: write
+
+jobs:
+  scan-packages:
+    name: Scan packages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Display workflow inputs in job summary
+        env:
+          PACKAGES: ${{ inputs.packages }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          {
+            echo '### Workflow Inputs'
+            echo ''
+            echo '**packages:**'
+            echo "$PACKAGES" | tr ',' '\n' | sed 's/^/- /'
+            echo ''
+            echo "**version:** $VERSION"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Scan Maven artifacts
+        uses: nuxeo/gh-build-tools/.github/actions/scan-maven-artifacts@a10ad0bdb8afe3531df63387f917a710ffa07183 # v0.22.1
+        with:
+          artifacts: ${{ inputs.packages }}
+          java-version: '17'
+          mvn-repo-username: ${{ secrets.REPOSITORY_MANAGER_USERNAME }}
+          mvn-repo-password: ${{ secrets.REPOSITORY_MANAGER_PASSWORD }}
+          output-filename: grype-packages-${{ inputs.version }}
