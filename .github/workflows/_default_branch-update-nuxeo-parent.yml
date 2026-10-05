@@ -28,7 +28,7 @@ jobs:
           - base-branch: 'lts-2025'
             java-version: '21'
     steps:
-      - uses: nuxeo/gh-build-tools/.github/actions/update-nuxeo-parent@369e9f656fb2eedd24d5fcdcb64bb98cff68b98f # v0.21.0
+      - uses: nuxeo/gh-build-tools/.github/actions/update-nuxeo-parent@a10ad0bdb8afe3531df63387f917a710ffa07183 # v0.22.1
         with:
           base-branch: ${{ matrix.lts.base-branch }}
           java-version: ${{ matrix.lts.java-version }}
