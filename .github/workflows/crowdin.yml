@@ -11,6 +11,12 @@ on:
     paths:
       - 'nuxeo-coldstorage-web/i18n/messages.json'
 
+permissions:
+  # contents: write and pull-requests: write are required by the Crowdin action to push the translation branch and open
+  # the pull request, and by the gh CLI to enable auto-merge on it
+  contents: write
+  pull-requests: write
+
 jobs:
   crowdin:
     runs-on: ubuntu-latest
