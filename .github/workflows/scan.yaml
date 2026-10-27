@@ -42,7 +42,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Scan Maven artifacts
-        uses: nuxeo/gh-build-tools/.github/actions/scan-maven-artifacts@512ea2928c9cfcb864c6cdaaf63c68ff45087497 # v0.26.1
+        uses: nuxeo/gh-build-tools/.github/actions/scan-maven-artifacts@cf755766169b6b91031f42af166cffa614ae539f # v0.27.0
         with:
           artifacts: ${{ inputs.packages }}
           java-version: '17'
