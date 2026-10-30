@@ -1,10 +1,12 @@
 <component name="org.nuxeo.coldstorage.audit" version="1.0">
-  <extension target="org.nuxeo.audit.service.AuditComponent" point="event">
-    <event name="coldStorageContentMoved" />
-    <event name="coldStorageContentToRetrieve" />
-    <event name="coldStorageContentAvailable" />
-    <event name="coldStorageContentToRestore" />
-    <event name="coldStorageContentRestored" />
-    <event name="coldStorageDownload" />
+  <extension target="org.nuxeo.audit.service.AuditComponent" point="routes">
+    <route name="default">
+      <event name="coldStorageContentMoved" />
+      <event name="coldStorageContentToRetrieve" />
+      <event name="coldStorageContentAvailable" />
+      <event name="coldStorageContentToRestore" />
+      <event name="coldStorageContentRestored" />
+      <event name="coldStorageDownload" />
+    </route>
   </extension>
 </component>
