@@ -71,7 +71,7 @@ public class IsSharedMainContentJsonEnricher extends AbstractJsonEnricher<Docume
                     + " AND file:content/digest = %s", escapedDocId, escapedDocId, excapedBlobDigest);
             // privilege because we may not have permission to see all documents referencing this blob
             return CoreInstance.doPrivileged(wrapper.getSession(),
-                    (session) -> session.queryProjection(query, 1, 0).size() > 0);
+                    (session) -> !session.queryProjection(query, 1, 0).isEmpty());
         }
     }
 

@@ -26,7 +26,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.nuxeo.ecm.core.api.security.SecurityConstants.READ;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,7 +66,7 @@ public class RequestRetrievalFromColdStorageTest extends AbstractTestColdStorage
     protected NotificationManager notificationManager;
 
     @Test
-    public void shouldRequestRetrieval() throws OperationException, IOException {
+    public void shouldRequestRetrieval() throws OperationException {
         DocumentModel documentModel = createFileDocument(session, true);
         // first make the move to cold storage
         documentModel = moveContentToColdStorage(session, documentModel);
@@ -76,7 +75,7 @@ public class RequestRetrievalFromColdStorageTest extends AbstractTestColdStorage
     }
 
     @Test
-    public void shouldRequestRetrievalWithReadAccess() throws OperationException, IOException, LoginException {
+    public void shouldRequestRetrievalWithReadAccess() throws OperationException, LoginException {
         DocumentModel documentModel = createFileDocument(session, true);
         // first make the move to cold storage
         documentModel = moveContentToColdStorage(session, documentModel);
@@ -94,7 +93,7 @@ public class RequestRetrievalFromColdStorageTest extends AbstractTestColdStorage
     }
 
     @Test
-    public void shouldFailRequestRetrievalBeingRetrieved() throws IOException, OperationException {
+    public void shouldFailRequestRetrievalBeingRetrieved() throws OperationException {
         DocumentModel documentModel = createFileDocument(session, true);
 
         // move the blob to cold storage
@@ -123,9 +122,9 @@ public class RequestRetrievalFromColdStorageTest extends AbstractTestColdStorage
         }
     }
 
-    protected DocumentModel requestRetrievalContentFromColdStorage(DocumentModel documentModel, CoreSession userSession)
+    protected void requestRetrievalContentFromColdStorage(DocumentModel documentModel, CoreSession userSession)
             throws OperationException {
-        return requestRetrievalContentFromColdStorage(documentModel, userSession, 0);
+        requestRetrievalContentFromColdStorage(documentModel, userSession, 0);
     }
 
     protected DocumentModel requestRetrievalContentFromColdStorage(DocumentModel documentModel, CoreSession userSession,

@@ -137,7 +137,7 @@ public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
             // expected, let's check none were sent to cold storage
             TransactionHelper.commitOrRollbackTransaction();
             TransactionHelper.startTransaction();
-            documents.stream().forEach(doc -> {
+            documents.forEach(doc -> {
                 doc = session.getDocument(doc.getRef());
                 assertFalse(session.getDocument(doc.getRef()).hasFacet(ColdStorageConstants.COLD_STORAGE_FACET_NAME));
             });
@@ -270,7 +270,7 @@ public class MoveToColdStorageTest extends AbstractTestColdStorageOperation {
         documents = session.query(query);
         assertEquals(4, documents.size());
 
-        DocumentModel documentModel = documents.get(0);
+        DocumentModel documentModel = documents.getFirst();
 
         // first make the move to cold storage
         documentModel = moveContentToColdStorage(session, documentModel);

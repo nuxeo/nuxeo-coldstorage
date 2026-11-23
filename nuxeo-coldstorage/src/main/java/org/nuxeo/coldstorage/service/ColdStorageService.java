@@ -103,10 +103,10 @@ public interface ColdStorageService {
     /**
      * Checks if the main content is ready for download.
      *
-     * @implSpec: Checks document with a cold storage content which is being retrieved, meaning
-     *            {@value org.nuxeo.coldstorage.ColdStorageConstants#COLD_STORAGE_BEING_RETRIEVED_PROPERTY} is
-     *            {@code true}, and it checks if it is available for download. In which case its fires a
-     *            {@value org.nuxeo.coldstorage.ColdStorageConstants#COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME} event.
+     * @implSpec Checks document with a cold storage content which is being retrieved, meaning
+     *           {@value org.nuxeo.coldstorage.ColdStorageConstants#COLD_STORAGE_BEING_RETRIEVED_PROPERTY} is
+     *           {@code true}, and it checks if it is available for download. In which case its fires a
+     *           {@value org.nuxeo.coldstorage.ColdStorageConstants#COLD_STORAGE_CONTENT_AVAILABLE_EVENT_NAME} event.
      * @see #retrieveFromColdStorage(CoreSession, DocumentRef, Duration)
      */
     boolean checkIsRetrieved(CoreSession session, DocumentModel documentModel);

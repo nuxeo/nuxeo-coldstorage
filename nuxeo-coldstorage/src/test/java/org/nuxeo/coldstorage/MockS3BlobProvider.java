@@ -129,7 +129,7 @@ public class MockS3BlobProvider extends AbstractBlobProvider {
 
         // Handle restore requests - requires special async handling
         if (blobUpdateContext.restoreForDuration != null) {
-            blobsStatus.compute(blobUpdateContext.key, (key, existingStatus) -> {
+            blobsStatus.compute(blobUpdateContext.key, (_, existingStatus) -> {
                 BlobStatus status = existingStatus != null ? existingStatus : new BlobStatus();
                 if (STANDARD.toString().equals(status.getStorageClass())) {
                     throw new IllegalStateException("Cannot restore a blob with default storage class");
@@ -138,7 +138,7 @@ public class MockS3BlobProvider extends AbstractBlobProvider {
             });
 
             // Simulate asynchronous restore
-            Runnable restoreCmd = () -> blobsStatus.compute(blobUpdateContext.key, (key, existingStatus) -> {
+            Runnable restoreCmd = () -> blobsStatus.compute(blobUpdateContext.key, (_, existingStatus) -> {
                 if (existingStatus == null) {
                     return null;
                 }
@@ -153,7 +153,7 @@ public class MockS3BlobProvider extends AbstractBlobProvider {
 
         // Handle cold storage class changes
         if (blobUpdateContext.coldStorageClass != null) {
-            blobsStatus.compute(blobUpdateContext.key, (key, existingStatus) -> {
+            blobsStatus.compute(blobUpdateContext.key, (_, existingStatus) -> {
                 BlobStatus status = existingStatus != null ? existingStatus : new BlobStatus();
                 String storageClass = blobUpdateContext.coldStorageClass.inColdStorage ? GLACIER.toString()
                         : STANDARD.toString();
@@ -208,7 +208,7 @@ public class MockS3BlobProvider extends AbstractBlobProvider {
             blobs.putIfAbsent(digest, bytes);
         } else {
             // Use computeIfAbsent for thread-safe deduplication
-            blobs.computeIfAbsent(digest, k -> {
+            blobs.computeIfAbsent(digest, _ -> {
                 try (InputStream in = blob.getStream()) {
                     return IOUtils.toByteArray(in);
                 } catch (IOException e) {
