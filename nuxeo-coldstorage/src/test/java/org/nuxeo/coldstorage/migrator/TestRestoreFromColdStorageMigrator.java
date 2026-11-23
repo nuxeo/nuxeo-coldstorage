@@ -59,7 +59,7 @@ import org.nuxeo.ecm.core.blob.BlobUpdateContext;
 import org.nuxeo.ecm.core.blob.ManagedBlob;
 import org.nuxeo.ecm.core.bulk.BulkService;
 import org.nuxeo.ecm.core.bulk.message.BulkStatus;
-import org.nuxeo.ecm.core.migrator.AbstractBulkMigrator;
+import org.nuxeo.ecm.core.migrator.AbstractBaseBulkMigrator;
 import org.nuxeo.runtime.api.Framework;
 import org.nuxeo.runtime.migration.MigrationService;
 import org.nuxeo.runtime.test.runner.Features;
@@ -173,7 +173,7 @@ public class TestRestoreFromColdStorageMigrator {
 
         // Wait for migration to complete
         await().atMost(Duration.ofMinutes(1)).until(() -> !migrationService.getStatus(MIGRATION_ID).isRunning());
-        assertBulkStatus(1, 1, 0, 0);
+        assertBulkStatus(1, 1, 0);
         transactionalFeature.nextTransaction();
 
         // Verify document was restored and no longer has ColdStorage facet
@@ -218,7 +218,7 @@ public class TestRestoreFromColdStorageMigrator {
         // Wait for migration to complete
         await().atMost(Duration.ofMinutes(1)).until(() -> !migrationService.getStatus(MIGRATION_ID).isRunning());
 
-        assertBulkStatus(1, 1, 1, 0);
+        assertBulkStatus(1, 1, 1);
 
         // Advance transaction to avoid stale reads
         transactionalFeature.nextTransaction();
@@ -376,7 +376,7 @@ public class TestRestoreFromColdStorageMigrator {
 
         // Wait for migration to complete
         await().atMost(Duration.ofMinutes(1)).until(() -> !migrationService.getStatus(MIGRATION_ID).isRunning());
-        assertBulkStatus(10, 10, 4, 0);
+        assertBulkStatus(10, 10, 4);
         transactionalFeature.nextTransaction();
 
         // Verify results:
@@ -406,10 +406,11 @@ public class TestRestoreFromColdStorageMigrator {
 
     // Helper methods
 
-    protected void assertBulkStatus(long total, long processed, long skipped, long error) {
+    protected void assertBulkStatus(long total, long processed, long skipped) {
         var bulkStatus = bulkService.getStatuses(SYSTEM_USERNAME)
                                     .stream()
-                                    .filter(s -> AbstractBulkMigrator.MigrationAction.ACTION_NAME.equals(s.getAction()))
+                                    .filter(s -> AbstractBaseBulkMigrator.MigrationAction.ACTION_NAME.equals(
+                                            s.getAction()))
                                     .filter(s -> {
                                         var cmd = bulkService.getCommand(s.getId());
                                         return RestoreFromColdStorageMigrator.MIGRATION_ID.equals(
@@ -423,7 +424,7 @@ public class TestRestoreFromColdStorageMigrator {
         assertEquals(total, bulkStatus.getTotal());
         assertEquals(processed, bulkStatus.getProcessed());
         assertEquals(skipped, bulkStatus.getSkipCount());
-        assertEquals(error, bulkStatus.getErrorCount());
+        assertEquals(0, bulkStatus.getErrorCount());
     }
 
     protected DocumentModel createFileDocument(CoreSession session) {

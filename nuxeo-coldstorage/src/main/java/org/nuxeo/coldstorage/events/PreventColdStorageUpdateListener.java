@@ -49,11 +49,10 @@ public class PreventColdStorageUpdateListener implements EventListener {
     @Override
     public void handleEvent(Event event) {
         EventContext eventContext = event.getContext();
-        if (!(eventContext instanceof DocumentEventContext)) {
+        if (!(eventContext instanceof DocumentEventContext docCtx)) {
             return;
         }
 
-        DocumentEventContext docCtx = (DocumentEventContext) eventContext;
         DocumentModel doc = docCtx.getSourceDocument();
         if (Boolean.TRUE.equals(docCtx.getProperty(DISABLE_PREVENT_COLD_STORAGE_UPDATE_LISTENER))) {
             log.trace("Checking the blob replacement in cold storage is disabled for document {}", doc::getId);

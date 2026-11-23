@@ -86,7 +86,6 @@ import org.nuxeo.ecm.core.blob.BlobUpdateContext;
 import org.nuxeo.ecm.core.blob.ManagedBlob;
 import org.nuxeo.ecm.core.bulk.BulkService;
 import org.nuxeo.ecm.core.bulk.message.BulkCommand;
-import org.nuxeo.ecm.core.bulk.message.BulkStatus;
 import org.nuxeo.ecm.core.event.Event;
 import org.nuxeo.ecm.core.event.EventService;
 import org.nuxeo.ecm.core.event.impl.DocumentEventContext;
@@ -352,10 +351,10 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
             }
             documentModel.setPropertyValue(COLD_STORAGE_CONTENT_DOWNLOADABLE_UNTIL,
                     Date.from(blobStatus.getDownloadableUntil()));
-            doNotify = doc -> false;
+            doNotify = _ -> false;
         } else if (blobStatus.isOngoingRestore()) {
             documentModel.setPropertyValue(COLD_STORAGE_BEING_RETRIEVED_PROPERTY, true);
-            doNotify = doc -> true;
+            doNotify = _ -> true;
         } else {
             try {
                 BlobUpdateContext updateContext = new BlobUpdateContext(key).withRestoreForDuration(restoreDuration);
@@ -566,13 +565,7 @@ public class ColdStorageServiceImpl extends DefaultComponent implements ColdStor
         String username = SecurityConstants.SYSTEM_USERNAME;
         String commandId = bulkService.submit(new BulkCommand.Builder(CheckColdStorageAvailabilityAction.ACTION_NAME,
                 GET_DOCUMENTS_TO_CHECK_QUERY, username).build());
-
-        BulkStatus status = bulkService.getStatus(commandId);
-        if (status == null) {
-            log.error("Unable to check documents to be retrieved");
-        } else {
-            log.debug("Checking documents to be retrieved");
-        }
+        log.debug("Checking documents to be retrieved, commandId: {}", commandId);
     }
 
     @Override

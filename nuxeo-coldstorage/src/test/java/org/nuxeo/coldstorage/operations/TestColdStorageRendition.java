@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import jakarta.inject.Inject;
 
@@ -153,7 +152,7 @@ public class TestColdStorageRendition extends AbstractTestColdStorageOperation {
     @Override
     protected void checkMoveContent(List<DocumentModel> expectedDocs, List<DocumentModel> actualDocs) {
         assertEquals(expectedDocs.size(), actualDocs.size());
-        List<String> expectedDocIds = expectedDocs.stream().map(DocumentModel::getId).collect(Collectors.toList());
+        List<String> expectedDocIds = expectedDocs.stream().map(DocumentModel::getId).toList();
         for (DocumentModel updatedDoc : actualDocs) {
             // check document
             assertTrue(expectedDocIds.contains(updatedDoc.getId()));

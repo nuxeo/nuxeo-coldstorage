@@ -24,7 +24,6 @@ import java.util.List;
 import jakarta.inject.Inject;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.nuxeo.ecm.core.api.Blobs;
 import org.nuxeo.ecm.core.api.CoreInstance;
 import org.nuxeo.ecm.core.api.CoreSession;
@@ -42,12 +41,10 @@ import org.nuxeo.ecm.core.io.registry.context.RenderingContext.CtxBuilder;
 import org.nuxeo.ecm.core.test.CoreFeature;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.Features;
-import org.nuxeo.runtime.test.runner.FeaturesRunner;
 
 /**
  * @since 2023.4
  */
-@RunWith(FeaturesRunner.class)
 @Features(CoreFeature.class)
 @Deploy("org.nuxeo.coldstorage:OSGI-INF/coldstorage-enrichers-contrib.xml")
 public class IsSharedMainContentJsonEnricherTest
@@ -55,10 +52,6 @@ public class IsSharedMainContentJsonEnricherTest
 
     @Inject
     private CoreSession session;
-
-    public IsSharedMainContentJsonEnricherTest() {
-        super(DocumentModelJsonWriter.class, DocumentModel.class);
-    }
 
     public DocumentModel createDocument(String content, ACE... aces) {
         DocumentModel doc = session.createDocumentModel("/", "doc-" + System.currentTimeMillis(), "File");

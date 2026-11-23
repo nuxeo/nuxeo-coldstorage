@@ -33,6 +33,7 @@ import org.nuxeo.coldstorage.service.RestoreContext;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.IdRef;
 import org.nuxeo.ecm.core.api.NuxeoException;
+import org.nuxeo.ecm.core.migrator.AbstractBaseBulkMigrator;
 import org.nuxeo.ecm.core.migrator.AbstractBulkMigrator;
 import org.nuxeo.runtime.api.Framework;
 import org.nuxeo.runtime.migration.MigrationDescriptor;
@@ -87,7 +88,7 @@ public class RestoreFromColdStorageMigrator extends AbstractBulkMigrator {
 
     @Override
     public void compute(CoreSession session, List<String> ids, Map<String, Serializable> properties,
-            MigrationProgress progress) {
+            AbstractBaseBulkMigrator.MigrationProgress progress) {
         var service = Framework.getService(ColdStorageService.class);
         for (String id : ids) {
             var docRef = new IdRef(id);
