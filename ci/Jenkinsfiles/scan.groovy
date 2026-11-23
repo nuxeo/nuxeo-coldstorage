@@ -20,7 +20,7 @@ library identifier: "platform-ci-shared-library@v0.0.91"
 
 pipeline {
   agent {
-    label 'jenkins-nuxeo-package-lts-2025'
+    label 'jenkins-nuxeo-package-lts-2027'
   }
   options {
     timeout(time: 1, unit: 'HOURS')
@@ -31,7 +31,7 @@ pipeline {
     RELEASE_VERSION = nxUtils.getLatestReleaseVersion() // 202x.(y-1)
     RELEASE_BUILD_VERSION = nxUtils.getLatestReleaseBuildVersion() // 202x.(y-1).z pointed by 202x.(y-1)
     JIRA_PROJECT = 'NXP'
-    JIRA_MOVING_VERSION = 'coldstorage-2025.x'
+    JIRA_MOVING_VERSION = 'coldstorage-2027.x'
     JIRA_TEAM_BOARD_ID = '4661'
     JIRA_TEAM_NEXT_SPRINT = 'nxplatform next'
     JIRA_TEAM_TAG = 'nxplatform'

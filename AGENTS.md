@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Nuxeo Cold Storage** is a Nuxeo addon that enables cold storage of document main content for archiving, compliance, and cost optimization. This is a Maven multi-module Java project hosted at `github.com/nuxeo/nuxeo-coldstorage` on branch `lts-2025`.
+**Nuxeo Cold Storage** is a Nuxeo addon that enables cold storage of document main content for archiving, compliance, and cost optimization. This is a Maven multi-module Java project hosted at `github.com/nuxeo/nuxeo-coldstorage` on branch `lts-2027`.
 
 The addon extends Nuxeo Platform and provides both backend (Java) and frontend (Web Components) contributions, packaged as a Nuxeo Marketplace package.
 
@@ -32,12 +32,12 @@ The root POM manages **internal module versions** only (`nuxeo-coldstorage`, `nu
 ### Build System
 
 - **Maven** multi-module, inheriting from `nuxeo-parent`
-- **Java 21** with `<release>21</release>` (inherited from nuxeo-parent)
+- **Java 25** with `<release>25</release>` (inherited from nuxeo-parent)
 - **Maven 3.6.3+** required
 - **Node.js v22.17.0** required for web module
 - Default build: `mvn clean install`
 - Skip tests: `mvn clean install -DskipTests`
-- Code formatting: `mvn spotless:check` / `mvn spotless:apply` (Eclipse formatter, ratcheted from `origin/lts-2025`)
+- Code formatting: `mvn spotless:check` / `mvn spotless:apply` (Eclipse formatter, ratcheted from `origin/lts-2027`)
 - NPM registry configuration required in `$HOME/.npmrc`:
   ```
   @nuxeo:registry=https://packages.nuxeo.com/repository/npm-public/
@@ -70,7 +70,7 @@ This addon follows standard Nuxeo Platform development conventions. For comprehe
 - Testing framework and patterns
 - Third-party libraries and Git conventions
 
-**See the [Nuxeo Platform Agent Development Guide](https://github.com/nuxeo/nuxeo/blob/lts-2025/AGENTS.md)**
+**See the [Nuxeo Platform Agent Development Guide](https://github.com/nuxeo/nuxeo/blob/lts-2027/AGENTS.md)**
 
 ---
 

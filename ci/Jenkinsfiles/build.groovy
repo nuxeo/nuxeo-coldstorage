@@ -66,7 +66,7 @@ Closure buildUnitTestStage(env) {
 
 pipeline {
   agent {
-    label 'jenkins-nuxeo-package-lts-2025'
+    label 'jenkins-nuxeo-package-lts-2027'
   }
   options {
     buildDiscarder(logRotator(daysToKeepStr: '60', numToKeepStr: '60', artifactNumToKeepStr: '5'))
@@ -147,7 +147,7 @@ pipeline {
                     ----------------------------------------
                     Check formatting
                     ----------------------------------------"""
-                    sh "git fetch origin lts-2025:origin/lts-2025"
+                    sh "git fetch origin lts-2027:origin/lts-2027"
                     sh "mvn ${MAVEN_CLI_ARGS} -V -Dcustom.environment=spotless spotless:check"
                   }
                 }

@@ -7,7 +7,7 @@ on:
 
   # Sync when a commit is done on the reference branches
   push:
-    branches: ["lts-2025"]
+    branches: ["lts-2027"]
     paths:
       - 'nuxeo-coldstorage-web/i18n/messages.json'
 
@@ -25,7 +25,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: lts-2025
+          ref: lts-2027
 
       - name: Crowdin Action
         id: crowdin-sync
@@ -48,11 +48,11 @@ jobs:
           auto_approve_imported: true
 
           # Name of the branch where to merge the translations
-          localization_branch_name: crowdin-translations-update-lts-2025
-          pull_request_base_branch_name: lts-2025
+          localization_branch_name: crowdin-translations-update-lts-2027
+          pull_request_base_branch_name: lts-2027
           create_pull_request: true
           pull_request_reviewers: 'manonlumeau'
-          pull_request_title: New Crowdin translations by GitHub Action (lts-2025)
+          pull_request_title: New Crowdin translations by GitHub Action (lts-2027)
 
           # Automatically download all the new translations
           download_translations: true
