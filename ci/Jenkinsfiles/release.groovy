@@ -23,13 +23,13 @@ library identifier: "platform-ci-shared-library@v0.0.91"
 
 pipeline {
   agent {
-    label 'jenkins-nuxeo-package-lts-2025'
+    label 'jenkins-nuxeo-package-lts-2027'
   }
   environment {
     BRANCH_NAME = "${params.BRANCH}"
     BUILD_VERSION = "${params.BUILD_VERSION}"
     JIRA_PROJECT = 'NXP'
-    JIRA_MOVING_VERSION = 'coldstorage-2025.x'
+    JIRA_MOVING_VERSION = 'coldstorage-2027.x'
     JIRA_RELEASED_VERSION = "coldstorage-${VERSION}"
     VERSION = "${nxUtils.getMajorDotMinorVersion(version: env.BUILD_VERSION)}"
   }

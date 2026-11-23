@@ -4,13 +4,13 @@
   <parent>
     <groupId>org.nuxeo</groupId>
     <artifactId>nuxeo-parent</artifactId>
-    <version>2025.29</version>
+    <version>2027.0.230</version>
   </parent>
 
   <groupId>org.nuxeo.coldstorage</groupId>
   <artifactId>nuxeo-coldstorage-parent</artifactId>
   <name>Nuxeo Cold Storage Parent</name>
-  <version>2025.3-SNAPSHOT</version>
+  <version>2027.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <description>Nuxeo Cold Storage allows the cold storage of document content. This can be needed for archiving,
     compliance, etc.
@@ -86,6 +86,7 @@
           <groupId>com.diffplug.spotless</groupId>
           <artifactId>spotless-maven-plugin</artifactId>
           <configuration combine.children="append">
+            <!-- TODO change -->
             <ratchetFrom>origin/lts-2025</ratchetFrom>
           </configuration>
         </plugin>

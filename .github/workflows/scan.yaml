@@ -45,7 +45,7 @@ jobs:
         uses: nuxeo/gh-build-tools/.github/actions/scan-maven-artifacts@d5b4ecfea51ec77593e3f282a7f03cf3bae524e3 # v0.29.0
         with:
           artifacts: ${{ inputs.packages }}
-          java-version: '21'
+          java-version: '25'
           mvn-repo-username: ${{ secrets.REPOSITORY_MANAGER_USERNAME }}
           mvn-repo-password: ${{ secrets.REPOSITORY_MANAGER_PASSWORD }}
           output-filename: grype-packages-${{ inputs.version }}
